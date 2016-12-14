@@ -19,7 +19,7 @@ Initialize it like this:
         planet.AddComponent<Geosphere>();
         planet.GetComponent<Geosphere>().pScale = 2;
         planet.GetComponent<Renderer>().material = planetSurface;
-        myPlanet = dreamSphere[sphereCount].GetComponent<Geosphere>();
+        myPlanet = planet.GetComponent<Geosphere>();
         myPlanet.Generate(beginPos, beginAngle);
  
  ```
