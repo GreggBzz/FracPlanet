@@ -5,7 +5,6 @@ using System;
 public class Geosphere : MonoBehaviour {
 
     public float pScale;
-    // Terrain trend, up or down.
     private int[] continents = new int[7];
     public Mesh mesh;
 
