@@ -8,13 +8,18 @@ public class PlanetMesh : MonoBehaviour {
     public float pScale;
     public bool ocean; // generate an ocean Mesh?
     public Mesh mesh;
+    public Vector3 center = new Vector3(0, 0, 0);
 
     private PlanetTexture textureManager;
     private int[] triangles;
     private int[] tempTriangles;
     private double radius;
+    
     // keep track of how many new vertices we've added during tesselate
+    // and the parent vertices, the center of each hexagon.
     private ushort newVertIndex;
+    private ushort parentVerts;
+
     // set to 10242 for 4 rounds and 40962 for 5 rounds.
     private const int vertCount = 40962;
     private const int tessRounds = 5;
@@ -28,12 +33,11 @@ public class PlanetMesh : MonoBehaviour {
 
     private Vector3[] vertices = new Vector3[vertCount];
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
+    private bool[] wave = new bool[vertCount];
+    private float totalTime = 0.0F;
 
     public void Generate() {
         textureManager = gameObject.AddComponent<PlanetTexture>();
-
-        Vector3 pos = new Vector3(0, 0, 0);
-        Vector3 angle = new Vector3(0, 0, 0);
         MeshCollider planetCollider = gameObject.AddComponent<MeshCollider>();
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Procedural Geosphere";
@@ -85,24 +89,27 @@ public class PlanetMesh : MonoBehaviour {
         // reset the midpoints and tesselate in a loop.
         for (int i = 0; i <= tessRounds; i++) {
             ResetMidpoints();
-            tempTriangles = Tesselate(triangles, ocean);
+            parentVerts = newVertIndex;
+            tempTriangles = Tesselate(triangles);
             triangles = null;
             triangles = tempTriangles;
             tempTriangles = null;
+            //Debug.Log("Parent Verts: " + parentVerts);
+            //Debug.Log("NewVertIndex: " + newVertIndex);
         }
 
         // normalize to max radius, apply the texture with the manager and assign the vertices and triangles
         mesh.vertices = vertices;
-        mesh.uv = textureManager.TexturePlanet(newVertIndex, vertices, radius);
-        mesh.triangles = triangles;
 
-        // center mesh, translate to controller hit position and eurlerangles
-        transform.Translate(pos);
-        transform.Rotate(angle);
+        if (ocean) mesh.uv = textureManager.TextureOcean(newVertIndex, parentVerts, vertices, triangles);
+        if (!ocean) mesh.uv = textureManager.TextureTerra(newVertIndex, parentVerts, vertices, (float)radius, triangles);
+
+        mesh.triangles = triangles;
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
-        planetCollider.sharedMesh = mesh;
-
+        if (!ocean) {
+            planetCollider.sharedMesh = mesh;
+        }
         // clean up.
         vertices = null;
         triangles = null;
@@ -110,7 +117,7 @@ public class PlanetMesh : MonoBehaviour {
         doneMidpoints = null;
     }
 
-    private int[] Tesselate(int[] curTriangles, bool ocean) {
+    private int[] Tesselate(int[] curTriangles) {
         int[] newTriangles = new int[curTriangles.Length * 4];
         int newTriangleIndex = 0;
 
@@ -150,7 +157,7 @@ public class PlanetMesh : MonoBehaviour {
             else { newMidpoints[2] = skip; }
             // displace the new midpoints
             for (int i2 = 0; i2 <= 2; i2++) {
-                vertices[newMidpoints[i2]] = DisplaceMidpoint(vertices[newMidpoints[i2]], dispalceMag[i2], ocean);
+                vertices[newMidpoints[i2]] = DisplaceMidpoint(vertices[newMidpoints[i2]], dispalceMag[i2]);
             }
             // build our new trianlges from the bisected vertices
             newTriangles[newTriangleIndex] = newMidpoints[0]; // 1
@@ -185,7 +192,7 @@ public class PlanetMesh : MonoBehaviour {
         return -1;
     }
 
-    private Vector3 DisplaceMidpoint(Vector3 p1, float displaceMag, bool ocean) {
+    private Vector3 DisplaceMidpoint(Vector3 p1, float displaceMag) {
         // randomly displace a midpoint.
         if (ocean) return p1 * 1.0F;
         if (rnd.NextDouble() < .5F) {
@@ -245,8 +252,17 @@ public class PlanetMesh : MonoBehaviour {
             }
         }
     }
-
     void Update() {
-     //transform.Rotate(Vector3.up, 1F * Time.deltaTime);
+        float tideDirection = new float();
+        // make waves every other frame.
+        if (ocean && textureManager.skipframe) {
+                vertices = mesh.vertices;
+                mesh.vertices = textureManager.MakeWaves(vertices, center);
+                mesh.RecalculateNormals();
+        }
+        if (ocean)
+            if (textureManager.tideStrength - (int)(textureManager.tideStrength) > .5F ) { tideDirection = 1F; } else { tideDirection = -.1F; }
+            transform.Rotate(Vector3.up, tideDirection / textureManager.tideStrength * Time.deltaTime );
+        textureManager.skipframe = !textureManager.skipframe;
     }
 }

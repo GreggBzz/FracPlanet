@@ -8,8 +8,8 @@ public class PlanetManager : MonoBehaviour {
 
     public GameObject planetOutline; // public for user(wand) manipulated transforms.
 
-    public float distScale = 200F;
-    public float planetCircumference = 50F;
+    public float distScale = 1000F;
+    public float planetCircumference = 500F;
     public string curPlanetType = "";
     private PlanetMesh[] planets = new PlanetMesh[200];
     private PlanetMesh[] oceans = new PlanetMesh[200];
@@ -57,29 +57,31 @@ public class PlanetManager : MonoBehaviour {
         // Adjust position.
         planets[planetMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
         planets[planetMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
+        planets[planetMeshCount].center = planets[planetMeshCount].transform.position;
         if (ocean) { AddPlanetOcean(controllerTransform, distScale, planetScale); }
         planetMeshCount += 1;
     }
 
     private void AddPlanetOcean(Transform controllerTransform, float distScale, float planetScale) {
-        // Setup textures.
+        // Setup outside and inside ocean. 
         Texture curTypeTexture = Resources.Load("PlanetTextures/txrOcean" + curPlanetType) as Texture;
-        Material oceanSurfaceMaterial = new Material(Shader.Find("Standard"));
+        Material oceanSurfaceMaterial = new Material(Shader.Find("Transparent/Diffuse"));
         oceanSurfaceMaterial.SetTexture("_MainTex", curTypeTexture);
         // Construction.
-        ocean[oceanMeshCount] = new GameObject("aPlanetOcean[" + oceanMeshCount + "]");
+        ocean[oceanMeshCount] = new GameObject("aPlanetTopOcean[" + oceanMeshCount + "]");
         ocean[oceanMeshCount].AddComponent<MeshFilter>();
         ocean[oceanMeshCount].AddComponent<MeshRenderer>();
         ocean[oceanMeshCount].AddComponent<PlanetMesh>();
         ocean[oceanMeshCount].GetComponent<PlanetMesh>().circumference = planetCircumference;
         ocean[oceanMeshCount].GetComponent<Renderer>().material = oceanSurfaceMaterial;
         oceans[oceanMeshCount] = ocean[oceanMeshCount].GetComponent<PlanetMesh>();
-        planets[planetMeshCount].ocean = true;
+        oceans[oceanMeshCount].ocean = true;
         oceans[oceanMeshCount].Generate();
         // Adjust position.
         oceans[oceanMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
         oceans[oceanMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        oceanMeshCount += 1;
+        oceans[oceanMeshCount].center = oceans[oceanMeshCount].transform.position;
+        oceanMeshCount += 2;
     }
     
     public void AddPlanetOutline() {
@@ -90,7 +92,6 @@ public class PlanetManager : MonoBehaviour {
         planetOutline = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         planetOutline.GetComponent<Renderer>().material = planetOutlineMaterial;
         planetOutline.transform.localScale = new Vector3(planetCircumference, planetCircumference, planetCircumference);
-        planetOutline.SetActive(true);
     }
     public void UpdatePlanetOutline(Transform controllerTransform) {
         if (planetOutline != null) {
