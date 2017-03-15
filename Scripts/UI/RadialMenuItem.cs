@@ -13,9 +13,9 @@ public class RadialMenuItem : MonoBehaviour {
 
         // enough for a simple plane.
         Vector3 itemLoc;
-        Vector3[] vertices = new Vector3[4];
-        Vector2[] uv = new Vector2[4];
-        int[] triangles = new int[6];
+        Vector3[] vertices = new Vector3[8];
+        Vector2[] uv = new Vector2[8];
+        int[] triangles = new int[12];
 
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Radial Menu Item " + itemNumber;
@@ -31,7 +31,7 @@ public class RadialMenuItem : MonoBehaviour {
         // Convert angle back to touchpad friendly radians.
         angle = (Mathf.Atan2(itemLoc.x, itemLoc.z) + Mathf.PI);
 
-        // build our plane.
+        // build our plane, front facing.
         vertices[j].x = (itemLoc.x - .02F);
         vertices[j].z = (itemLoc.z - .02F);
         vertices[j].y = itemLoc.y;
@@ -62,6 +62,38 @@ public class RadialMenuItem : MonoBehaviour {
         triangles[j + 3] = 2;
         triangles[j + 4] = 3;
         triangles[j + 5] = 0;
+
+        // build our plane, back facing.
+        vertices[j + 4].x = (itemLoc.x - .02F);
+        vertices[j + 4].z = (itemLoc.z - .02F);
+        vertices[j + 4].y = itemLoc.y - .001F;
+        uv[j + 4].x = 0F;
+        uv[j + 4].y = 0F;
+
+        vertices[j + 5].x = (itemLoc.x - .02F);
+        vertices[j + 5].z = (itemLoc.z + .02F);
+        vertices[j + 5].y = itemLoc.y - .001F;
+        uv[j + 5].x = 0F;
+        uv[j + 5].y = 1.0F;
+
+        vertices[j + 6].x = (itemLoc.x + .02F);
+        vertices[j + 6].z = (itemLoc.z + .02F);
+        vertices[j + 6].y = itemLoc.y - .001F;
+        uv[j + 6].x = 1.0F;
+        uv[j + 6].y = 1.0F;
+
+        vertices[j + 7].x = (itemLoc.x + .02F);
+        vertices[j + 7].z = (itemLoc.z - .02F);
+        vertices[j + 7].y = itemLoc.y - .001F;
+        uv[j + 7].x = 1.0F;
+        uv[j + 7].y = 0F;
+        
+        triangles[j + 6] = 4;
+        triangles[j + 7] = 7;
+        triangles[j + 8] = 6;
+        triangles[j + 9] = 6;
+        triangles[j + 10] = 5;
+        triangles[j + 11] = 4;
 
         mesh.vertices = vertices;
         mesh.triangles = triangles;

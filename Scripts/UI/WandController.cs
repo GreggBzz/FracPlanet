@@ -41,6 +41,7 @@ public class WandController : SteamVR_TrackedController {
                 transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
                 transform.parent.position = new Vector3(0F, 0F, 0F);
                 radialMenu.whatIsSelected = "";
+                aScene.onWhichPlanet = "";
                 break;
             default:
                 if (!radialMenu.curMenuType.Contains(" - Child")) {
@@ -54,6 +55,10 @@ public class WandController : SteamVR_TrackedController {
         }
         // draw/update the planets?
         aScene.UpdatePlanets();
+
+        // are we on a planet? Pause roate if so, and unpause for all others.
+        aScene.PausePlanet();
+        
         // draw/update the radial menu.
         radialMenu.UpdateMenu(GetTouchpadAxis(), transform, controller.GetTouch(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad));
     }
@@ -83,24 +88,27 @@ public class WandController : SteamVR_TrackedController {
                 // There's no [CameraRig], we can't teleport, so return.
                 if (transform.parent == null)
                     return;
+                
                 // Perform a raycast starting from the controller's position and going 1000 meters
                 // out in the forward direction of the controller to see if we hit something to teleport to.
                 RaycastHit hit;
                 Vector3 startPos = transform.position;
-                if (Physics.Raycast(startPos, transform.forward, out hit, 10000.0f)) {
+                if (Physics.Raycast(startPos, transform.forward, out hit, 50000.0f)) {
                     transform.parent.position = hit.point;
                     // We're going to a planet, transform the angle so we're going around it.
                     if (hit.transform.gameObject.name.Contains("Planet")) {
                         Vector3 centerHitObject = hit.transform.gameObject.transform.position;
                         Vector3 outerHitObject = hit.point;
                         transform.parent.eulerAngles = Quaternion.FromToRotation(Vector3.up, outerHitObject - centerHitObject).eulerAngles;
+                        aScene.onWhichPlanet = hit.transform.gameObject.name;
                     }
                     else {
                         transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
                     }
                 }
-                if (Physics.Raycast(startPos, transform.forward, out hit, 10000.0f)) {
+                if (Physics.Raycast(startPos, transform.forward, out hit, 50000.0f)) {
                     transform.parent.position = hit.point;
+                    aScene.onWhichPlanet = hit.transform.gameObject.name;
                 }
                 break;
             case "Planet":

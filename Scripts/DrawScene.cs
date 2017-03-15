@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class DrawScene : MonoBehaviour {
     // Draw or destroy world objects, excluding controller menus.
@@ -14,6 +12,7 @@ public class DrawScene : MonoBehaviour {
     public GameObject pointerLine;
     private Color baseColor;
     private Color hitColor;
+    public string onWhichPlanet = "";
 
 
     // use the planetmanager to draw and update planet related stuff.
@@ -49,7 +48,6 @@ public class DrawScene : MonoBehaviour {
     }
     public void UpdatePointerLine() {
         // Update our LineRenderer
-        Vector2 touchAxis = wand.controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad);
         if (pointerLineRenderer && pointerLineRenderer.enabled) {
             RaycastHit hit;
             Vector3 startPos = wand.transform.position;
@@ -74,7 +72,13 @@ public class DrawScene : MonoBehaviour {
 
     public void AddPlanet() {
         planetManager.AddPlanet(wand.transform, planetManager.distScale, planetManager.
-                                planetCircumference, true);
+                                planetCircumference);
+    }
+
+    public void PausePlanet() {
+        // "pause" this planet if we've teleported to it.
+        // "unpause" all the other planets.
+        planetManager.PausePlanet(onWhichPlanet);
     }
 
     public void DestroyPlanets() {
@@ -98,7 +102,7 @@ public class DrawScene : MonoBehaviour {
         switch (switch_string) 
         {
             case "Out":
-                if (planetManager.distScale > 6000F) planetManager.distScale = 6000F;
+                if (planetManager.distScale > 7000F) planetManager.distScale = 7000F;
                     else planetManager.distScale += 1F;
                 break;
             case "In":
@@ -106,12 +110,12 @@ public class DrawScene : MonoBehaviour {
                     else planetManager.distScale -= 1F;
                 break;
             case "Grow":
-                if (planetManager.planetCircumference > 1000F) planetManager.planetCircumference = 1000F;
-                    else planetManager.planetCircumference += .3F;
+                if (planetManager.planetCircumference > 4000F) planetManager.planetCircumference = 4000F;
+                    else planetManager.planetCircumference += 1F;
                 break;
             case "Shrink":
-                if (planetManager.planetCircumference < 10F) planetManager.planetCircumference = 10F;
-                    else planetManager.planetCircumference -= .3F;
+                if (planetManager.planetCircumference < 100F) planetManager.planetCircumference = 100F;
+                    else planetManager.planetCircumference -= 1F;
                 break;
             default:
                 break;

@@ -1,14 +1,9 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 public class PlanetTexture : MonoBehaviour {
-
-    // fake waves.    
-    private bool[] waveDirection;
-    private float[] waveSize;
-    public bool skipframe = false;
-    public float tideStrength = 0.0F;
+    // texture manager class. Methods to texture terrain, ocean, atmosphere (and clouds with a helper class).
+    private PlanetCloud cloudTextureManager;
 
     private struct adjacent {
         public int vert;
@@ -17,44 +12,34 @@ public class PlanetTexture : MonoBehaviour {
 
     private adjacent[,] adjacents;
     private Vector2[] uv;
+    public float maxElev = 0F;
 
-    // A simple, per verticie method.
-    public Vector2[] TextureTerra(int vertCount, int parentVertCount, Vector3[] vertices, float radius, int[] triangles) {
-        adjacents = new adjacent[vertCount, 6];
-        uv = new Vector2[vertCount];
-        float[] vertLength = new float[vertCount];
-        float maxElev = 0F;
-        float minElev = radius * 10;
-
-        for (int i = 0; i <= vertCount - 1; i++) {
-            uv[i].x = -10F;
-            uv[i].y = -10F;
+    private bool[] checkAdjacents(int vert) {
+        // checks neighboring verts, returns an array of booleans to let us know which are nearby.
+        bool[] matches = new bool[4];
+        for (int i = 0; i <= 5; i++) {
+            if (adjacents[vert, i].vert == -99) {
+                return matches;
+            }
+            if ((uv[adjacents[vert, i].vert].x + uv[adjacents[vert, i].vert].y) == 0F) {
+                matches[0] = true; continue;
+            }
+            if ((uv[adjacents[vert, i].vert].x == 1F) && (uv[adjacents[vert, i].vert].y == 0F)) {
+                matches[1] = true; continue;
+            }
+            if ((uv[adjacents[vert, i].vert].x == 0F) && (uv[adjacents[vert, i].vert].y == 1F)) {
+                matches[2] = true; continue;
+            }
+            if ((uv[adjacents[vert, i].vert].x + uv[adjacents[vert, i].vert].y) == 2F) {
+                matches[3] = true; continue;
+            }
         }
-
-        // find the maximum and minimum elevations.
-        for (int i = 0; i <= vertices.Length - 1; i++) {
-            vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
-                                             (vertices[i].y * vertices[i].y) +
-                                             (vertices[i].z * vertices[i].z));
-            if (vertLength[i] <= minElev) { minElev = vertLength[i]; }
-            if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
-        }
-
-        // assign all centers to the far right of the texture map.
-        // for more horizontal texture resolution.
-        for (int i = 0; i <= parentVertCount - 1; i++) {
-            float uvyCenter = (vertLength[i] - minElev) / (maxElev - minElev);
-            uv[i].x = 1F; uv[i].y = uvyCenter;
-        }
-        // assign all adjacent verts to the far left of the texture map.
-        for (int i = parentVertCount; i <= vertCount - 1; i++) {
-            float uvyCenter = (vertLength[i] - minElev) / (maxElev - minElev);
-            uv[i].x = 0F; uv[i].y = uvyCenter;
-        }
-        return uv;
+        return matches;
     }
 
     private void findAdjacents(int[] tris, int vertCount) {
+        // find a verts six or sometimes five neighbors.
+        // stuff those into our 2d refrence array.
         for (int i = 0; i <= vertCount - 1; i++) {
             for (int i2 = 0; i2 <= 5; i2++) {
                 adjacents[i, i2].vert = -99;
@@ -86,162 +71,130 @@ public class PlanetTexture : MonoBehaviour {
         adjacents[vert1, 0].count = count;
     }
 
-    private int[] markVertsToSkip(adjacent adjacnest) {
-        int[] skipme = new int[60];
-        for (int i = 0; i <= 59; i++) {
-
+    private Vector2 assignAdjacent(bool[] checkedMatches, int permutation) {
+        // Assign a vert that doesn't match our neighbors. 
+        // Options for the permutation and order of assignment, when there's more than once choice.
+        Vector2[] returnVectors = new Vector2[4];
+        returnVectors[0] = new Vector2(0F, 0F);
+        returnVectors[1] = new Vector2(1F, 0F);
+        returnVectors[2] = new Vector2(0F, 1F);
+        returnVectors[3] = new Vector2(1F, 1F);
+        int curPermutation = 0;
+        for (int i = 0; i <= 3; i++) {
+            for (int j = 0; j <= 3; j++) {
+                if (j == i) continue;
+                for (int k = 0; k <= 3; k++) {
+                    if ((k == j) || (k == i)) continue;
+                    for (int l = 0; l <= 3; l++) {
+                        if ((l == i) || (l == j) || (l == k)) continue;
+                        if (curPermutation == permutation) {
+                            if (!checkedMatches[i]) { return returnVectors[i]; }
+                            if (!checkedMatches[j]) { return returnVectors[j]; }
+                            if (!checkedMatches[k]) { return returnVectors[k]; }
+                            if (!checkedMatches[l]) { return returnVectors[l]; }
+                        }
+                        curPermutation += 1;
+                    }
+                }
+            }
         }
-        return skipme;
+        return new Vector2(.5F, .5F);
     }
 
-
-    public Vector2[] TextureOcean(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles) {
-        // A texturing method that does it's best to seamlessly texture tile our irregular polyhedra without
-        // using square tiles, not pentagon/hexagon tiles. This was hard but I get about 98% correct with 4 UV points.
-        adjacents = new adjacent[vertCount, 6];
+    public Vector2[] TextureClouds(int vertCount, Vector3[] vertices) {
+        cloudTextureManager = gameObject.AddComponent<PlanetCloud>();
         uv = new Vector2[vertCount];
-        // 
         for (int i = 0; i <= vertCount - 1; i++) {
-            uv[i].x = -10F;
-            uv[i].y = -10F;
-        }
-        // find each vertices' 6, or sometimes 5 neighbors.
-        findAdjacents(triangles, vertCount);
-        // Not texturing. Setup random sine-ish waves for the ocean affects.
-        InitializeWaves(vertCount);
-
-        bool[] checkedMatches = new bool[3];
-        int tmpVert;
-        int adjVert;
-        int centVert;
-        int doneVerts = 0;
-
-        centVert = 0;
-        for (int i = 0; i <= parentVertCount - 1; i++) {
-            uv[i].x = 0F; uv[i].y = 0F;
-            doneVerts += 1;
-        }
-        do {
-            for (int i2 = 0; i2 <= 5; i2++) {
-                // break if adjvert was a child of the pentagons club.
-                adjVert = adjacents[centVert, i2].vert;
-                if (adjVert == -99) continue;
-                // skip if we've already done this vert.
-                if (uv[adjVert].x != -10) continue;
-                checkedMatches = checkAdjacents(adjVert);
-                uv[adjVert] = assignAdjacent(checkedMatches);
-                doneVerts += 1;
-            }
-            // pick a new center.
-            do {
-                tmpVert = adjacents[centVert, UnityEngine.Random.Range(0, 6)].vert;
-            } while (tmpVert == -99);
-            centVert = tmpVert;
-         } while (doneVerts <= 40960);
-        // attempt one more time to reassign any failed verts.
-        for (int i = 0; i <= vertCount - 1; i++) { 
-            if (uv[i] == new Vector2(.5F, .5F)) {
-                uv[i] = reassignFailedVert(i, adjacents);
-            }
+            uv[i] = cloudTextureManager.GetFlatTextureCorrs(vertices[i]);
         }
         return uv;
     }
 
-    private Vector2 reassignFailedVert(int vert, adjacent[,] adjacents) {
-        // Try assigning adjacent vertices again.
-        int adjVert;
+    public Vector2[] Texture(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles, float elevationRadius = 0) {
+        // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
+        // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
+        // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
+        adjacents = new adjacent[vertCount, 6];
+        uv = new Vector2[vertCount];
+
+        for (int i = 0; i <= vertCount - 1; i++) {
+            uv[i].x = -10F;
+            uv[i].y = -10F;
+        }
+        findAdjacents(triangles, vertCount);
+
+        int doneVerts = 0;
+
         bool[] checkedMatches = new bool[3];
-        // 'reverse' our adjacents.
-        for (int i = 0; i <= 5; i++) {
-            adjVert = adjacents[vert, i].vert;
-            if (adjVert == -99) { break; }
-            checkedMatches = checkAdjacents(adjVert);
-            uv[adjVert] = assignAdjacent(checkedMatches, true);
+
+        int vi = 0;
+        int[] vertList = new int[vertCount];
+        int[] tmpVertList = new int[vertCount];
+        for (int i = 0; i <= vertCount - 1; i++) { vertList[i] = -1; }
+
+        vertList[0] = 0;
+        do {
+            do {
+                checkedMatches = checkAdjacents(vertList[vi]);
+                uv[vertList[vi]] = assignAdjacent(checkedMatches, UnityEngine.Random.Range(0, 12));
+                vi += 1;
+                doneVerts += 1;
+            } while (vertList[vi] != -1);
+            tmpVertList = vertList;
+            vertList = updateVertList(vertCount, tmpVertList);
+            vi = 0;
+        } while (doneVerts <= vertCount - 1);
+
+        // Check if we're doing terrain, then calculate the minimum and maximum elevations.
+        // Assign the terrain UV based on a heigh diff. 
+        if (elevationRadius == 0F) { return uv; }
+
+        float[] vertLength = new float[vertCount];
+        float minElev = elevationRadius * 10;
+        for (int i = 0; i <= vertices.Length - 1; i++) {
+            vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
+                                             (vertices[i].y * vertices[i].y) +
+                                             (vertices[i].z * vertices[i].z));
+            if (vertLength[i] <= minElev) { minElev = vertLength[i]; }
+            if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
         }
-        // try the failed vert again.
-        checkedMatches = checkAdjacents(vert);
-        return assignAdjacent(checkedMatches);
+        for (int i = 0; i <= vertCount - 1; i++) {
+            float uvyCenter = (vertLength[i] - minElev) / (maxElev - minElev);
+            if (uv[i].y == 0) {
+                uv[i].y = uvyCenter - .003F;
+                continue;
+            }
+            if (uv[i].y == 1) {
+                uv[i].y = uvyCenter + .003F;
+                continue;
+            }
+            uv[i].y = uvyCenter;
+        }
+        return uv;
     }
 
-    private Vector2 assignAdjacent(bool[] checkedMatches, bool reverse = false) {
-        // Assign adjacent vertices to 1 of 4 UV texture points.
-        if (reverse) {
-            if (!checkedMatches[3]) { return new Vector2(1F, 1F); }
-            if (!checkedMatches[2]) { return new Vector2(0F, 1F); }
-            if (!checkedMatches[1]) { return new Vector2(1F, 0F); }
-            if (!checkedMatches[0]) { return new Vector2(0F, 0F); }
-            return new Vector2(UnityEngine.Random.Range(0F, 1F), UnityEngine.Random.Range(0F, 1F));
-        }
-        if (!checkedMatches[0]) { return new Vector2(0F,0F); }
-        if (!checkedMatches[1]) { return new Vector2(1F,0F); }
-        if (!checkedMatches[2]) { return new Vector2(0F,1F); }
-        if (!checkedMatches[3]) { return new Vector2(1F,1F); }
-        return new Vector2(UnityEngine.Random.Range(0F, 1F), UnityEngine.Random.Range(0F, 1F));
-   } 
-
-    private bool[] checkAdjacents(int vert) {
-        bool[] matches = new bool[4];
-        for (int i = 0; i <= 5; i++) {
-            if (adjacents[vert, i].vert == -99) {
-                return matches;
-            }
-            if ((uv[adjacents[vert, i].vert].x + uv[adjacents[vert, i].vert].y) == 0F) {  
-                matches[0] = true; continue;
-            }
-            if ((uv[adjacents[vert, i].vert].x == 1F) && (uv[adjacents[vert, i].vert].y == 0F)) {
-                matches[1] = true; continue;
-            }
-            if ((uv[adjacents[vert, i].vert].x == 0F) && (uv[adjacents[vert, i].vert].y == 1F)) {
-                matches[2] = true; continue;
-            }
-            if ((uv[adjacents[vert, i].vert].x + uv[adjacents[vert, i].vert].y) == 2F) {
-                matches[3] = true; continue;
+    private int[] updateVertList(int vertCount, int[] oldVertList) {
+        // Assign all verts that were adjacent to each vert in the old vertlist (and previously untextured).
+        // Avoid dupes. Will form a new outer ring of unassigned verts. Keep track of which index we are on.
+        // Use arrays because shuffling linked lists is slow and messy inside of a recursive algorithm. 
+        int[] newVertList = new int[vertCount];
+        for (int i = 0; i <= vertCount - 1; i++) { newVertList[i] = -1; }
+        int vertIndex = 0;
+        bool dupe = false;
+        for (int i = 0; i <= vertCount - 1; i++) {
+            if (oldVertList[i] == -1) { break; }
+            for (int i2 = 0; i2 <= 5; i2++) {
+                int adjVert = adjacents[oldVertList[i], i2].vert;
+                if (adjVert == -99) { continue; }
+                if (uv[adjVert].x == -10) {
+                    for (int i3 = 0; i3 <= vertIndex; i3++) {
+                        if (newVertList[i3] == adjVert) { dupe = true; }
+                    }
+                    if (!dupe) { newVertList[vertIndex] = adjVert; vertIndex += 1; }
+                    dupe = false;
+                }
             }
         }
-        return matches;
+        return newVertList;
     }
-
-    public Vector3[] MakeWaves(Vector3[] vertices, Vector3 center) {
-        // a simple wave function. Let's move this to a shader, later.
-        for (int i = 0; i <= vertices.Length - 1; i += 1) {
-            if (waveDirection[i]) {
-                vertices[i] = vertices[i] * (1.0F + (.00002F / (float)Math.Sqrt(Math.Abs(waveSize[i]))));
-                waveSize[i] += .4F;
-            }
-            else 
-            {
-                vertices[i] = vertices[i] / (1.0F + (.00002F / (float)Math.Sqrt(Math.Abs(waveSize[i]))));
-                waveSize[i] += -.4F;
-            }
-            if (Math.Abs(waveSize[i]) > 50F) waveDirection[i] = !waveDirection[i];
-        }
-        tideStrength += Time.deltaTime;
-        if (tideStrength > 7F) {
-            SetTide();
-            tideStrength = 0F;
-        }
-        return vertices;
-    }
-
-    private void SetTide() {
-        for (int i = 0; i <= waveDirection.Length - 1; i += 1) {
-            // invert one of ten vertices.
-            if (UnityEngine.Random.value > 0.2f) waveDirection[i] = !waveDirection[i];
-        }
-    }
-
-    private void InitializeWaves(int vertCount) {
-        waveDirection = new bool[vertCount];
-        waveSize = new float[vertCount];
-        for (int i = 0; i <= vertCount - 1; i += 1) {
-            waveDirection[i] = (UnityEngine.Random.value > 0.5f);
-            if (waveDirection[i]) {
-                waveSize[i] = (UnityEngine.Random.value * 30F) + .1F;
-            }
-            else {
-                waveSize[i] = -1F * ((UnityEngine.Random.value * 30F) + .1F);
-            }
-        }
-    }
-
 }

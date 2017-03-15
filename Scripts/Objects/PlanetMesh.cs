@@ -6,11 +6,16 @@ public class PlanetMesh : MonoBehaviour {
 
     public float circumference;
     public float pScale;
-    public bool ocean; // generate an ocean Mesh?
+    public bool rotate = true;
+    public float maxElev = 0F;
+    public string planetLayer; // terrain, ocean, atmosphere?
     public Mesh mesh;
     public Vector3 center = new Vector3(0, 0, 0);
+    public Vector3 worldUp;
 
     private PlanetTexture textureManager;
+    private PlanetOcean oceanManager;
+
     private int[] triangles;
     private int[] tempTriangles;
     private double radius;
@@ -24,7 +29,15 @@ public class PlanetMesh : MonoBehaviour {
     private const int vertCount = 40962;
     private const int tessRounds = 5;
 
-    private System.Random rnd = new System.Random();
+    // how bumpy is our planet?
+    private const float maxRoughness = .000025F; 
+    private const float minRoughness = .000015F;
+    private float roughness;
+
+    // setup the random seed and include a default.
+    public int seed = 100; // the random seed for our planet.
+    private System.Random rnd; 
+    
     // a refrence object for done midpoints.
     private struct doneMidpoint {
         public int adjVert;
@@ -33,11 +46,14 @@ public class PlanetMesh : MonoBehaviour {
 
     private Vector3[] vertices = new Vector3[vertCount];
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
-    private bool[] wave = new bool[vertCount];
-    private float totalTime = 0.0F;
 
     public void Generate() {
+        rnd = new System.Random(seed);
+        roughness = (float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness;
+
         textureManager = gameObject.AddComponent<PlanetTexture>();
+        oceanManager = gameObject.AddComponent<PlanetOcean>();
+
         MeshCollider planetCollider = gameObject.AddComponent<MeshCollider>();
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Procedural Geosphere";
@@ -94,33 +110,51 @@ public class PlanetMesh : MonoBehaviour {
             triangles = null;
             triangles = tempTriangles;
             tempTriangles = null;
-            //Debug.Log("Parent Verts: " + parentVerts);
-            //Debug.Log("NewVertIndex: " + newVertIndex);
         }
 
         // normalize to max radius, apply the texture with the manager and assign the vertices and triangles
         mesh.vertices = vertices;
 
-        if (ocean) mesh.uv = textureManager.TextureOcean(newVertIndex, parentVerts, vertices, triangles);
-        if (!ocean) mesh.uv = textureManager.TextureTerra(newVertIndex, parentVerts, vertices, (float)radius, triangles);
-
-        mesh.triangles = triangles;
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-        if (!ocean) {
-            planetCollider.sharedMesh = mesh;
+        switch (planetLayer) {
+            case "":
+                break;
+            case "ocean":
+                mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
+                oceanManager.InitializeWaves(newVertIndex);
+                mesh.triangles = triangles;
+                mesh.RecalculateBounds();
+                mesh.RecalculateNormals();
+                break;
+            case "atmosphere":
+                mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
+                mesh.triangles = triangles;
+                mesh.RecalculateBounds();
+                mesh.RecalculateNormals();
+                break;
+            case "cloud":
+                mesh.uv = textureManager.TextureClouds(newVertIndex, vertices);
+                mesh.triangles = triangles;
+                mesh.RecalculateBounds();
+                mesh.RecalculateNormals();
+                break;
+            case "terrain":
+                mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles, (float)radius);
+                mesh.triangles = triangles;
+                mesh.RecalculateBounds();
+                mesh.RecalculateNormals();
+                planetCollider.sharedMesh = mesh;
+                break;
+            default:
+                break;
         }
+
         // clean up.
-        vertices = null;
-        triangles = null;
-        tempTriangles = null;
-        doneMidpoints = null;
+        vertices = null; triangles = null; tempTriangles = null; doneMidpoints = null;
     }
 
     private int[] Tesselate(int[] curTriangles) {
         int[] newTriangles = new int[curTriangles.Length * 4];
         int newTriangleIndex = 0;
-
         // process a triangle for midpoints
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
             int[] newMidpoints = new int[3];
@@ -193,13 +227,13 @@ public class PlanetMesh : MonoBehaviour {
     }
 
     private Vector3 DisplaceMidpoint(Vector3 p1, float displaceMag) {
-        // randomly displace a midpoint.
-        if (ocean) return p1 * 1.0F;
+        // randomly displace a midpoint up or down 50/50.
+        if (planetLayer != "terrain") return p1 * 1.0F;
         if (rnd.NextDouble() < .5F) {
-            return p1 * (float)((displaceMag * .0001F) * rnd.NextDouble() + 1.0F);
+            return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
         }
         else {
-            return p1 * (1.0F - (float)((displaceMag * .0001F) * rnd.NextDouble()));
+            return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
         }
     }
 
@@ -214,15 +248,16 @@ public class PlanetMesh : MonoBehaviour {
     private Vector3 CreateMidpoint(Vector3 p1, Vector3 p2) {
         // create a midpoint.
         float rApprox;
-        if (ocean) {
+        if (planetLayer != "terrain") {
             rApprox = (float)radius;
         } 
         else {
-            float rApprox1 = (float)Math.Sqrt((p1.x * p1.x) + (p1.y * p1.y) + (p1.z * p1.z));
-            float rApprox2 = (float)Math.Sqrt((p2.x * p2.x) + (p2.y * p2.y) + (p2.z * p2.z));
-            rApprox = ((rApprox1 + rApprox2) / 2.0F);
+           float rApprox1 = (float)Math.Sqrt((p1.x * p1.x) + (p1.y * p1.y) + (p1.z * p1.z));
+           float rApprox2 = (float)Math.Sqrt((p2.x * p2.x) + (p2.y * p2.y) + (p2.z * p2.z));
+           rApprox = ((rApprox1 + rApprox2) / 2.0F);
         }
         Vector3 aMidpoint = new Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+        //rApprox = (float)Math.Sqrt((aMidpoint.x * aMidpoint.x) + (aMidpoint.y * aMidpoint.y) + (aMidpoint.z * aMidpoint.z));
         return ExtendMidpoint(aMidpoint, rApprox);
     }
     
@@ -252,17 +287,31 @@ public class PlanetMesh : MonoBehaviour {
             }
         }
     }
+
+    public float GetMaxElevation() {
+        return textureManager.maxElev;
+    }
+
     void Update() {
-        float tideDirection = new float();
         // make waves every other frame.
-        if (ocean && textureManager.skipframe) {
-                vertices = mesh.vertices;
-                mesh.vertices = textureManager.MakeWaves(vertices, center);
-                mesh.RecalculateNormals();
+        if (planetLayer == "ocean" && oceanManager.skipframe) {
+            vertices = mesh.vertices;
+            mesh.vertices = oceanManager.MakeWaves(vertices, center);
+            mesh.RecalculateNormals();
         }
-        if (ocean)
-            if (textureManager.tideStrength - (int)(textureManager.tideStrength) > .5F ) { tideDirection = 1F; } else { tideDirection = -.1F; }
-            transform.Rotate(Vector3.up, tideDirection / textureManager.tideStrength * Time.deltaTime );
-        textureManager.skipframe = !textureManager.skipframe;
+        oceanManager.skipframe = !oceanManager.skipframe;
+
+        if (planetLayer == "ocean") {
+            transform.Rotate(Vector3.up, (Time.deltaTime / 15) * (oceanManager.tideStrength - 1.5F));
+        }
+        // if we teleport, stop rotating.
+        if (rotate){
+            if (planetLayer == "cloud") {
+                transform.Rotate(worldUp, Time.deltaTime * .45F);
+            }
+            else {
+                transform.Rotate(worldUp, Time.deltaTime * 1F);
+            }
+        }
     }
 }
