@@ -11,10 +11,10 @@ public class PlanetMesh : MonoBehaviour {
     public string planetLayer; // terrain, ocean, atmosphere?
     public Mesh mesh;
     public Vector3 center = new Vector3(0, 0, 0);
-    public Vector3 worldUp;
 
     private PlanetTexture textureManager;
     private PlanetOcean oceanManager;
+    private PlanetCloud cloudManager;
 
     private int[] triangles;
     private int[] tempTriangles;
@@ -53,6 +53,7 @@ public class PlanetMesh : MonoBehaviour {
 
         textureManager = gameObject.AddComponent<PlanetTexture>();
         oceanManager = gameObject.AddComponent<PlanetOcean>();
+        cloudManager = gameObject.AddComponent<PlanetCloud>();
 
         MeshCollider planetCollider = gameObject.AddComponent<MeshCollider>();
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
@@ -112,7 +113,6 @@ public class PlanetMesh : MonoBehaviour {
             tempTriangles = null;
         }
 
-        // normalize to max radius, apply the texture with the manager and assign the vertices and triangles
         mesh.vertices = vertices;
 
         switch (planetLayer) {
@@ -132,8 +132,11 @@ public class PlanetMesh : MonoBehaviour {
                 mesh.RecalculateNormals();
                 break;
             case "cloud":
-                mesh.uv = textureManager.TextureClouds(newVertIndex, vertices);
-                mesh.triangles = triangles;
+                // we need to modify the cloud mesh a bit to avoid the texture seam problem.
+                mesh.vertices = cloudManager.TextureCloudMesh(vertices, triangles);
+                mesh.uv = cloudManager.newUv;
+                mesh.triangles = cloudManager.newTriangles;
+                cloudManager.newTriangles = null; cloudManager.newUv = null;
                 mesh.RecalculateBounds();
                 mesh.RecalculateNormals();
                 break;
@@ -307,10 +310,10 @@ public class PlanetMesh : MonoBehaviour {
         // if we teleport, stop rotating.
         if (rotate){
             if (planetLayer == "cloud") {
-                transform.Rotate(worldUp, Time.deltaTime * .45F);
+                transform.Rotate(Vector3.up, Time.deltaTime * .45F);
             }
             else {
-                transform.Rotate(worldUp, Time.deltaTime * 1F);
+                transform.Rotate(Vector3.up, Time.deltaTime * 1F);
             }
         }
     }

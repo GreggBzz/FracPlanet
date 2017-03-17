@@ -114,7 +114,6 @@ public class PlanetManager : MonoBehaviour {
         terrains[terrainMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
         terrains[terrainMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
         terrains[terrainMeshCount].center = terrains[terrainMeshCount].transform.position;
-        terrains[terrainMeshCount].worldUp = Vector3.up;
         terrainMeshCount += 1;
     }
 
@@ -133,7 +132,6 @@ public class PlanetManager : MonoBehaviour {
         oceans[oceanMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
         oceans[oceanMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
         oceans[oceanMeshCount].center = oceans[oceanMeshCount].transform.position;
-        oceans[oceanMeshCount].worldUp = Vector3.up;
         oceanMeshCount += 1;
     }
 
@@ -173,7 +171,6 @@ public class PlanetManager : MonoBehaviour {
         clouds[cloudMeshCount].Generate();
         clouds[cloudMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
         clouds[cloudMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        clouds[cloudMeshCount].worldUp = Vector3.up;
         cloudMeshCount += 1;
     }
 

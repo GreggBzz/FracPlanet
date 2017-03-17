@@ -101,15 +101,6 @@ public class PlanetTexture : MonoBehaviour {
         return new Vector2(.5F, .5F);
     }
 
-    public Vector2[] TextureClouds(int vertCount, Vector3[] vertices) {
-        cloudTextureManager = gameObject.AddComponent<PlanetCloud>();
-        uv = new Vector2[vertCount];
-        for (int i = 0; i <= vertCount - 1; i++) {
-            uv[i] = cloudTextureManager.GetFlatTextureCorrs(vertices[i]);
-        }
-        return uv;
-    }
-
     public Vector2[] Texture(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles, float elevationRadius = 0) {
         // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
@@ -170,6 +161,7 @@ public class PlanetTexture : MonoBehaviour {
             }
             uv[i].y = uvyCenter;
         }
+        adjacents = null;
         return uv;
     }
 
