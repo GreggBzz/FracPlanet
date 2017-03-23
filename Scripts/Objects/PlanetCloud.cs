@@ -11,7 +11,7 @@ public class PlanetCloud : MonoBehaviour {
 
     public Vector3[] TextureCloudMesh(Vector3[] vertices, int[] triangles) {
         // We modify the cloud mesh a bit to avoid the closed polyhedral texture "seam" problem.
-        // - assign initial UV corrdiates which include the seam with sphercial trig.
+        // - assign initial UV corrdiates which include the seam with spherical trig.
         // - cycle through all the triangles.
         // - find which triangles contain verts that have wrap around UV corrdinates.
         // - duplicate those verts.

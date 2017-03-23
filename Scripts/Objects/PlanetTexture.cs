@@ -101,7 +101,7 @@ public class PlanetTexture : MonoBehaviour {
         return new Vector2(.5F, .5F);
     }
 
-    public Vector2[] Texture(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles, float elevationRadius = 0) {
+    public Vector2[] Texture(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles) {
         // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
         // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
@@ -136,12 +136,16 @@ public class PlanetTexture : MonoBehaviour {
             vi = 0;
         } while (doneVerts <= vertCount - 1);
 
-        // Check if we're doing terrain, then calculate the minimum and maximum elevations.
-        // Assign the terrain UV based on a heigh diff. 
-        if (elevationRadius == 0F) { return uv; }
-
+        return uv;
+    }
+    
+    public Vector2[] AssignSplatElev(int vertCount, int parentVertCount, Vector3[] vertices) {
+        // for use in the terrain shader, we'll return each vert's uv4 as either as a point along an 
+        // RGB fade on the y axis or a point along an RGB fade on the X axis. 
+        // In the shader we can then fade up to 6 textures. 
+        Vector2[] uv4 = new Vector2[vertCount];
         float[] vertLength = new float[vertCount];
-        float minElev = elevationRadius * 10;
+        float minElev = 650000;
         for (int i = 0; i <= vertices.Length - 1; i++) {
             vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
                                              (vertices[i].y * vertices[i].y) +
@@ -150,20 +154,17 @@ public class PlanetTexture : MonoBehaviour {
             if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
         }
         for (int i = 0; i <= vertCount - 1; i++) {
-            float uvyCenter = (vertLength[i] - minElev) / (maxElev - minElev);
-            if (uv[i].y == 0) {
-                uv[i].y = uvyCenter - .003F;
-                continue;
+            float normalizedElev = (vertLength[i] - minElev) / (maxElev - minElev);
+            uv4[i].y = normalizedElev;
+            if (normalizedElev > .65F) {
+                uv4[i].x = 1F;
             }
-            if (uv[i].y == 1) {
-                uv[i].y = uvyCenter + .003F;
-                continue;
+            else {
+                uv4[i].x = 0F;
             }
-            uv[i].y = uvyCenter;
         }
-        adjacents = null;
-        return uv;
-    }
+        return uv4;
+    }  
 
     private int[] updateVertList(int vertCount, int[] oldVertList) {
         // Assign all verts that were adjacent to each vert in the old vertlist (and previously untextured).

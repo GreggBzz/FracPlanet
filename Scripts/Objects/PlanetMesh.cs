@@ -127,6 +127,7 @@ public class PlanetMesh : MonoBehaviour {
                 break;
             case "atmosphere":
                 mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
+
                 mesh.triangles = triangles;
                 mesh.RecalculateBounds();
                 mesh.RecalculateNormals();
@@ -141,7 +142,8 @@ public class PlanetMesh : MonoBehaviour {
                 mesh.RecalculateNormals();
                 break;
             case "terrain":
-                mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles, (float)radius);
+                mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
+                mesh.uv4 = textureManager.AssignSplatElev(newVertIndex, parentVerts, vertices);
                 mesh.triangles = triangles;
                 mesh.RecalculateBounds();
                 mesh.RecalculateNormals();

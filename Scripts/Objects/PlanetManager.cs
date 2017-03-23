@@ -57,16 +57,25 @@ public class PlanetManager : MonoBehaviour {
         // "pause" a planet we've teleported to.
         // "unpause" all the other planets.
         for (int i = 0; i <= terrainMeshCount - 1; i++) {
-                if ((terrain[i] != null) && (terrain[i].name == planetName)) {
-                    terrains[i].rotate = false;
-                    if (oceans[i] != null) { oceans[i].rotate = false; }
+            if ((terrain[i] != null) && (terrain[i].name == planetName)) {
+                terrains[i].rotate = false;
+                if (oceans[i] != null) { oceans[i].rotate = false; }
+                // if we're on the planet, change the cloud shader so it looks right.
+                if (clouds[i] != null) {
+                    Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, true);
+                    cloud[i].GetComponent<Renderer>().material = cloudMaterial;
                 }
-                else {
-                    if (terrain[i] != null) { terrains[i].rotate = true; }
-                    if (oceans[i] != null) { oceans[i].rotate = true; }
+            }
+            else {
+                if (terrain[i] != null) { terrains[i].rotate = true; }
+                if (oceans[i] != null) { oceans[i].rotate = true; }
+                if (clouds[i] != null) {
+                    Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, false);
+                    cloud[i].GetComponent<Renderer>().material = cloudMaterial;
                 }
             }
         }
+    }
 
     public void DestroyPlanetOutline() {
         Destroy(planetOutline);
@@ -87,20 +96,18 @@ public class PlanetManager : MonoBehaviour {
             hasAtmosphere = (rnd.NextDouble() < .7F);
             if (hasAtmosphere) { hasClouds = (rnd.NextDouble() < .7F); }
         }
-
         // no chace for atmosphere and clouds, no ocean.
         if (curPlanetType.Contains("Rock")) { hasAtmosphere = false; hasOcean = false; hasClouds = false; }
 
-        AddTerrain(controllerTransform, distScale, planetScale);
         // setup the planet.
+        AddTerrain(controllerTransform, distScale, planetScale);
         if (hasOcean) AddOcean(controllerTransform, distScale, planetScale);
         if (hasAtmosphere) AddAtmosphere(controllerTransform, distScale);
         if (hasClouds) AddClouds(controllerTransform, distScale);
-
     }
 
     private void AddTerrain(Transform controllerTransform, float distScale, float planetScale) {
-        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType);
+        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
         terrain[terrainMeshCount] = new GameObject("aPlanet[" + terrainMeshCount + "]");
         terrain[terrainMeshCount].AddComponent<MeshFilter>();
         terrain[terrainMeshCount].AddComponent<MeshRenderer>();
@@ -118,7 +125,7 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddOcean(Transform controllerTransform, float distScale, float planetScale) {
-        Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType);
+        Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
         ocean[oceanMeshCount] = new GameObject("aPlanetOcean[" + oceanMeshCount + "]");
         ocean[oceanMeshCount].AddComponent<MeshFilter>();
         ocean[oceanMeshCount].AddComponent<MeshRenderer>();
@@ -136,7 +143,7 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddAtmosphere(Transform controllerTransform, float distScale) {
-        Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType);
+        Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType, curPlanetSeed);
         atmosphere[atmosphereMeshCount] = new GameObject("aPlanetAtmosphere[" + atmosphereMeshCount + "]");
         atmosphere[atmosphereMeshCount].AddComponent<MeshFilter>();
         atmosphere[atmosphereMeshCount].AddComponent<MeshRenderer>();
