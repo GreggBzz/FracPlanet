@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class WandController : SteamVR_TrackedController {
 
@@ -9,6 +8,7 @@ public class WandController : SteamVR_TrackedController {
     public Vector3 menuPos;
     public RadialMenuManager radialMenu;
     private DrawScene aScene;
+
   
     protected override void Start() {
         base.Start();
@@ -19,6 +19,7 @@ public class WandController : SteamVR_TrackedController {
     protected override void Update() {
         base.Update();
         // high level, we're either teleporting, making a planet or nothing.
+        // if we're rendering a planet, limit the user options.
         string switch_string = radialMenu.whatIsSelected;
         if (radialMenu.whatIsSelected.Contains("Planet")) switch_string = "Planet";
         switch (switch_string)
@@ -29,7 +30,6 @@ public class WandController : SteamVR_TrackedController {
             case "Planet":
                 aScene.SetPlanetType(radialMenu.whatIsSelected);
                 radialMenu.SwitchToChild();
-                aScene.AddPointerLine(Color.red, Color.magenta);
                 aScene.AddPlanetOutline();
                 break;
             case "Delete":
@@ -38,15 +38,16 @@ public class WandController : SteamVR_TrackedController {
                 radialMenu.whatIsSelected = "";
                 break;
             case "Home":
-                transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
-                transform.parent.position = new Vector3(0F, 0F, 0F);
+                aScene.Teleport(true);
                 radialMenu.whatIsSelected = "";
                 aScene.onWhichPlanet = "";
                 aScene.PausePlanet();
                 break;
             default:
-                if (!radialMenu.curMenuType.Contains(" - Child")) {
-                    aScene.DestroyPointerLine();
+                if (radialMenu.curMenuType != null) {
+                    if (!radialMenu.curMenuType.Contains(" - Child")) {
+                        aScene.DestroyPointerLine();
+                    }
                 }
                 break;
         }
@@ -56,6 +57,9 @@ public class WandController : SteamVR_TrackedController {
         }
         // draw/update the planets?
         aScene.UpdatePlanets();
+
+        // Have we just teleported? Delay the transform until we fade out. Fade in once it's done.
+        aScene.TeleportFade();
        
         // draw/update the radial menu.
         radialMenu.UpdateMenu(GetTouchpadAxis(), transform, controller.GetTouch(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad));
@@ -82,34 +86,16 @@ public class WandController : SteamVR_TrackedController {
             case "":
                 break;
             case "Teleport":
-                // Do teleport stuff.
                 // There's no CameraRig, we can't teleport, so return.
                 if (transform.parent == null)
                     return;
-                // Perform a raycast starting from the controller's position and going 50000.0f meters
-                // forward from the controller to see if we hit something to teleport to.
-                RaycastHit hit;
-                Vector3 startPos = transform.position;
-                if (Physics.Raycast(startPos, transform.forward, out hit, 50000.0f)) {
-                    aScene.onWhichPlanet = hit.transform.gameObject.name;
-                    transform.parent.position = hit.point;
-                    // We're going to a planet, transform the angle so we're going around it.
-                    if (hit.transform.gameObject.name.Contains("Planet")) {
-                        Vector3 centerHitObject = hit.transform.gameObject.transform.position;
-                        Vector3 outerHitObject = hit.point;
-                        transform.parent.eulerAngles = Quaternion.FromToRotation(Vector3.up, outerHitObject - centerHitObject).eulerAngles;
-                    }
-                    else {
-                        transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
-                    }
-                }
-                if (Physics.Raycast(startPos, transform.forward, out hit, 50000.0f)) {
-                    transform.parent.position = hit.point;
-                }
+                aScene.Teleport();
                 break;
             case "Planet":
                 aScene.AddPlanet();
                 System.GC.Collect();
+                aScene.DestroyPlanetOutline();
+                radialMenu.Cycle("Destroy Menu");
                 break;
             default:
                 aScene.DestroyPointerLine();
@@ -123,7 +109,13 @@ public class WandController : SteamVR_TrackedController {
         base.OnMenuClicked(e);
         aScene.DestroyPlanetOutline();
         aScene.DestroyPointerLine();
-        radialMenu.Cycle();
+        // if we're rendering a planet, don't let the user do anything besides destroy/teleport.
+        if (aScene.havePlanet) {
+            radialMenu.Cycle("Destroy Menu");
+        }
+        else {
+            radialMenu.Cycle();
+        }
     }
     public override void OnMenuUnclicked(ClickedEventArgs e) {
         base.OnMenuUnclicked(e);

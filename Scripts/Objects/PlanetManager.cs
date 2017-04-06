@@ -1,198 +1,201 @@
 ﻿using UnityEngine;
 
 public class PlanetManager : MonoBehaviour {
-    private PlanetMesh[] terrains = new PlanetMesh[10];
-    private PlanetMesh[] oceans = new PlanetMesh[10];
-    private PlanetMesh[] atmospheres = new PlanetMesh[10];
-    private PlanetMesh[] clouds = new PlanetMesh[10];
+    private PlanetMesh terrainMesh;
+    private PlanetMesh oceanMesh;
+    private PlanetMesh atmosphereMesh;
+    private PlanetMesh cloudMesh;
 
-    private int terrainMeshCount = 0;
-    private int oceanMeshCount = 0;
-    private int atmosphereMeshCount = 0;
-    private int cloudMeshCount = 0;
+    private GameObject terrain;
+    private GameObject ocean;
+    public GameObject atmosphere;
+    public GameObject cloud;
+    public bool hasOcean;
+    public bool hasAtmosphere;
+    public bool hasClouds;
 
-    private GameObject[] terrain = new GameObject[10];
-    private GameObject[] ocean = new GameObject[10];
-    public GameObject[] atmosphere = new GameObject[10];
-    public GameObject[] cloud = new GameObject[10]; 
-
-    public float distScale = 2000F;
-    public float planetCircumference = 2500F;
+    private const float distScale = 3500F; // distance of planet from 0,0,0
+    public float planetDiameter = 2500F;
     public string curPlanetType = "";
     private int curPlanetSeed = 100;
+    private Vector3 centerPos = new Vector3(0, 750, 0);
 
     public GameObject planetOutline; // public for user(wand) manipulated transforms.
     private PlanetMaterial materialManager; // Manage the planet layer materials with a class.
+    public PlanetMetaData planetMetaData; // The metadata for the planet, compounds, mass, weather etc.
 
     private System.Random rnd; // chance for current planet atmosphere, clouds?
 
     public void Start() {
         materialManager = gameObject.AddComponent<PlanetMaterial>();
+        planetMetaData = gameObject.AddComponent<PlanetMetaData>();
+        Material planetOutlineMaterial = materialManager.AssignMaterial("outline");
+        planetOutline = new GameObject("Planet Outline");
+        planetOutline = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        planetOutline.GetComponent<Renderer>().material = planetOutlineMaterial;
+        planetOutline.transform.localScale = new Vector3(planetDiameter, planetDiameter, planetDiameter);
+        planetOutline.GetComponent<Renderer>().enabled = false;
     }
 
-    public void DestroyPlanets() {
-        for (int i = 0; i <= terrainMeshCount; i++) {
-            Destroy(terrain[i]);
-            terrains[i] = null;
+    public void DestroyPlanet() {
+        if (terrainMesh != null) {
+            Destroy(terrain);
+            terrainMesh = null;
         }
-        terrainMeshCount = 0;
-        for (int i = 0; i <= oceanMeshCount; i++) {
-            Destroy(ocean[i]);
-            oceans[i] = null;
+        if (oceanMesh != null) {
+            Destroy(ocean);
+            oceanMesh = null;
         }
-        oceanMeshCount = 0;
-        for (int i = 0; i <= atmosphereMeshCount; i++) {
-            Destroy(atmosphere[i]);
-            atmospheres[i] = null;
+        if (atmosphereMesh != null) {
+            Destroy(atmosphere);
+            atmosphereMesh = null;
         }
-        atmosphereMeshCount = 0;
-        for (int i = 0; i <= cloudMeshCount; i++) {
-            Destroy(cloud[i]);
-            cloud[i] = null;
+        if (cloud != null) { 
+            Destroy(cloud);
+            cloud = null;
         }
-        cloudMeshCount = 0;
     }
 
     public void PausePlanet(string planetName) {
         // "pause" a planet we've teleported to.
         // "unpause" all the other planets.
-        for (int i = 0; i <= terrainMeshCount - 1; i++) {
-            if ((terrain[i] != null) && (terrain[i].name == planetName)) {
-                terrains[i].rotate = false;
-                if (oceans[i] != null) { oceans[i].rotate = false; }
-                // if we're on the planet, change the cloud shader so it looks right.
-                if (clouds[i] != null) {
-                    Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, true);
-                    cloud[i].GetComponent<Renderer>().material = cloudMaterial;
-                }
+        if ((terrain != null) && (terrain.name == planetName)) {
+            terrainMesh.rotate = false;
+            if (oceanMesh != null) { oceanMesh.rotate = false; }
+            // if we're on the planet, change the cloud shader so it looks right, change the terrain textures so they're detailed.
+            if (cloudMesh != null) {
+                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, true);
+                cloud.GetComponent<Renderer>().material = cloudMaterial;
             }
-            else {
-                if (terrain[i] != null) { terrains[i].rotate = true; }
-                if (oceans[i] != null) { oceans[i].rotate = true; }
-                if (clouds[i] != null) {
-                    Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, false);
-                    cloud[i].GetComponent<Renderer>().material = cloudMaterial;
-                }
+            if (oceanMesh != null) {
+                Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed, true);
+                oceanMesh.GetComponent<Renderer>().material = oceanMaterial;
+            }
+            Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
+            terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
+        }
+        else {
+            if (terrain != null) { terrainMesh.rotate = true; }
+            if (oceanMesh != null) { oceanMesh.rotate = true; }
+            // if we're not on a planet, change the terrain textures so they look blended and not tiled, change the clouds back.
+            if (cloudMesh != null) {
+                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, false);
+                cloud.GetComponent<Renderer>().material = cloudMaterial;
+            }
+            if (oceanMesh != null) {
+                Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed, false);
+                oceanMesh.GetComponent<Renderer>().material = oceanMaterial;
+            }
+            if (terrainMesh != null) {
+                Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, false);
+                terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             }
         }
     }
 
     public void DestroyPlanetOutline() {
-        Destroy(planetOutline);
+        planetOutline.GetComponent<Renderer>().enabled = false;
     }
 
-    public void AddPlanet(Transform controllerTransform, float distScale, float planetScale, bool hasOcean = false, 
-                          bool hasAtmosphere = false, bool hasClouds = false, int seed = 100) {
-        if (seed == 100) { seed = Random.Range(0, 20000); }
-        rnd = new System.Random(seed); curPlanetSeed = seed;
-
-        // always with atmosphere and clouds.
-        if (curPlanetType.Contains("Terra")) { hasAtmosphere = true;  hasOcean = true; hasClouds = true; }
-        // chance for atmosphere and clouds.
-        if (curPlanetType.Contains("Molten")) { hasAtmosphere = true; hasOcean = true; hasClouds = true; }
-        // chance for atmosphere and clouds.
-        if (curPlanetType.Contains("Icy")) {
-            hasOcean = (rnd.NextDouble() < .7F);
-            hasAtmosphere = (rnd.NextDouble() < .7F);
-            if (hasAtmosphere) { hasClouds = (rnd.NextDouble() < .7F); }
-        }
-        // no chace for atmosphere and clouds, no ocean.
-        if (curPlanetType.Contains("Rock")) { hasAtmosphere = false; hasOcean = false; hasClouds = false; }
-
+    public void AddPlanet() {
         // setup the planet.
-        AddTerrain(controllerTransform, distScale, planetScale);
-        if (hasOcean) AddOcean(controllerTransform, distScale, planetScale);
-        if (hasAtmosphere) AddAtmosphere(controllerTransform, distScale);
-        if (hasClouds) AddClouds(controllerTransform, distScale);
+        AddTerrain(distScale, planetDiameter);
+        if (hasOcean) AddOcean(distScale, planetDiameter);
+        if (hasAtmosphere) AddAtmosphere(distScale);
+        if (hasClouds) AddClouds(distScale);
     }
 
-    private void AddTerrain(Transform controllerTransform, float distScale, float planetScale) {
+    private void AddTerrain(float distScale, float planetScale) {
         Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
-        terrain[terrainMeshCount] = new GameObject("aPlanet[" + terrainMeshCount + "]");
-        terrain[terrainMeshCount].AddComponent<MeshFilter>();
-        terrain[terrainMeshCount].AddComponent<MeshRenderer>();
-        terrain[terrainMeshCount].AddComponent<PlanetMesh>();
-        terrain[terrainMeshCount].GetComponent<PlanetMesh>().circumference = planetCircumference;
-        terrain[terrainMeshCount].GetComponent<Renderer>().material = planetSurfaceMaterial;
-        terrains[terrainMeshCount] = terrain[terrainMeshCount].GetComponent<PlanetMesh>();
-        terrains[terrainMeshCount].planetLayer = "terrain";
-        terrains[terrainMeshCount].seed = curPlanetSeed;
-        terrains[terrainMeshCount].Generate();
-        terrains[terrainMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
-        terrains[terrainMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        terrains[terrainMeshCount].center = terrains[terrainMeshCount].transform.position;
-        terrainMeshCount += 1;
+        terrain = new GameObject("aPlanet");
+        terrain.AddComponent<MeshFilter>();
+        terrain.AddComponent<MeshRenderer>();
+        terrain.AddComponent<PlanetMesh>();
+        terrain.GetComponent<PlanetMesh>().diameter = planetDiameter;
+        terrain.GetComponent<Renderer>().material = planetSurfaceMaterial;
+        terrainMesh = terrain.GetComponent<PlanetMesh>();
+        terrainMesh.planetLayer = "terrain";
+        terrainMesh.seed = curPlanetSeed;
+        terrainMesh.Generate();
+        terrainMesh.transform.position = centerPos + Vector3.forward * distScale;
+        terrainMesh.center = terrainMesh.transform.position;
     }
 
-    private void AddOcean(Transform controllerTransform, float distScale, float planetScale) {
+    private void AddOcean(float distScale, float planetScale) {
         Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
-        ocean[oceanMeshCount] = new GameObject("aPlanetOcean[" + oceanMeshCount + "]");
-        ocean[oceanMeshCount].AddComponent<MeshFilter>();
-        ocean[oceanMeshCount].AddComponent<MeshRenderer>();
-        ocean[oceanMeshCount].AddComponent<PlanetMesh>();
-        ocean[oceanMeshCount].GetComponent<PlanetMesh>().circumference = planetCircumference;
-        ocean[oceanMeshCount].GetComponent<Renderer>().material = oceanMaterial;
-        oceans[oceanMeshCount] = ocean[oceanMeshCount].GetComponent<PlanetMesh>();
-        oceans[oceanMeshCount].planetLayer = "ocean";
-        oceans[oceanMeshCount].seed = curPlanetSeed;
-        oceans[oceanMeshCount].Generate();
-        oceans[oceanMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
-        oceans[oceanMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        oceans[oceanMeshCount].center = oceans[oceanMeshCount].transform.position;
-        oceanMeshCount += 1;
+        ocean = new GameObject("aPlanetOcean");
+        ocean.AddComponent<MeshFilter>();
+        ocean.AddComponent<MeshRenderer>();
+        ocean.AddComponent<PlanetMesh>();
+        ocean.GetComponent<PlanetMesh>().diameter = planetDiameter;
+        ocean.GetComponent<Renderer>().material = oceanMaterial;
+        oceanMesh = ocean.GetComponent<PlanetMesh>();
+        oceanMesh.planetLayer = "ocean";
+        oceanMesh.seed = curPlanetSeed;
+        oceanMesh.Generate();
+        oceanMesh.transform.position =  centerPos + Vector3.forward * distScale;
+        oceanMesh.center = oceanMesh.transform.position;
     }
 
-    private void AddAtmosphere(Transform controllerTransform, float distScale) {
+    private void AddAtmosphere(float distScale) {
         Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType, curPlanetSeed);
-        atmosphere[atmosphereMeshCount] = new GameObject("aPlanetAtmosphere[" + atmosphereMeshCount + "]");
-        atmosphere[atmosphereMeshCount].AddComponent<MeshFilter>();
-        atmosphere[atmosphereMeshCount].AddComponent<MeshRenderer>();
-        atmosphere[atmosphereMeshCount].AddComponent<PlanetMesh>();
+        atmosphere = new GameObject("aPlanetAtmosphere");
+        atmosphere.AddComponent<MeshFilter>();
+        atmosphere.AddComponent<MeshRenderer>();
+        atmosphere.AddComponent<PlanetMesh>();
         // scale the atmosphere to just above the highest mountain.
-        float atmosphereScale = terrains[atmosphereMeshCount].GetMaxElevation() * 2 / planetCircumference;
-        atmosphere[atmosphereMeshCount].GetComponent<PlanetMesh>().circumference = planetCircumference * atmosphereScale;
-        atmosphere[atmosphereMeshCount].GetComponent<Renderer>().material = atmosphereMaterial;
-        atmospheres[atmosphereMeshCount] = atmosphere[atmosphereMeshCount].GetComponent<PlanetMesh>();
-        atmospheres[atmosphereMeshCount].planetLayer = "atmosphere";
-        atmospheres[atmosphereMeshCount].seed = curPlanetSeed;
-        atmospheres[atmosphereMeshCount].Generate();
-        atmospheres[atmosphereMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
-        atmospheres[atmosphereMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        atmosphereMeshCount += 1;
+        float atmosphereScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
+        atmosphere.GetComponent<PlanetMesh>().diameter = planetDiameter * atmosphereScale;
+        atmosphere.GetComponent<Renderer>().material = atmosphereMaterial;
+        atmosphereMesh = atmosphere.GetComponent<PlanetMesh>();
+        atmosphereMesh.planetLayer = "atmosphere";
+        atmosphereMesh.seed = curPlanetSeed;
+        atmosphereMesh.Generate();
+        atmosphereMesh.transform.position = centerPos + Vector3.forward * distScale;
     }
 
-    public void AddClouds(Transform controllerTransform, float distScale) {
+    public void AddClouds(float distScale) {
         Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed);
-        cloud[cloudMeshCount] = new GameObject("aPlanetCloud[" + cloudMeshCount + "]");
-        cloud[cloudMeshCount].AddComponent<MeshFilter>();
-        cloud[cloudMeshCount].AddComponent<MeshRenderer>();
-        cloud[cloudMeshCount].AddComponent<PlanetMesh>();
+        cloud = new GameObject("aPlanetCloud");
+        cloud.AddComponent<MeshFilter>();
+        cloud.AddComponent<MeshRenderer>();
+        cloud.AddComponent<PlanetMesh>();
         // scale the clouds to just around the highest mountain.
-        float cloudScale = terrains[cloudMeshCount].GetMaxElevation() * 2 / planetCircumference;
+        float cloudScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
         cloudScale -= .01F;
-        cloud[cloudMeshCount].GetComponent<PlanetMesh>().circumference = planetCircumference * cloudScale;
-        cloud[cloudMeshCount].GetComponent<Renderer>().material = cloudMaterial;
-        clouds[cloudMeshCount] = cloud[cloudMeshCount].GetComponent<PlanetMesh>();
-        clouds[cloudMeshCount].planetLayer = "cloud";
-        clouds[cloudMeshCount].seed = curPlanetSeed;
-        clouds[cloudMeshCount].Generate();
-        clouds[cloudMeshCount].transform.position = controllerTransform.position + controllerTransform.forward * distScale;
-        clouds[cloudMeshCount].transform.eulerAngles = controllerTransform.eulerAngles;
-        cloudMeshCount += 1;
+        cloud.GetComponent<PlanetMesh>().diameter = planetDiameter * cloudScale;
+        cloud.GetComponent<Renderer>().material = cloudMaterial;
+        cloudMesh = cloud.GetComponent<PlanetMesh>();
+        cloudMesh.planetLayer = "cloud";
+        cloudMesh.seed = curPlanetSeed;
+        cloudMesh.Generate();
+        cloudMesh.transform.position = centerPos + Vector3.forward * distScale;
     }
 
     public void AddPlanetOutline() {
-        Material planetOutlineMaterial = materialManager.AssignMaterial("outline");
-        planetOutline = new GameObject("Planet Outline");
-        planetOutline = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        planetOutline.GetComponent<Renderer>().material = planetOutlineMaterial;
-        planetOutline.transform.localScale = new Vector3(planetCircumference, planetCircumference, planetCircumference);
+        planetOutline.GetComponent<Renderer>().enabled = true;
     }
 
-    public void UpdatePlanetOutline(Transform controllerTransform) {
+    public void UpdatePotentialPlanet(int seed) {
         if (planetOutline != null) {
-            planetOutline.transform.position = controllerTransform.position + controllerTransform.forward * distScale;
-            planetOutline.transform.localScale = new Vector3(planetCircumference, planetCircumference, planetCircumference);
+            // update the outline.
+            planetOutline.transform.position = centerPos + Vector3.forward * distScale;
+            planetOutline.transform.localScale = new Vector3(planetDiameter, planetDiameter, planetDiameter);
+            // setup planet metadata and base data.
+            rnd = new System.Random(seed); curPlanetSeed = seed;
+            // always with atmosphere and clouds.
+            if (curPlanetType.Contains("Terra")) { hasAtmosphere = true; hasOcean = true; hasClouds = true; }
+            // chance for atmosphere and clouds.
+            if (curPlanetType.Contains("Molten")) { hasAtmosphere = true; hasOcean = true; hasClouds = true; }
+            // chance for atmosphere and clouds.
+            if (curPlanetType.Contains("Icy")) {
+                hasOcean = (rnd.NextDouble() < .7F);
+                hasAtmosphere = (rnd.NextDouble() < .7F);
+                if (hasAtmosphere) { hasClouds = (rnd.NextDouble() < .7F); }
+            }
+            // no chace for atmosphere and clouds, no ocean.
+            if (curPlanetType.Contains("Rock")) { hasAtmosphere = false; hasOcean = false; hasClouds = false; }
+            planetMetaData.initialize(seed, planetDiameter, curPlanetType, hasAtmosphere, hasClouds, hasOcean);
         }
     }
 }

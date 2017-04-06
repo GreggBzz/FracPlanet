@@ -21,7 +21,7 @@
 		Tags{
 		"SplatCount" = "6"
 		"BumpCount" = "6"
-		"Queue" = "Geometry-100"
+		"Queue" = "Geometry-2000"
 		"RenderType" = "Opaque"
 	}
 		CGPROGRAM

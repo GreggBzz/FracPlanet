@@ -2,7 +2,7 @@
 
 public class DrawScene : MonoBehaviour {
     // Draw or destroy world objects, excluding controller menus.
-
+    
     // the WandController object for the right controller.
     private WandController wand;
 
@@ -13,17 +13,119 @@ public class DrawScene : MonoBehaviour {
     private Color baseColor;
     private Color hitColor;
     public string onWhichPlanet = "";
+    
+    // teleporting stuff.
+    private bool teleporting;
+    private bool teleportHome;
+    private Vector3 startPos;
+    private Vector3 outDir;
+    private RaycastHit hit;
+    private float teleDistance;
 
+    // screen fader.
+    private ScreenFader screenFade;
+    private DrawScene aScene;
 
-    // use the planetmanager to draw and update planet related stuff.
+    private float timer = 0;
+    private float timerMax = 0;
+    
+    // planet related stuff.
     private PlanetManager planetManager;
+    private ScanBox scanBox;
+    // 1000 queued up seeds for our planets.
+    private int[] seedQueue = new int[1500];
+    private int seedQueueIndex = 750;
+    public int planetSeed;
+    public bool havePlanet = false; // are we rendering a planet?
+    System.Random rnd;
 
     void Start () {
         planetManager = gameObject.AddComponent<PlanetManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
-	}
-	
-	void Update () {
+        screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
+        scanBox = gameObject.AddComponent<ScanBox>();
+        screenFade.fadeTime = .1F;
+        screenFade.enabled = true;
+        rnd = new System.Random();
+        // queue up 1000 random planet seeds.
+        for (int i = 0; i <= seedQueue.Length -1; i++ ) {
+            seedQueue[i] = rnd.Next(0, 32000);
+        }
+    }
+
+    private void Update() {
+        if (wand == null) { return;  }
+        if (onWhichPlanet.Contains("Planet")) {
+            scanBox.HideScanBox();
+            teleDistance = 800F;
+        }
+        if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
+            UpdateScanBox();
+            teleDistance = 4500F;
+        }
+        if ((!havePlanet) && (wand.radialMenu.curMenuType != ("Planet Menu - Child"))) {
+            HideScanBox();
+            teleDistance = 4500F;
+        }
+
+        if ((!havePlanet) && (wand.radialMenu.curMenuType == ("Planet Menu - Child"))) {
+            planetManager.UpdatePotentialPlanet(seedQueue[seedQueueIndex]);
+            UpdateScanBox(true);
+            teleDistance = 4500F;
+        }
+    }
+ 	
+    public void TeleportFade() {
+        // control the teleport fader, called every update from wandcontroller.
+        if (!teleporting) return;
+        screenFade.fadeIn = false; 
+        if (!Waited(.3F)) return;
+        DoTeleport(teleportHome);
+        screenFade.fadeIn = true;
+        teleporting = false;
+        teleportHome = false;
+        return;
+    }
+
+    public void Teleport(bool toHome = false) {
+        // kick off a teleport sequence, set teleporting to true.
+        teleporting = true;
+        if (toHome) { teleportHome = true;  return; }
+        startPos = wand.transform.position;
+        outDir = wand.transform.forward;
+    }
+
+    private void DoTeleport(bool toHome) {
+        if (toHome) {
+            wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
+            wand.transform.parent.position = new Vector3(0F, 0F, 0F);
+            return;
+        }
+        //RaycastHit hit;
+        if (Physics.Raycast(startPos, outDir, out hit, teleDistance)) {
+            onWhichPlanet = hit.transform.gameObject.name;
+            wand.transform.parent.position = hit.point;
+            // We're going to a planet, transform the angle so we're going around it.
+            if (hit.transform.gameObject.name.Contains("Planet")) {
+                Vector3 centerHitObject = hit.transform.gameObject.transform.position;
+                Vector3 outerHitObject = hit.point;
+                wand.transform.parent.eulerAngles = Quaternion.FromToRotation(Vector3.up, outerHitObject - centerHitObject).eulerAngles;
+            }
+            else {
+                wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
+            }
+        }
+        PausePlanet();
+    }
+
+    private bool Waited(float seconds) {
+        timerMax = seconds;
+        timer += Time.deltaTime;
+        if (timer >= timerMax) {
+            timer = 0; timerMax = 0;
+            return true;
+        }
+        return false;
     }
 
     public void DestroyPointerLine() {
@@ -46,21 +148,22 @@ public class DrawScene : MonoBehaviour {
         pointerLineRenderer.endWidth = 0.01f;
         pointerLineRenderer.numPositions = 2;
     }
+
     public void UpdatePointerLine() {
         // Update our LineRenderer
         if (pointerLineRenderer && pointerLineRenderer.enabled) {
             RaycastHit hit;
             Vector3 startPos = wand.transform.position;
             // If our raycast hits, end the line at that positon. Otherwise,
-            // just make our line point straight out for 200 meters.
-            // If the raycast hits, the line will be green, otherwise it'll be red.
-            if (Physics.Raycast(startPos, wand.transform.forward, out hit, 1000.0f)) {
+            // make our line point straight out for 5000 meters.
+            // If the raycast hits, the line will be green, if not, red.
+            if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
                 lineRendererVertices[1] = hit.point;
                 pointerLineRenderer.startColor = baseColor;
                 pointerLineRenderer.endColor = baseColor;
             }
             else {
-                lineRendererVertices[1] = startPos + wand.transform.forward * 1000.0f;
+                lineRendererVertices[1] = startPos + wand.transform.forward * teleDistance;
                 pointerLineRenderer.startColor = hitColor;
                 pointerLineRenderer.endColor = hitColor;
             }
@@ -71,8 +174,8 @@ public class DrawScene : MonoBehaviour {
     }
 
     public void AddPlanet() {
-        planetManager.AddPlanet(wand.transform, planetManager.distScale, planetManager.
-                                planetCircumference);
+        planetManager.AddPlanet();
+        havePlanet = true;
     }
 
     public void PausePlanet() {
@@ -82,7 +185,9 @@ public class DrawScene : MonoBehaviour {
     }
 
     public void DestroyPlanets() {
-        planetManager.DestroyPlanets();
+        planetManager.DestroyPlanet();
+        scanBox.HideScanBox();
+        havePlanet = false;
     }
 
     public void SetPlanetType(string planetType) {
@@ -97,31 +202,45 @@ public class DrawScene : MonoBehaviour {
         planetManager.DestroyPlanetOutline();
     }
 
+    public void UpdateScanBox(bool unknowns = false) {
+        string scanBoxText;
+        if (unknowns) {
+            scanBoxText = planetManager.planetMetaData.getData(true);
+        }
+        else {
+            scanBoxText = planetManager.planetMetaData.getData();
+        }
+        scanBox.DisplayScanBox(scanBoxText);
+    }
+
+    public void HideScanBox() {
+        scanBox.HideScanBox();
+    }
+
     public void UpdatePlanets() {
+        if (wand == null) { return; }
         string switch_string = wand.radialMenu.whatIsSelected;
-        switch (switch_string) 
-        {
-            case "Out":
-                if (planetManager.distScale > 7000F) planetManager.distScale = 7000F;
-                    else planetManager.distScale += 1F;
+        switch (switch_string) {
+            case "Next":
+                seedQueueIndex += 1;
+                if (seedQueueIndex > seedQueue.Length - 1) { seedQueueIndex = 0; }
+                planetSeed = seedQueue[seedQueueIndex];
+                Debug.Log(seedQueueIndex);
+                rnd = new System.Random(planetSeed);
+                planetManager.planetDiameter = rnd.Next(500, 5000);
+                wand.radialMenu.whatIsSelected = "";
                 break;
-            case "In":
-                if (planetManager.distScale < 100F) planetManager.distScale = 100F;
-                    else planetManager.distScale -= 1F;
-                break;
-            case "Grow":
-                if (planetManager.planetCircumference > 4000F) planetManager.planetCircumference = 4000F;
-                    else planetManager.planetCircumference += 1F;
-                break;
-            case "Shrink":
-                if (planetManager.planetCircumference < 100F) planetManager.planetCircumference = 100F;
-                    else planetManager.planetCircumference -= 1F;
+            case "Previous":
+                seedQueueIndex -= 1;
+                if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length -1; }
+                planetSeed = seedQueue[seedQueueIndex];
+                Debug.Log(seedQueueIndex);
+                rnd = new System.Random(planetSeed);
+                planetManager.planetDiameter = rnd.Next(500, 5000);
+                wand.radialMenu.whatIsSelected = "";
                 break;
             default:
                 break;
-        }
-        if (wand.radialMenu.curMenuType == ("Planet Menu - Child")) {
-            planetManager.UpdatePlanetOutline(wand.transform);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 

@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PlanetMesh : MonoBehaviour {
 
-    public float circumference;
-    public float pScale;
+    public float diameter;
+    private float pScale;
     public bool rotate = true;
     public float maxElev = 0F;
     public string planetLayer; // terrain, ocean, atmosphere?
@@ -49,7 +48,7 @@ public class PlanetMesh : MonoBehaviour {
 
     public void Generate() {
         rnd = new System.Random(seed);
-        roughness = (float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness;
+        roughness = ((float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness) / (diameter / 2500);
 
         textureManager = gameObject.AddComponent<PlanetTexture>();
         oceanManager = gameObject.AddComponent<PlanetOcean>();
@@ -59,9 +58,9 @@ public class PlanetMesh : MonoBehaviour {
         GetComponent<MeshFilter>().mesh = mesh = new Mesh();
         mesh.name = "Procedural Geosphere";
 
-        // We'll scale to our circumference. The original vertices are factored from constants based on a 
+        // We'll scale to our diameter. The original vertices are factored from constants based on a 
         // 50 unit radius.
-        pScale = 100.0F / circumference;
+        pScale = 100.0F / diameter;
 
         vertices[0].x = -26.2865543F / pScale; vertices[0].y = 0.0F / pScale; vertices[0].z = -42.53254F / pScale;
         vertices[1].x = 26.2865543F / pScale; vertices[1].y = 0.0F / pScale; vertices[1].z = -42.53254F / pScale;
@@ -77,7 +76,7 @@ public class PlanetMesh : MonoBehaviour {
         vertices[11].x = -42.53254F / pScale; vertices[11].y = 26.2865543F / pScale; vertices[11].z = 0.0F / pScale;
         newVertIndex = 12;
 
-        //radius = circumference / 2.0F;
+        //radius = diameter / 2.0F;
         radius = 50.0F / pScale;
 
         // 20 triangles for now
@@ -127,7 +126,6 @@ public class PlanetMesh : MonoBehaviour {
                 break;
             case "atmosphere":
                 mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
-
                 mesh.triangles = triangles;
                 mesh.RecalculateBounds();
                 mesh.RecalculateNormals();
@@ -262,7 +260,6 @@ public class PlanetMesh : MonoBehaviour {
            rApprox = ((rApprox1 + rApprox2) / 2.0F);
         }
         Vector3 aMidpoint = new Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-        //rApprox = (float)Math.Sqrt((aMidpoint.x * aMidpoint.x) + (aMidpoint.y * aMidpoint.y) + (aMidpoint.z * aMidpoint.z));
         return ExtendMidpoint(aMidpoint, rApprox);
     }
     

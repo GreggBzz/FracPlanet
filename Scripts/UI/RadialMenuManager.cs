@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 // Controller class for touchpad radial menu management.
 // Set stuff in defineTyes() and Start(). Construct with Generate().
@@ -32,9 +31,14 @@ public class RadialMenuManager : MonoBehaviour {
         curMenuType = "";
     }
 
-    public void Cycle() {
+    public void Cycle(string cycleToMenu = "") {
         if (curMenuType == "") {
             Generate(new Vector3(0, 0, 0), menuTypes[0]);
+            return;
+        }
+        if (cycleToMenu != "") {
+            DestroyItems();
+            Generate(new Vector3(0, 0, 0), cycleToMenu);
             return;
         }
         if (curMenuType.Contains(" - Child")) {
@@ -150,37 +154,34 @@ public class RadialMenuManager : MonoBehaviour {
     private void defineItems(string menuType) {
         switch (menuType) {
             case "Planet Menu":
-                itemsCount = 6;
-                menuTexture[0] = Resources.Load("MenuItems/MoltenPlanet") as Texture;
-                menuTexture[1] = Resources.Load("MenuItems/GasGiantPlanet") as Texture;
-                menuTexture[2] = Resources.Load("MenuItems/TerraPlanet") as Texture;
-                menuTexture[3] = Resources.Load("MenuItems/IcyPlanet") as Texture;
-                menuTexture[4] = Resources.Load("MenuItems/RockyPlanet") as Texture;
-                menuTexture[5] = Resources.Load("MenuItems/Teleport") as Texture;
+                itemsCount = 5;
+                menuTexture[0] = Resources.Load<Texture>("MenuItems/MoltenPlanet");
+                menuTexture[1] = Resources.Load<Texture>("MenuItems/GasGiantPlanet");
+                menuTexture[2] = Resources.Load<Texture>("MenuItems/TerraPlanet");
+                menuTexture[3] = Resources.Load<Texture>("MenuItems/IcyPlanet");
+                menuTexture[4] = Resources.Load<Texture>("MenuItems/RockyPlanet");
                 menuTitle[0] = "MoltenPlanet";
                 menuTitle[1] = "GasGiantPlanet";
                 menuTitle[2] = "TerraPlanet";
                 menuTitle[3] = "IcyPlanet";
                 menuTitle[4] = "RockyPlanet";
-                menuTitle[5] = "Teleport";
+
                 break;
             case "Destroy Menu":
-                itemsCount = 2;
-                menuTexture[0] = Resources.Load("MenuItems/Delete") as Texture;
-                menuTexture[1] = Resources.Load("MenuItems/Home") as Texture;
+                itemsCount = 3;
+                menuTexture[0] = Resources.Load<Texture>("MenuItems/Delete");
+                menuTexture[1] = Resources.Load<Texture>("MenuItems/Home");
+                menuTexture[2] = Resources.Load<Texture>("MenuItems/Teleport");
                 menuTitle[0] = "Delete";
                 menuTitle[1] = "Home";
+                menuTitle[2] = "Teleport";
                 break;
             case "Planet Menu - Child":
-                itemsCount = 4;
-                menuTexture[0] = Resources.Load("MenuItems/Out") as Texture;
-                menuTexture[1] = Resources.Load("MenuItems/Shrink") as Texture;
-                menuTexture[2] = Resources.Load("MenuItems/In") as Texture;
-                menuTexture[3] = Resources.Load("MenuItems/Grow") as Texture;
-                menuTitle[0] = "Out";
-                menuTitle[1] = "Shrink";
-                menuTitle[2] = "In";
-                menuTitle[3] = "Grow";
+                itemsCount = 2;
+                menuTexture[0] = Resources.Load<Texture>("MenuItems/Previous");
+                menuTexture[1] = Resources.Load<Texture>("MenuItems/Next");
+                menuTitle[0] = "Previous";
+                menuTitle[1] = "Next";
                 break;
             default:
                 itemsCount = 0;

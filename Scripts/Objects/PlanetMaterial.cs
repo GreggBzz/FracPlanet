@@ -1,13 +1,15 @@
 ﻿using System;
 using UnityEngine;
 // class to manage materials for planet / layer types.
-// procedually modify the standard shaders many components to give each planet a uniqer look.
+// procedually modify the shader properties to give each planet a uniqe look.
 public class PlanetMaterial : MonoBehaviour {
     public int seed = 100;
     private System.Random rnd;
-
+    private string txrPostFix = "";
+    
     public Material AssignMaterial(string layer, string curPlanetType = "", int NewSeed = 100, bool reassign = false) {
         seed = NewSeed;
+        txrPostFix = "";
         if (layer == "terrain") {
             Texture controlTexture = Resources.Load("PlanetTextures/SplatElevation") as Texture;
             Texture[] terrainTextures = new Texture[6];
@@ -15,9 +17,14 @@ public class PlanetMaterial : MonoBehaviour {
             Material planetSurfaceMaterial = new Material(Shader.Find("Custom/Splatmap"));
             planetSurfaceMaterial.SetColor("_Color", TerrainColor(curPlanetType, seed));
             planetSurfaceMaterial.SetTexture("_Control", controlTexture);
+            planetSurfaceMaterial.SetFloat("_Smoothness", TerrainShininess(curPlanetType, seed));
+            planetSurfaceMaterial.SetColor("_Specular", TerrainColor(curPlanetType, seed, true));
             for (int i = 0; i <= terrainTextures.Length - 1; i++ ) {
-                terrainTextures[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/txr" + curPlanetType + (i + 1)) as Texture;
-                terrainNormals[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + curPlanetType + (i + 1)) as Texture;
+                txrPostFix = curPlanetType + (i + 1);
+                terrainNormals[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + txrPostFix) as Texture;
+                // if we're far away, load the less detailed diffuse textures.
+                if (reassign) { txrPostFix = curPlanetType + (i + 1); } else { txrPostFix = curPlanetType + (i + 1) + "f"; }
+                terrainTextures[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/txr" + txrPostFix) as Texture;
                 planetSurfaceMaterial.SetTexture("_Texture" + (i + 1), terrainTextures[i]);
                 planetSurfaceMaterial.SetTexture("_Normal" + (i + 1), terrainNormals[i]);
                 planetSurfaceMaterial.SetTextureScale("_Texture" + (i + 1), TerrainTiling(curPlanetType, seed + i));
@@ -27,7 +34,9 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "ocean") {
-            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType) as Texture;
+            txrPostFix = "f";
+            if (reassign) { txrPostFix = ""; }
+            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType + txrPostFix) as Texture;
             Material oceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
             oceanMaterial.SetColor("_TintColor", OceanColor(seed));
             oceanMaterial.SetTexture("_MainTex", curTypeTexture);
@@ -57,19 +66,18 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "cloud") {
-            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrCloud" + curPlanetType) as Texture;
-            string cloudShader = "";
-            // reassign the shader if we're on the surface so it looks right.
-            if (reassign) {
-                cloudShader = "Particles/Alpha Blended";
-            }
-            else {
-                cloudShader = "Particles/Anim Alpha Blended";
-            }
-            Material cloudMaterial = new Material(Shader.Find(cloudShader));
+            rnd = new System.Random(seed);
+            int cloudTxrN = rnd.Next(1, 4);
+            Texture curTypeTexture = Resources.Load("PlanetTextures/txrCloud" + cloudTxrN) as Texture;
+            Material cloudMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
             cloudMaterial.SetTexture("_MainTex", curTypeTexture);
             cloudMaterial.SetColor("_TintColor", CloudColor(curPlanetType, seed));
             cloudMaterial.mainTextureScale = CloudTiling(curPlanetType, seed);
+            cloudMaterial.renderQueue = 3000;
+            // Adjust the render queue if we're on the surface so it looks right.
+            if (reassign) {
+                cloudMaterial.renderQueue = 2900;
+            }
             return cloudMaterial;
         }
 
@@ -99,8 +107,8 @@ public class PlanetMaterial : MonoBehaviour {
         }
         if (curPlanetType.Contains("Molten")) {
             // more Venus/Hellplanet kind of clouds.
-            int R = rnd.Next(200, 255); int B = rnd.Next(200, 255);
-            int G = rnd.Next(200, 255); int A = rnd.Next(5, 100);
+            int R = rnd.Next(200, 255); int B = rnd.Next(80, 200);
+            int G = rnd.Next(80, 200); int A = rnd.Next(5, 100);
             return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
         }
         // more Venus/Hellplanet kind of clouds.
@@ -135,15 +143,16 @@ public class PlanetMaterial : MonoBehaviour {
             int G = rnd.Next(200, 255); int A = rnd.Next(5, 100);
             return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
         }
-        // more Venus/Hellplanet kind of clouds.
         return new Color32(0xFF, 0xFF, 0xFF, 0xFF);
     }
 
-    private Color32 TerrainColor(string curPlanetType, int seed) {
+    private Color32 TerrainColor(string curPlanetType, int seed, bool specular = false) {
         rnd = new System.Random(seed);
-        // deviate the terrain tint for all planets very slightly.
-        int R = rnd.Next(220, 255); int B = rnd.Next(220, 255);
-        int G = rnd.Next(220, 255); int A = rnd.Next(220, 255);
+        int cMin = 220; int cMax = 255;
+        if (!curPlanetType.Contains("Terra")) { cMax = 255; cMin = 150; }
+        if (specular) { cMax = 70; cMin = 0; } 
+        int R = rnd.Next(cMin, cMax); int B = rnd.Next(cMin, cMax);
+        int G = rnd.Next(cMin, cMax); int A = rnd.Next(cMin, cMax);
         return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
     }
 
@@ -153,7 +162,7 @@ public class PlanetMaterial : MonoBehaviour {
         if (curPlanetType.Contains("Terra")) {
             return (float)rnd.NextDouble() * (.6F - .2F) + .2F;
         }
-        // bumpy shadows, cause ice ridges?
+        // bumpy shadows
         if (curPlanetType.Contains("Icy")) {
             return (float)rnd.NextDouble() * (1.3F - .6F) + .6F;
         }
@@ -165,25 +174,23 @@ public class PlanetMaterial : MonoBehaviour {
 
     private float TerrainShininess(string curPlanetType, int seed) {
         rnd = new System.Random(seed);
-        // diffuse non-shiny earth.
+        // diffuse non-shiny earth and gas.
         if (curPlanetType.Contains("Terra")) {
-            return 0F;
+            return .02F;
         }
-        // shiny cause it's ice.
-        if (curPlanetType.Contains("Icy")) {
-            return (float)rnd.NextDouble() * (.7F - .2F) + .2F;
+        else if (curPlanetType.Contains("Rock")) {
+            return (float)rnd.NextDouble() * (.5F);
         }
-        if (curPlanetType.Contains("Molten")) {
-            return (float)rnd.NextDouble() * (3F - 1F) + 1F;
+        else {
+            return (float)rnd.NextDouble();
         }
-        return 1F;
     }
 
     private Vector2 OceanTiling(int seed) {
         rnd = new System.Random(seed);
         int xTile = rnd.Next(1, 4);
         int yTile = rnd.Next(1, 4);
-        return new Vector2((float)xTile, (float)yTile);
+        return new Vector2(xTile, yTile);
     }
 
     private Vector2 CloudTiling(string curPlanetType, int seed) {
@@ -192,36 +199,26 @@ public class PlanetMaterial : MonoBehaviour {
         if (curPlanetType.Contains("Terra")) {
             int xTile = rnd.Next(1, 5);
             int yTile = rnd.Next(1, 5);
-            return new Vector2((float)xTile, (float)yTile);
+            return new Vector2(xTile, yTile);
         }
         // thin clouds
         if (curPlanetType.Contains("Icy")) {
             int xTile = rnd.Next(1, 3);
             int yTile = rnd.Next(1, 3);
-            return new Vector2((float)xTile, (float)yTile);
+            return new Vector2(xTile, yTile);
         }
         // dense nasty clouds
         if (curPlanetType.Contains("Molten")) {
-            int xTile = rnd.Next(5, 20);
-            int yTile = rnd.Next(5, 20);
-            return new Vector2((float)xTile, (float)yTile);
+            int xTile = rnd.Next(1, 4);
+            int yTile = rnd.Next(3, 7);
+            return new Vector2(xTile, yTile);
         }
         return new Vector2(1F, 1F);
     }
     private Vector2 TerrainTiling(string curPlanetType, int seed) {
         rnd = new System.Random(seed);
-        // somewhat grainy terrain..
-        if ((curPlanetType.Contains("Terra")) || (curPlanetType.Contains("Icy")) || (curPlanetType.Contains("Rocky")))  {
-            double xTile = rnd.NextDouble() * (3F - 1F) + 1F;
-            double yTile = rnd.NextDouble() * (1.04F - 1F) + 1F;
-            return new Vector2((float)xTile, (float)yTile);
-        }
-        // more smooth like?
-        if (curPlanetType.Contains("Molten")) {
-            int xTile = rnd.Next(5, 20);
-            int yTile = rnd.Next(5, 20);
-            return new Vector2((float)xTile, (float)yTile);
-        }
-        return new Vector2(1F, 1F);
+        double xTile = rnd.NextDouble() * (3F - 1F) + 1F;
+        double yTile = rnd.NextDouble() * (1.04F - 1F) + 1F;
+        return new Vector2((int)xTile, (int)yTile);
     }
 }
