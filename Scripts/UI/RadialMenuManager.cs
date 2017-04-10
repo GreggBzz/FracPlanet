@@ -154,18 +154,15 @@ public class RadialMenuManager : MonoBehaviour {
     private void defineItems(string menuType) {
         switch (menuType) {
             case "Planet Menu":
-                itemsCount = 5;
+                itemsCount = 4;
                 menuTexture[0] = Resources.Load<Texture>("MenuItems/MoltenPlanet");
-                menuTexture[1] = Resources.Load<Texture>("MenuItems/GasGiantPlanet");
-                menuTexture[2] = Resources.Load<Texture>("MenuItems/TerraPlanet");
-                menuTexture[3] = Resources.Load<Texture>("MenuItems/IcyPlanet");
-                menuTexture[4] = Resources.Load<Texture>("MenuItems/RockyPlanet");
+                menuTexture[1] = Resources.Load<Texture>("MenuItems/TerraPlanet");
+                menuTexture[2] = Resources.Load<Texture>("MenuItems/IcyPlanet");
+                menuTexture[3] = Resources.Load<Texture>("MenuItems/RockyPlanet");
                 menuTitle[0] = "MoltenPlanet";
-                menuTitle[1] = "GasGiantPlanet";
-                menuTitle[2] = "TerraPlanet";
-                menuTitle[3] = "IcyPlanet";
-                menuTitle[4] = "RockyPlanet";
-
+                menuTitle[1] = "TerraPlanet";
+                menuTitle[2] = "IcyPlanet";
+                menuTitle[3] = "RockyPlanet";
                 break;
             case "Destroy Menu":
                 itemsCount = 3;

@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 
 public class PlanetManager : MonoBehaviour {
+    // Meshes.
     private PlanetMesh terrainMesh;
     private PlanetMesh oceanMesh;
     private PlanetMesh atmosphereMesh;
     private PlanetMesh cloudMesh;
-
+    // Gameobjects and boolean base attributes.
     private GameObject terrain;
     private GameObject ocean;
     public GameObject atmosphere;
@@ -13,8 +14,13 @@ public class PlanetManager : MonoBehaviour {
     public bool hasOcean;
     public bool hasAtmosphere;
     public bool hasClouds;
-
-    private const float distScale = 3500F; // distance of planet from 0,0,0
+    // lights
+    private Sun aSun;
+    private Moon aMoon;
+    // sounds
+    private PlanetSounds planetSound;
+    // dimensions, seed, type.
+    private const float distFromCenter = 3500F;
     public float planetDiameter = 2500F;
     public string curPlanetType = "";
     private int curPlanetSeed = 100;
@@ -29,12 +35,16 @@ public class PlanetManager : MonoBehaviour {
     public void Start() {
         materialManager = gameObject.AddComponent<PlanetMaterial>();
         planetMetaData = gameObject.AddComponent<PlanetMetaData>();
+        planetSound = gameObject.AddComponent<PlanetSounds>();
         Material planetOutlineMaterial = materialManager.AssignMaterial("outline");
         planetOutline = new GameObject("Planet Outline");
         planetOutline = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         planetOutline.GetComponent<Renderer>().material = planetOutlineMaterial;
         planetOutline.transform.localScale = new Vector3(planetDiameter, planetDiameter, planetDiameter);
         planetOutline.GetComponent<Renderer>().enabled = false;
+        // all the lights.
+        aSun = GameObject.Find("Sun").GetComponent<Sun>();
+        aMoon = GameObject.Find("Moon").GetComponent<Moon>();
     }
 
     public void DestroyPlanet() {
@@ -73,7 +83,12 @@ public class PlanetManager : MonoBehaviour {
             }
             Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
             terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
+            // activate the lights!
+            if (!aMoon.enabled) aMoon.Enable(planetDiameter);
+            if (!aSun.enabled) aSun.Enable(planetDiameter);
+            planetSound.EnableSounds(curPlanetType, hasOcean, hasAtmosphere, planetDiameter, terrain.GetComponent<PlanetTexture>().maxElev);
         }
+
         else {
             if (terrain != null) { terrainMesh.rotate = true; }
             if (oceanMesh != null) { oceanMesh.rotate = true; }
@@ -90,22 +105,26 @@ public class PlanetManager : MonoBehaviour {
                 Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, false);
                 terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             }
+            aMoon.Disable();
+            aSun.Disable();
+            planetSound.DisableSounds();
         }
     }
 
     public void DestroyPlanetOutline() {
         planetOutline.GetComponent<Renderer>().enabled = false;
+        planetOutline.transform.localScale = new Vector3(0, 0, 0);
     }
 
     public void AddPlanet() {
         // setup the planet.
-        AddTerrain(distScale, planetDiameter);
-        if (hasOcean) AddOcean(distScale, planetDiameter);
-        if (hasAtmosphere) AddAtmosphere(distScale);
-        if (hasClouds) AddClouds(distScale);
+        AddTerrain(distFromCenter, planetDiameter);
+        if (hasOcean) AddOcean(distFromCenter, planetDiameter);
+        if (hasAtmosphere) AddAtmosphere(distFromCenter);
+        if (hasClouds) AddClouds(distFromCenter);
     }
 
-    private void AddTerrain(float distScale, float planetScale) {
+    private void AddTerrain(float dist, float planetScale) {
         Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
         terrain = new GameObject("aPlanet");
         terrain.AddComponent<MeshFilter>();
@@ -117,11 +136,11 @@ public class PlanetManager : MonoBehaviour {
         terrainMesh.planetLayer = "terrain";
         terrainMesh.seed = curPlanetSeed;
         terrainMesh.Generate();
-        terrainMesh.transform.position = centerPos + Vector3.forward * distScale;
+        terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
     }
 
-    private void AddOcean(float distScale, float planetScale) {
+    private void AddOcean(float dist, float planetScale) {
         Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
         ocean = new GameObject("aPlanetOcean");
         ocean.AddComponent<MeshFilter>();
@@ -133,11 +152,11 @@ public class PlanetManager : MonoBehaviour {
         oceanMesh.planetLayer = "ocean";
         oceanMesh.seed = curPlanetSeed;
         oceanMesh.Generate();
-        oceanMesh.transform.position =  centerPos + Vector3.forward * distScale;
+        oceanMesh.transform.position =  centerPos + Vector3.forward * dist;
         oceanMesh.center = oceanMesh.transform.position;
     }
 
-    private void AddAtmosphere(float distScale) {
+    private void AddAtmosphere(float dist) {
         Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType, curPlanetSeed);
         atmosphere = new GameObject("aPlanetAtmosphere");
         atmosphere.AddComponent<MeshFilter>();
@@ -151,10 +170,10 @@ public class PlanetManager : MonoBehaviour {
         atmosphereMesh.planetLayer = "atmosphere";
         atmosphereMesh.seed = curPlanetSeed;
         atmosphereMesh.Generate();
-        atmosphereMesh.transform.position = centerPos + Vector3.forward * distScale;
+        atmosphereMesh.transform.position = centerPos + Vector3.forward * dist;
     }
 
-    public void AddClouds(float distScale) {
+    public void AddClouds(float dist) {
         Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed);
         cloud = new GameObject("aPlanetCloud");
         cloud.AddComponent<MeshFilter>();
@@ -169,7 +188,7 @@ public class PlanetManager : MonoBehaviour {
         cloudMesh.planetLayer = "cloud";
         cloudMesh.seed = curPlanetSeed;
         cloudMesh.Generate();
-        cloudMesh.transform.position = centerPos + Vector3.forward * distScale;
+        cloudMesh.transform.position = centerPos + Vector3.forward * dist;
     }
 
     public void AddPlanetOutline() {
@@ -179,7 +198,7 @@ public class PlanetManager : MonoBehaviour {
     public void UpdatePotentialPlanet(int seed) {
         if (planetOutline != null) {
             // update the outline.
-            planetOutline.transform.position = centerPos + Vector3.forward * distScale;
+            planetOutline.transform.position = centerPos + Vector3.forward * distFromCenter;
             planetOutline.transform.localScale = new Vector3(planetDiameter, planetDiameter, planetDiameter);
             // setup planet metadata and base data.
             rnd = new System.Random(seed); curPlanetSeed = seed;

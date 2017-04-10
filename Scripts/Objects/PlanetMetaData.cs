@@ -231,13 +231,13 @@ public class PlanetMetaData : MonoBehaviour {
     public string getData(bool partial = false) {
         partialData = partial;
         string allText = "";
-        allText += ("Mass: " + setMass() + "\n");
-        allText += ("Gravity: " + setGravity() + "\n");
-        allText += ("Climate: " + setClimate() + "\n");
-        allText += ("Weather: " + setWeather() + "\n");
-        allText += ("Atmosphere: " + setAtmosphere() + "\n");
-        allText += ("Hydrosphere: " + setHydrosphere() + "\n");
-        allText += ("Lithopsphere: " + setLithosphere() + "\n");
+        allText += ("<color=orange>Mass:</color> " + setMass() + "\n");
+        allText += ("<color=orange>Gravity:</color> " + setGravity() + "\n");
+        allText += ("<color=orange>Climate:</color> " + setClimate() + "\n");
+        allText += ("<color=orange>Weather:</color> " + setWeather() + "\n");
+        allText += ("<color=orange>Atmosphere:</color> " + setAtmosphere() + "\n");
+        allText += ("<color=orange>Hydrosphere:</color> " + setHydrosphere() + "\n");
+        allText += ("<color=orange>Lithosphere:</color> " + setLithosphere() + "\n");
         return allText;
     }
 }

@@ -1,11 +1,9 @@
 ﻿using UnityEngine;
-
+// Draw or destroy world objects, excluding controller menus.
 public class DrawScene : MonoBehaviour {
-    // Draw or destroy world objects, excluding controller menus.
-    
     // the WandController object for the right controller.
     private WandController wand;
-
+    private MainLight aMainLight;
     // A line drawn from the controller.
     public LineRenderer pointerLineRenderer;
     private Vector3[] lineRendererVertices = new Vector3[2];
@@ -13,7 +11,6 @@ public class DrawScene : MonoBehaviour {
     private Color baseColor;
     private Color hitColor;
     public string onWhichPlanet = "";
-    
     // teleporting stuff.
     private bool teleporting;
     private bool teleportHome;
@@ -21,14 +18,11 @@ public class DrawScene : MonoBehaviour {
     private Vector3 outDir;
     private RaycastHit hit;
     private float teleDistance;
-
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
-
     private float timer = 0;
     private float timerMax = 0;
-    
     // planet related stuff.
     private PlanetManager planetManager;
     private ScanBox scanBox;
@@ -43,6 +37,7 @@ public class DrawScene : MonoBehaviour {
         planetManager = gameObject.AddComponent<PlanetManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
+        aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
         scanBox = gameObject.AddComponent<ScanBox>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
@@ -58,20 +53,23 @@ public class DrawScene : MonoBehaviour {
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
             teleDistance = 800F;
+            aMainLight.Disable();
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
             UpdateScanBox();
             teleDistance = 4500F;
+            aMainLight.Enable();
         }
         if ((!havePlanet) && (wand.radialMenu.curMenuType != ("Planet Menu - Child"))) {
             HideScanBox();
             teleDistance = 4500F;
+            aMainLight.Enable();
         }
-
         if ((!havePlanet) && (wand.radialMenu.curMenuType == ("Planet Menu - Child"))) {
             planetManager.UpdatePotentialPlanet(seedQueue[seedQueueIndex]);
             UpdateScanBox(true);
             teleDistance = 4500F;
+            aMainLight.Enable();
         }
     }
  	
@@ -101,7 +99,7 @@ public class DrawScene : MonoBehaviour {
             wand.transform.parent.position = new Vector3(0F, 0F, 0F);
             return;
         }
-        //RaycastHit hit;
+        // RaycastHit hit;
         if (Physics.Raycast(startPos, outDir, out hit, teleDistance)) {
             onWhichPlanet = hit.transform.gameObject.name;
             wand.transform.parent.position = hit.point;
