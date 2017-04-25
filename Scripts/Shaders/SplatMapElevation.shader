@@ -70,33 +70,33 @@
 		fixed3 combinedNormal;
     	if (i.uv4_Control.x == 0)
 	    {
-			// Calculate and combine the diffuse color.
+            // Calculate and combine the diffuse color.
             combinedColor = tex2D(_Texture1, i.uv_Texture1).rgb * splatmapMask.r;
             combinedColor += tex2D(_Texture2, i.uv_Texture2).rgb * splatmapMask.g;
             combinedColor += tex2D(_Texture3, i.uv_Texture3).rgb * splatmapMask.b;
             combinedColor += tex2D(_Texture4, i.uv_Texture4).rgb * (1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
-			// Calculate normal.
-			float3 nRed = UnpackNormal(tex2D(_Normal1, i.uv_Texture1));
-			float3 nGreen = UnpackNormal(tex2D(_Normal2, i.uv_Texture2));
-			float3 nBlue = UnpackNormal(tex2D(_Normal3, i.uv_Texture3));
-			float3 nBlack = UnpackNormal(tex2D(_Normal4, i.uv_Texture4));
-			// Combine the normal.
-			combinedNormal = nBlack.rgb*(1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
-			combinedNormal += nRed.rgb*splatmapMask.r;
-			combinedNormal += nGreen.rgb*splatmapMask.g;
-			combinedNormal += nBlue.rgb*splatmapMask.b;
+            // Calculate normal.
+            float3 nRed = UnpackNormal(tex2D(_Normal1, i.uv_Texture1));
+            float3 nGreen = UnpackNormal(tex2D(_Normal2, i.uv_Texture2));
+            float3 nBlue = UnpackNormal(tex2D(_Normal3, i.uv_Texture3));
+            float3 nBlack = UnpackNormal(tex2D(_Normal4, i.uv_Texture4));
+            // Combine the normal.
+            combinedNormal = nBlack.rgb*(1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
+            combinedNormal += nRed.rgb*splatmapMask.r;
+            combinedNormal += nGreen.rgb*splatmapMask.g;
+            combinedNormal += nBlue.rgb*splatmapMask.b;
 		}
 	    else
         {
             combinedColor = tex2D(_Texture4, i.uv_Texture4).rgb * (1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
             combinedColor += tex2D(_Texture5, i.uv_Texture5).rgb * splatmapMask.r;
             combinedColor += tex2D(_Texture6, i.uv_Texture6).rgb * splatmapMask.g;
-			float3 nBlack = UnpackNormal(tex2D(_Normal4, i.uv_Texture4));
-			float3 nRed = UnpackNormal(tex2D(_Normal5, i.uv_Texture5));
-			float3 nGreen = UnpackNormal(tex2D(_Normal6, i.uv_Texture6));
-			combinedNormal = nBlack.rgb*(1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
-			combinedNormal += nRed.rgb*splatmapMask.r;
-			combinedNormal += nGreen.rgb*splatmapMask.g;
+            float3 nBlack = UnpackNormal(tex2D(_Normal4, i.uv_Texture4));
+            float3 nRed = UnpackNormal(tex2D(_Normal5, i.uv_Texture5));
+            float3 nGreen = UnpackNormal(tex2D(_Normal6, i.uv_Texture6));
+            combinedNormal = nBlack.rgb*(1 - splatmapMask.r - splatmapMask.g - splatmapMask.b);
+            combinedNormal += nRed.rgb*splatmapMask.r;
+            combinedNormal += nGreen.rgb*splatmapMask.g;
 		}
         o.Smoothness = _Smoothness;
         o.Specular = _Specular;
