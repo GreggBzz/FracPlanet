@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System;
+using System.Linq;
+
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PlanetMesh : MonoBehaviour {
 
@@ -121,14 +123,12 @@ public class PlanetMesh : MonoBehaviour {
                 mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
                 oceanManager.InitializeWaves(newVertIndex);
                 mesh.triangles = triangles;
-                mesh.RecalculateBounds();
-                mesh.RecalculateNormals();
+                recalc(false);
                 break;
             case "atmosphere":
                 mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
                 mesh.triangles = triangles;
-                mesh.RecalculateBounds();
-                mesh.RecalculateNormals();
+                recalc(false);
                 break;
             case "cloud":
                 // we need to modify the cloud mesh a bit to avoid the texture seam problem.
@@ -136,16 +136,14 @@ public class PlanetMesh : MonoBehaviour {
                 mesh.uv = cloudManager.newUv;
                 mesh.triangles = cloudManager.newTriangles;
                 cloudManager.newTriangles = null; cloudManager.newUv = null;
-                mesh.RecalculateBounds();
-                mesh.RecalculateNormals();
+                recalc(false);
                 break;
             case "terrain":
                 mesh.uv = textureManager.Texture(newVertIndex, parentVerts, vertices, triangles);
                 mesh.uv4 = textureManager.AssignSplatElev(newVertIndex, parentVerts, vertices);
                 mesh.triangles = triangles;
-                mesh.RecalculateBounds();
-                mesh.RecalculateNormals();
                 planetCollider.sharedMesh = mesh;
+                recalc();
                 break;
             default:
                 break;
@@ -153,6 +151,11 @@ public class PlanetMesh : MonoBehaviour {
 
         // clean up.
         vertices = null; triangles = null; tempTriangles = null; doneMidpoints = null;
+    }
+
+    private void recalc(bool bounds = true) {
+        if (bounds) { mesh.RecalculateBounds(); }
+        mesh.RecalculateNormals();
     }
 
     private int[] Tesselate(int[] curTriangles) {
@@ -294,12 +297,17 @@ public class PlanetMesh : MonoBehaviour {
         return textureManager.maxElev;
     }
 
+    public void invertTriangles() {
+        mesh.triangles = mesh.triangles.Reverse().ToArray();
+        recalc(false);
+    }
+
     void Update() {
         // make waves every other frame.
         if (planetLayer == "ocean" && oceanManager.skipframe) {
             vertices = mesh.vertices;
             mesh.vertices = oceanManager.MakeWaves(vertices, center);
-            mesh.RecalculateNormals();
+            recalc(false);
         }
         oceanManager.skipframe = !oceanManager.skipframe;
 

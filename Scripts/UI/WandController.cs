@@ -55,6 +55,7 @@ public class WandController : SteamVR_TrackedController {
         if (aScene.pointerLineRenderer && aScene.pointerLineRenderer.enabled) {
             aScene.UpdatePointerLine();
         }
+
         // draw/update the planets?
         aScene.UpdatePlanets();
 

@@ -26,6 +26,7 @@ public class DrawScene : MonoBehaviour {
     // planet related stuff.
     private PlanetManager planetManager;
     private ScanBox scanBox;
+    private SkyBoxManager skybox;
     // 1000 queued up seeds for our planets.
     private int[] seedQueue = new int[1500];
     private int seedQueueIndex = 750;
@@ -35,6 +36,7 @@ public class DrawScene : MonoBehaviour {
 
     void Start () {
         planetManager = gameObject.AddComponent<PlanetManager>();
+        skybox = gameObject.AddComponent<SkyBoxManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
@@ -54,6 +56,8 @@ public class DrawScene : MonoBehaviour {
             scanBox.HideScanBox();
             teleDistance = 800F;
             aMainLight.Disable();
+            skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
+            return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
             UpdateScanBox();
@@ -71,8 +75,9 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 4500F;
             aMainLight.Enable();
         }
+        skybox.setSkyBox();
     }
- 	
+
     public void TeleportFade() {
         // control the teleport fader, called every update from wandcontroller.
         if (!teleporting) return;
@@ -223,7 +228,6 @@ public class DrawScene : MonoBehaviour {
                 seedQueueIndex += 1;
                 if (seedQueueIndex > seedQueue.Length - 1) { seedQueueIndex = 0; }
                 planetSeed = seedQueue[seedQueueIndex];
-                Debug.Log(seedQueueIndex);
                 rnd = new System.Random(planetSeed);
                 planetManager.planetDiameter = rnd.Next(500, 5000);
                 wand.radialMenu.whatIsSelected = "";
@@ -232,7 +236,6 @@ public class DrawScene : MonoBehaviour {
                 seedQueueIndex -= 1;
                 if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length -1; }
                 planetSeed = seedQueue[seedQueueIndex];
-                Debug.Log(seedQueueIndex);
                 rnd = new System.Random(planetSeed);
                 planetManager.planetDiameter = rnd.Next(500, 5000);
                 wand.radialMenu.whatIsSelected = "";

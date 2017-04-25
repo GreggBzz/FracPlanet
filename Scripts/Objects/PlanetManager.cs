@@ -23,7 +23,7 @@ public class PlanetManager : MonoBehaviour {
     private const float distFromCenter = 3500F;
     public float planetDiameter = 2500F;
     public string curPlanetType = "";
-    private int curPlanetSeed = 100;
+    public int curPlanetSeed = 100;
     private Vector3 centerPos = new Vector3(0, 750, 0);
 
     public GameObject planetOutline; // public for user(wand) manipulated transforms.

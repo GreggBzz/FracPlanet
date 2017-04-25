@@ -21,7 +21,7 @@ public class Sun : MonoBehaviour {
     }
     public void Enable(float diameter = 5000F) {
         sun.intensity = 1F;
-        transform.position = new Vector3(0F, (750F + diameter / 1.5F), 3500F);
+        transform.position = new Vector3(0F, (750F + diameter / 1.75F), 3500F);
         enabled = true;
     }
 }
