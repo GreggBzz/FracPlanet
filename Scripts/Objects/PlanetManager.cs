@@ -130,28 +130,22 @@ public class PlanetManager : MonoBehaviour {
         terrain.AddComponent<MeshFilter>();
         terrain.AddComponent<MeshRenderer>();
         terrain.AddComponent<PlanetMesh>();
-        terrain.GetComponent<PlanetMesh>().diameter = planetDiameter;
         terrain.GetComponent<Renderer>().material = planetSurfaceMaterial;
         terrainMesh = terrain.GetComponent<PlanetMesh>();
-        terrainMesh.planetLayer = "terrain";
-        terrainMesh.seed = curPlanetSeed;
-        terrainMesh.Generate();
+        terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
     }
-
+    
     private void AddOcean(float dist, float planetScale) {
         Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
         ocean = new GameObject("aPlanetOcean");
         ocean.AddComponent<MeshFilter>();
         ocean.AddComponent<MeshRenderer>();
         ocean.AddComponent<PlanetMesh>();
-        ocean.GetComponent<PlanetMesh>().diameter = planetDiameter;
         ocean.GetComponent<Renderer>().material = oceanMaterial;
         oceanMesh = ocean.GetComponent<PlanetMesh>();
-        oceanMesh.planetLayer = "ocean";
-        oceanMesh.seed = curPlanetSeed;
-        oceanMesh.Generate();
+        oceanMesh.GenerateFull("ocean", planetDiameter, curPlanetSeed);
         oceanMesh.transform.position =  centerPos + Vector3.forward * dist;
         oceanMesh.center = oceanMesh.transform.position;
     }
@@ -164,12 +158,9 @@ public class PlanetManager : MonoBehaviour {
         atmosphere.AddComponent<PlanetMesh>();
         // scale the atmosphere to just above the highest mountain.
         float atmosphereScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
-        atmosphere.GetComponent<PlanetMesh>().diameter = planetDiameter * atmosphereScale;
         atmosphere.GetComponent<Renderer>().material = atmosphereMaterial;
         atmosphereMesh = atmosphere.GetComponent<PlanetMesh>();
-        atmosphereMesh.planetLayer = "atmosphere";
-        atmosphereMesh.seed = curPlanetSeed;
-        atmosphereMesh.Generate();
+        atmosphereMesh.GenerateFull("atmosphere", planetDiameter * atmosphereScale, curPlanetSeed);
         atmosphereMesh.transform.position = centerPos + Vector3.forward * dist;
     }
 
@@ -182,12 +173,9 @@ public class PlanetManager : MonoBehaviour {
         // scale the clouds to just around the highest mountain.
         float cloudScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
         cloudScale -= .01F;
-        cloud.GetComponent<PlanetMesh>().diameter = planetDiameter * cloudScale;
         cloud.GetComponent<Renderer>().material = cloudMaterial;
         cloudMesh = cloud.GetComponent<PlanetMesh>();
-        cloudMesh.planetLayer = "cloud";
-        cloudMesh.seed = curPlanetSeed;
-        cloudMesh.Generate();
+        cloudMesh.GenerateFull("cloud", planetDiameter * cloudScale, curPlanetSeed);
         cloudMesh.transform.position = centerPos + Vector3.forward * dist;
     }
 

@@ -12,11 +12,10 @@ public class DrawScene : MonoBehaviour {
     private Color hitColor;
     public string onWhichPlanet = "";
     // teleporting stuff.
-    private bool teleporting;
-    private bool teleportHome;
+    private bool teleporting, teleportHome;
     private Vector3 startPos;
     private Vector3 outDir;
-    private RaycastHit hit;
+    private RaycastHit hit, hit2;
     private float teleDistance;
     // screen fader.
     private ScreenFader screenFade;
@@ -54,9 +53,9 @@ public class DrawScene : MonoBehaviour {
         if (wand == null) { return;  }
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
-            teleDistance = 800F;
+            teleDistance = 800;
             aMainLight.Disable();
-            skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
+            //skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -75,7 +74,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 4500F;
             aMainLight.Enable();
         }
-        skybox.setSkyBox();
+        //skybox.setSkyOffPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
     }
 
     public void TeleportFade() {
@@ -99,23 +98,35 @@ public class DrawScene : MonoBehaviour {
     }
 
     private void DoTeleport(bool toHome) {
+        string[] planetParts = { "aPlanetAtmosphere", "aPlanetCloud", "aPlanetOcean", "aPlanet" };
         if (toHome) {
             wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
             wand.transform.parent.position = new Vector3(0F, 0F, 0F);
+            foreach (string planetPart in planetParts) {
+                if (GameObject.Find(planetPart)) {
+                    GameObject.Find(planetPart).transform.eulerAngles = new Vector3(0, 0, 0);
+                }
+            }
             return;
         }
-        // RaycastHit hit;
-        if (Physics.Raycast(startPos, outDir, out hit, teleDistance)) {
+        if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
             onWhichPlanet = hit.transform.gameObject.name;
-            wand.transform.parent.position = hit.point;
-            // We're going to a planet, transform the angle so we're going around it.
             if (hit.transform.gameObject.name.Contains("Planet")) {
-                Vector3 centerHitObject = hit.transform.gameObject.transform.position;
-                Vector3 outerHitObject = hit.point;
-                wand.transform.parent.eulerAngles = Quaternion.FromToRotation(Vector3.up, outerHitObject - centerHitObject).eulerAngles;
+                // If we hit a planet, first rotate the point on the planet we hit to the top.
+                Vector3 newTop = hit.point - hit.transform.gameObject.transform.position;
+                Quaternion rotateToTop = Quaternion.FromToRotation(newTop, Vector3.up);
+                foreach (string planetPart in planetParts) {
+                    if (GameObject.Find(planetPart)) {
+                        GameObject.Find(planetPart).transform.localRotation *= rotateToTop;
+                    }
+                }
+                if (Physics.Raycast(new Vector3(0, 20000, 3500), Vector3.down, out hit2, 20000)) {
+                    wand.transform.parent.position = hit2.point;
+                }
             }
             else {
                 wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
+                wand.transform.parent.position = hit.point;
             }
         }
         PausePlanet();
@@ -155,7 +166,6 @@ public class DrawScene : MonoBehaviour {
     public void UpdatePointerLine() {
         // Update our LineRenderer
         if (pointerLineRenderer && pointerLineRenderer.enabled) {
-            RaycastHit hit;
             Vector3 startPos = wand.transform.position;
             // If our raycast hits, end the line at that positon. Otherwise,
             // make our line point straight out for 5000 meters.
