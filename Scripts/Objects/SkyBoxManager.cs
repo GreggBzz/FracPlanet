@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SkyBoxManager : MonoBehaviour {
     private System.Random rnd;
-    private PlanetMesh atmosphereMesh;
+    private PlanetLayers atmosphereMesh;
     private Material atmosphereMaterial;
     private bool planetSideSky;
     private PlanetMaterial materialManager;

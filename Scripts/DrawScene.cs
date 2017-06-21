@@ -14,7 +14,6 @@ public class DrawScene : MonoBehaviour {
     // teleporting stuff.
     private bool teleporting, teleportHome;
     private Vector3 startPos;
-    private Vector3 outDir;
     private RaycastHit hit, hit2;
     private float teleDistance;
     // screen fader.
@@ -25,7 +24,6 @@ public class DrawScene : MonoBehaviour {
     // planet related stuff.
     private PlanetManager planetManager;
     private ScanBox scanBox;
-    private SkyBoxManager skybox;
     // 1000 queued up seeds for our planets.
     private int[] seedQueue = new int[1500];
     private int seedQueueIndex = 750;
@@ -35,7 +33,6 @@ public class DrawScene : MonoBehaviour {
 
     void Start () {
         planetManager = gameObject.AddComponent<PlanetManager>();
-        skybox = gameObject.AddComponent<SkyBoxManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
@@ -94,40 +91,56 @@ public class DrawScene : MonoBehaviour {
         teleporting = true;
         if (toHome) { teleportHome = true;  return; }
         startPos = wand.transform.position;
-        outDir = wand.transform.forward;
     }
 
     private void DoTeleport(bool toHome) {
-        string[] planetParts = { "aPlanetAtmosphere", "aPlanetCloud", "aPlanetOcean", "aPlanet" };
+        string[] planetParts = { "aPlanetCloud", "aPlanet" };
         if (toHome) {
             wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
             wand.transform.parent.position = new Vector3(0F, 0F, 0F);
+            if (GameObject.Find("aPlanet")) { planetManager.ManageOcean(false); }           
+            // reset terrain and clouds to upright.
             foreach (string planetPart in planetParts) {
                 if (GameObject.Find(planetPart)) {
                     GameObject.Find(planetPart).transform.eulerAngles = new Vector3(0, 0, 0);
                 }
             }
+            onWhichPlanet = "";
             return;
         }
         if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
-            onWhichPlanet = hit.transform.gameObject.name;
             if (hit.transform.gameObject.name.Contains("Planet")) {
-                // If we hit a planet, first rotate the point on the planet we hit to the top.
-                Vector3 newTop = hit.point - hit.transform.gameObject.transform.position;
-                Quaternion rotateToTop = Quaternion.FromToRotation(newTop, Vector3.up);
-                foreach (string planetPart in planetParts) {
-                    if (GameObject.Find(planetPart)) {
-                        GameObject.Find(planetPart).transform.localRotation *= rotateToTop;
+                planetManager.ManageOcean(true);
+                // if we hit a planet, first rotate the point on the planet we hit to the top.
+                // set the hit point (newTop) relative to 0,0,0 by subtracting the planet's position.
+                Vector3 fromPoint = hit.point - hit.transform.gameObject.transform.position;
+                Vector3 toPoint = Vector3.up;
+                Vector3 dropPoint = new Vector3(0, 20000, 3500);
+                // forumulate a rotation using FromToRotation.
+                if (onWhichPlanet.Contains("Planet")) {
+                    dropPoint = wand.transform.parent.position + new Vector3(0, 500, 0);
+                    if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
+                        toPoint = hit2.point - hit.transform.gameObject.transform.position;
                     }
                 }
-                if (Physics.Raycast(new Vector3(0, 20000, 3500), Vector3.down, out hit2, 20000)) {
+                Quaternion rotateToTop = Quaternion.FromToRotation(fromPoint, toPoint);
+                // finally, roate each part of the planet using the caclulated rotation.
+                foreach (string planetPart in planetParts) {
+                    if (GameObject.Find(planetPart)) {
+                        GameObject.Find(planetPart).transform.rotation *= rotateToTop;
+                    }
+                }
+                // cast a ray down, and wherever that hits, that's where the player position should be.
+                if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                     wand.transform.parent.position = hit2.point;
                 }
             }
             else {
                 wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
                 wand.transform.parent.position = hit.point;
+                if (GameObject.Find("aPlanet")) { planetManager.ManageOcean(false); }
             }
+            onWhichPlanet = hit.transform.gameObject.name;
         }
         PausePlanet();
     }

@@ -101,7 +101,7 @@ public class PlanetTexture : MonoBehaviour {
         return new Vector2(.5F, .5F);
     }
 
-    public Vector2[] Texture(int vertCount, int parentVertCount, Vector3[] vertices, int[] triangles) {
+    public Vector2[] Texture(int vertCount, Vector3[] vertices, int[] triangles) {
         // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
         // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
@@ -139,7 +139,7 @@ public class PlanetTexture : MonoBehaviour {
         return uv;
     }
     
-    public Vector2[] AssignSplatElev(int vertCount, int parentVertCount, Vector3[] vertices) {
+    public Vector2[] AssignSplatElev(int vertCount, Vector3[] vertices) {
         // for use in the terrain shader, we'll return each vert's uv4 as either as a point along an 
         // RGB fade on the y axis or a point along an RGB fade on the X axis. 
         // In the shader we can then fade up to 6 textures. 

@@ -2,13 +2,15 @@
 
 public class PlanetManager : MonoBehaviour {
     // Meshes.
-    private PlanetMesh terrainMesh;
-    private PlanetMesh oceanMesh;
-    private PlanetMesh atmosphereMesh;
-    private PlanetMesh cloudMesh;
+    private PlanetLayers terrainMesh;
+    private PlanetLayers oceanMesh;
+    private PlanetLayers atmosphereMesh;
+    private PlanetLayers cloudMesh;
+    private PlanetOceanDetail partialOceanMesh;
     // Gameobjects and boolean base attributes.
     private GameObject terrain;
     private GameObject ocean;
+    private GameObject partialOcean;
     public GameObject atmosphere;
     public GameObject cloud;
     public bool hasOcean;
@@ -49,21 +51,21 @@ public class PlanetManager : MonoBehaviour {
 
     public void DestroyPlanet() {
         if (terrainMesh != null) {
-            Destroy(terrain);
-            terrainMesh = null;
+            Destroy(terrain); terrainMesh = null;
         }
         if (oceanMesh != null) {
-            Destroy(ocean);
-            oceanMesh = null;
+            Destroy(ocean); oceanMesh = null;
         }
         if (atmosphereMesh != null) {
-            Destroy(atmosphere);
-            atmosphereMesh = null;
+            Destroy(atmosphere); atmosphereMesh = null;
         }
         if (cloud != null) { 
-            Destroy(cloud);
-            cloud = null;
+            Destroy(cloud); cloud = null;
         }
+        if (partialOcean != null) {
+            Destroy(partialOcean); partialOcean = null;
+        }
+        planetSound.DisableSounds();
     }
 
     public void PausePlanet(string planetName) {
@@ -124,14 +126,25 @@ public class PlanetManager : MonoBehaviour {
         if (hasClouds) AddClouds(distFromCenter);
     }
 
+    public void ManageOcean(bool onplanet) {
+        if (!hasOcean) return;
+        if (GameObject.Find("aPlanetPartialOcean") && onplanet) { return; }
+        if (onplanet) { AddPartialOcean(); return; }
+        if (!GameObject.Find("aPlanetOcean")) {
+            AddOcean(distFromCenter, planetDiameter);
+            Destroy(partialOcean); partialOceanMesh = null;
+        }
+        return;
+    }
+
     private void AddTerrain(float dist, float planetScale) {
         Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
         terrain = new GameObject("aPlanet");
         terrain.AddComponent<MeshFilter>();
         terrain.AddComponent<MeshRenderer>();
-        terrain.AddComponent<PlanetMesh>();
+        terrain.AddComponent<PlanetLayers>();
         terrain.GetComponent<Renderer>().material = planetSurfaceMaterial;
-        terrainMesh = terrain.GetComponent<PlanetMesh>();
+        terrainMesh = terrain.GetComponent<PlanetLayers>();
         terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
@@ -142,12 +155,28 @@ public class PlanetManager : MonoBehaviour {
         ocean = new GameObject("aPlanetOcean");
         ocean.AddComponent<MeshFilter>();
         ocean.AddComponent<MeshRenderer>();
-        ocean.AddComponent<PlanetMesh>();
+        ocean.AddComponent<PlanetLayers>();
         ocean.GetComponent<Renderer>().material = oceanMaterial;
-        oceanMesh = ocean.GetComponent<PlanetMesh>();
+        oceanMesh = ocean.GetComponent<PlanetLayers>();
         oceanMesh.GenerateFull("ocean", planetDiameter, curPlanetSeed);
         oceanMesh.transform.position =  centerPos + Vector3.forward * dist;
         oceanMesh.center = oceanMesh.transform.position;
+    }
+
+    private void AddPartialOcean() {
+        // create a smaller, more highly tesselated ocean mesh for better looking water.
+        Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType, curPlanetSeed);
+        partialOcean = new GameObject("aPlanetPartialOcean");
+        partialOcean.AddComponent<MeshFilter>();
+        partialOcean.AddComponent<MeshRenderer>();
+        partialOceanMesh = gameObject.AddComponent<PlanetOceanDetail>();
+        partialOcean.GetComponent<Renderer>().material = partialOceanMaterial;
+        partialOceanMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter);
+        partialOcean.GetComponent<MeshFilter>().mesh.vertices = partialOceanMesh.GetVerts();
+        partialOcean.GetComponent<MeshFilter>().mesh.triangles = partialOceanMesh.GetTris();
+        partialOcean.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+        partialOcean.transform.position = centerPos + Vector3.forward * 3500F;
+        Destroy(ocean); oceanMesh = null;
     }
 
     private void AddAtmosphere(float dist) {
@@ -155,11 +184,11 @@ public class PlanetManager : MonoBehaviour {
         atmosphere = new GameObject("aPlanetAtmosphere");
         atmosphere.AddComponent<MeshFilter>();
         atmosphere.AddComponent<MeshRenderer>();
-        atmosphere.AddComponent<PlanetMesh>();
+        atmosphere.AddComponent<PlanetLayers>();
         // scale the atmosphere to just above the highest mountain.
         float atmosphereScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
         atmosphere.GetComponent<Renderer>().material = atmosphereMaterial;
-        atmosphereMesh = atmosphere.GetComponent<PlanetMesh>();
+        atmosphereMesh = atmosphere.GetComponent<PlanetLayers>();
         atmosphereMesh.GenerateFull("atmosphere", planetDiameter * atmosphereScale, curPlanetSeed);
         atmosphereMesh.transform.position = centerPos + Vector3.forward * dist;
     }
@@ -169,12 +198,12 @@ public class PlanetManager : MonoBehaviour {
         cloud = new GameObject("aPlanetCloud");
         cloud.AddComponent<MeshFilter>();
         cloud.AddComponent<MeshRenderer>();
-        cloud.AddComponent<PlanetMesh>();
+        cloud.AddComponent<PlanetLayers>();
         // scale the clouds to just around the highest mountain.
         float cloudScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
         cloudScale -= .01F;
         cloud.GetComponent<Renderer>().material = cloudMaterial;
-        cloudMesh = cloud.GetComponent<PlanetMesh>();
+        cloudMesh = cloud.GetComponent<PlanetLayers>();
         cloudMesh.GenerateFull("cloud", planetDiameter * cloudScale, curPlanetSeed);
         cloudMesh.transform.position = centerPos + Vector3.forward * dist;
     }

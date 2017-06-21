@@ -44,6 +44,36 @@ public class PlanetMaterial : MonoBehaviour {
             return oceanMaterial;
         }
 
+        if (layer == "partialOcean") {
+            Texture waterFallBack = Resources.Load("PlanetTextures/TerraPlanet/txrOceanTerraPlanet") as Texture;
+            Texture waterBumpMap = Resources.Load("HydroTextures/WaterBump") as Texture;
+            Texture waterReflection = Resources.Load("HydroTextures/WaterBump") as Texture;
+            Material partialOceanMaterial = new Material(Shader.Find("FX/SimpleWater4"));
+            partialOceanMaterial.SetTexture("_ReflectionTex", waterReflection);
+            partialOceanMaterial.SetTexture("_MainTex", waterFallBack);
+            partialOceanMaterial.SetTexture("_BumpMap", waterBumpMap);
+            partialOceanMaterial.SetVector("_DistortParams", new Vector4(1F, 1F, 2F, 1.15F));
+            partialOceanMaterial.SetVector("_InvFadeParemeter", new Vector4(1F, 1F, 0.5F, 1F));
+            partialOceanMaterial.SetVector("_AnimationTiling", new Vector4(2.2F, 2.2F, -1.1F, -1.1F));
+            partialOceanMaterial.SetVector("_AnimationDirection", new Vector4(1F, 1F, 1F, 1F));
+            partialOceanMaterial.SetVector("_BumpTiling", new Vector4(0.05F, 0.05F, 0.05F, 0.05F));
+            partialOceanMaterial.SetVector("_BumpDirection", new Vector4(10F, 10F, -10F, 1F));
+            partialOceanMaterial.SetFloat("_FresnelScale", 0.6F);
+            partialOceanMaterial.SetColor("_BaseColor", OceanColor(seed));
+            partialOceanMaterial.SetColor("_ReflectionColor", OceanColor(seed));
+            partialOceanMaterial.SetColor("_SpecularColor", OceanColor(seed + 1, true));
+            partialOceanMaterial.SetVector("_WorldLightDir", new Vector4(0.05F, 0.15F, -0.5F, 0.0F));
+            partialOceanMaterial.SetFloat("_Shininess", 2.0F);
+            partialOceanMaterial.SetFloat("_GerstnerIntensity", 1.0F);
+            partialOceanMaterial.SetVector("_GAmplitude", new Vector4(0.2F, 0.2F, 0.1F, 0.1F));
+            partialOceanMaterial.SetVector("_GFrequency", new Vector4(0.5F, 0.5F, 0.5F, 0.5F));
+            partialOceanMaterial.SetVector("_GSteepness", new Vector4(1.0F, 1.0F, 1.0F, 1.0F));
+            partialOceanMaterial.SetVector("_GSpeed", new Vector4(1.2F, 2.2F, 1.2F, 1.2F));
+            partialOceanMaterial.SetVector("_GDirectionAB", new Vector4(0.3F, 0.85F, 0.85F, 0.25F));
+            partialOceanMaterial.SetVector("_GDirectionCD", new Vector4(0.1F, 0.9F, 0.5F, 0.5F));
+            return partialOceanMaterial;
+        }
+
         if (layer == "atmosphere") {
             Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrAtmosphere" + curPlanetType) as Texture;
             Texture curTypeNormalMap = Resources.Load("PlanetTextures/" + curPlanetType + "/nmAtmosphere" + curPlanetType) as Texture;
@@ -115,11 +145,17 @@ public class PlanetMaterial : MonoBehaviour {
         return new Color32(0xFF, 0xFF, 0xFF, 0xFF);
     }
 
-    private Color32 OceanColor(int seed) {
+    private Color32 OceanColor(int seed, bool shiny = false) {
         rnd = new System.Random(seed);
         // Give the ocean a unique tint.
-        int R = rnd.Next(80, 140); int B = rnd.Next(80, 140);
-        int G = rnd.Next(80, 140); int A = rnd.Next(140, 180);
+        int R, G, B, A;
+        if (shiny) {
+            R = rnd.Next(150, 255); B = rnd.Next(150, 255);
+            G = rnd.Next(150, 255); A = rnd.Next(150, 255);
+            return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
+        }
+        R = rnd.Next(30, 80); B = rnd.Next(40, 160);
+        G = rnd.Next(30, 90); A = 255;
         return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
     }
 
