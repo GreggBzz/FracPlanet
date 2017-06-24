@@ -4,6 +4,8 @@ using System.Linq;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PlanetLayers : MonoBehaviour {
+    // create each layer and texutre it using the texture, geometry and cloud
+    // helper classes.
 
     // terrain, ocean, atmosphere?
     public string planetLayer;
@@ -63,7 +65,7 @@ public class PlanetLayers : MonoBehaviour {
             default:
                 break;
         }
-        // clean up.
+        // clean up
         meshGeometry = null;
     }
 
@@ -77,6 +79,7 @@ public class PlanetLayers : MonoBehaviour {
     }
 
     void Update() {
+        // rotate the layers when we view the planet from space.
         if (rotate) {
             if (planetLayer == "cloud") {
                 transform.Rotate(Vector3.up, Time.deltaTime * .45F);

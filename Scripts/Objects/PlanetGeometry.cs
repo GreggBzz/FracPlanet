@@ -6,20 +6,20 @@ public class PlanetGeometry : MonoBehaviour {
 
     // keep track of how many new vertices we've added during tesselate.
     // and the parent vertices, the center of each hexagon.
-    private ushort newVertIndex;
+    public int newVertIndex;
 
-    private string planetLayer; // terrain, ocean, atmosphere?
+    public string planetLayer; // terrain, ocean, atmosphere?
 
     // set to 10242 for 4 rounds and 40962 for 5 rounds.
     private const int vertCount = 40962;
-    private const int tessRounds = 5;
+    public int tessRounds = 5;
 
     // how bumpy is our planet?
     private const float maxRoughness = .000025F;
     private const float minRoughness = .000015F;
     private float roughness;
 
-    private int[] triangles;
+    public int[] triangles;
     private int[] tempTriangles;
 
     // scale variables.
@@ -34,11 +34,10 @@ public class PlanetGeometry : MonoBehaviour {
     // setup the random seed and include a default.
     private System.Random rnd;
 
-    private Vector3[] vertices = new Vector3[vertCount];
+    public Vector3[] vertices = new Vector3[vertCount];
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
 
-    public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100) {
-        Debug.Log("Plnaet Diameter Full: " + curDiameter);
+    public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100, bool fullSetup = true) {
         // setup random seed and assign the planet layer.
         rnd = new System.Random(curPlanetSeed);
         planetLayer = curPlanetLayer;
@@ -47,8 +46,14 @@ public class PlanetGeometry : MonoBehaviour {
         roughness = ((float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness) / (curDiameter / 2500);
         pScale = 100.0F / curDiameter;
         radius = 50.0F / pScale;
-        vertices = StartVerts(pScale, vertCount);
-        triangles = StartTris();
+
+        if (fullSetup) {
+            // if we're doing a full, new planet setup, create the initial geometry.
+            // otherwise, it gets set by way of the public vertice[], triangle[] and newvertindex 
+            // variables.
+            vertices = StartVerts(pScale, vertCount);
+            triangles = StartTris();
+        }
 
         // reset the midpoints and tesselate in a loop.
         for (int i = 0; i <= tessRounds; i++) {
@@ -105,7 +110,7 @@ public class PlanetGeometry : MonoBehaviour {
         return triangles;
     }
 
-    private int[] Tesselate(int[] curTriangles) {
+    public int[] Tesselate(int[] curTriangles) {
         int[] newTriangles = new int[curTriangles.Length * 4];
         int newTriangleIndex = 0;
         // process a triangle for midpoints
@@ -240,7 +245,7 @@ public class PlanetGeometry : MonoBehaviour {
         }
     }
 
-    public ushort GetVertIndex() {
+    public int GetVertIndex() {
         return newVertIndex;
     }
 
