@@ -16,14 +16,14 @@ public class PlanetLayers : MonoBehaviour {
 
     // manage textures and special layers.
     private PlanetTexture textureManager;
-    private PlanetCloud cloudManager;
+    private PlanetCloudsAndStars cloudManager;
 
     // mesh geometry setup is done in another class.
     private PlanetGeometry meshGeometry;
 
     public void GenerateFull(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100) {
         textureManager = gameObject.AddComponent<PlanetTexture>();
-        cloudManager = gameObject.AddComponent<PlanetCloud>();
+        cloudManager = gameObject.AddComponent<PlanetCloudsAndStars>();
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
         planetLayer = curPlanetLayer;
 
@@ -84,7 +84,7 @@ public class PlanetLayers : MonoBehaviour {
             if (planetLayer == "cloud") {
                 transform.Rotate(Vector3.up, Time.deltaTime * .45F);
             }
-            else {
+            else if (planetLayer != "atmosphere") {
                 transform.Rotate(Vector3.up, Time.deltaTime * 1F);
             }
         }

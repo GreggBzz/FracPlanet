@@ -2,8 +2,7 @@
 using System;
 
 public class PlanetTexture : MonoBehaviour {
-    // texture manager class. Methods to texture terrain, ocean, atmosphere (and clouds with a helper class).
-    private PlanetCloud cloudTextureManager;
+    // texture manager class. Methods to texture terrain, ocean, atmosphere.
 
     private struct adjacent {
         public int vert;

@@ -6,11 +6,13 @@ public class PlanetManager : MonoBehaviour {
     private PlanetLayers oceanMesh;
     private PlanetLayers atmosphereMesh;
     private PlanetLayers cloudMesh;
-    private PlanetOceanDetail partialOceanMesh;
+    private PlanetOceanDetail partialOceanTopMesh;
+    private PlanetOceanDetail partialOceanBottomMesh;
     // Gameobjects and boolean base attributes.
     private GameObject terrain;
     private GameObject ocean;
-    private GameObject partialOcean;
+    private GameObject partialOceanTop;
+    private GameObject partialOceanBottom;
     public GameObject atmosphere;
     public GameObject cloud;
     public bool hasOcean;
@@ -62,8 +64,11 @@ public class PlanetManager : MonoBehaviour {
         if (cloud != null) { 
             Destroy(cloud); cloud = null;
         }
-        if (partialOcean != null) {
-            Destroy(partialOcean); partialOcean = null;
+        if (partialOceanTop != null) {
+            Destroy(partialOceanTop); partialOceanTop = null;
+        }
+        if (partialOceanBottom != null) {
+            Destroy(partialOceanBottom); partialOceanTop = null;
         }
         planetSound.DisableSounds();
     }
@@ -127,12 +132,13 @@ public class PlanetManager : MonoBehaviour {
     }
 
     public void ManageOcean(bool onplanet) {
-        if (!hasOcean) return;
-        if (GameObject.Find("aPlanetPartialOcean") && onplanet) { return; }
-        if (onplanet) { AddPartialOcean(); return; }
+        if (!hasOcean) return; // if it's a planet w/o an ocean, return.
+        if (GameObject.Find("aPlanetTopOcean") && onplanet) { return; }
+        if (onplanet) { AddPartialOceans(); return; }
         if (!GameObject.Find("aPlanetOcean")) {
+            Destroy(partialOceanTop); partialOceanTopMesh = null;
+            Destroy(partialOceanBottom); partialOceanBottomMesh = null;
             AddOcean(distFromCenter, planetDiameter);
-            Destroy(partialOcean); partialOceanMesh = null;
         }
         return;
     }
@@ -163,19 +169,37 @@ public class PlanetManager : MonoBehaviour {
         oceanMesh.center = oceanMesh.transform.position;
     }
 
-    private void AddPartialOcean() {
-        // create a smaller, more highly tesselated ocean mesh for better looking water.
+    private void AddPartialOceans() {
+        // create a smaller, more highly tesselated ocean mesh at the top for better looking water.
+        partialOceanTopMesh = gameObject.AddComponent<PlanetOceanDetail>();
+        // truncate the existing ocean mesh leaving the bottom part so everything looks right.
+        partialOceanBottomMesh = gameObject.AddComponent<PlanetOceanDetail>();
+        // the top part
         Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType, curPlanetSeed);
-        partialOcean = new GameObject("aPlanetPartialOcean");
-        partialOcean.AddComponent<MeshFilter>();
-        partialOcean.AddComponent<MeshRenderer>();
-        partialOceanMesh = gameObject.AddComponent<PlanetOceanDetail>();
-        partialOcean.GetComponent<Renderer>().material = partialOceanMaterial;
-        partialOceanMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter);
-        partialOcean.GetComponent<MeshFilter>().mesh.vertices = partialOceanMesh.GetVerts();
-        partialOcean.GetComponent<MeshFilter>().mesh.triangles = partialOceanMesh.GetTris();
-        partialOcean.GetComponent<MeshFilter>().mesh.RecalculateNormals();
-        partialOcean.transform.position = centerPos + Vector3.forward * 3500F;
+        partialOceanTop = new GameObject("aPlanetTopOcean");
+        partialOceanTop.AddComponent<MeshFilter>();
+        partialOceanTop.AddComponent<MeshRenderer>();
+        partialOceanTop.GetComponent<Renderer>().material = partialOceanMaterial;
+        partialOceanTopMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter);
+        partialOceanTop.GetComponent<MeshFilter>().mesh.vertices = partialOceanTopMesh.GetVerts();
+        partialOceanTop.GetComponent<MeshFilter>().mesh.triangles = partialOceanTopMesh.GetTris();
+        partialOceanTop.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+        partialOceanTop.transform.position = centerPos + Vector3.forward * 3500F;
+        // the bottom part
+        Material oceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
+        Color tmpColor = partialOceanMaterial.GetColor("_BaseColor");
+        partialOceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
+        partialOceanMaterial.SetColor("_TintColor", tmpColor);
+        partialOceanBottom = new GameObject("aPlanetBottomOcean");
+        partialOceanBottom.AddComponent<MeshFilter>();
+        partialOceanBottom.AddComponent<MeshRenderer>();
+        partialOceanBottom.GetComponent<Renderer>().material = partialOceanMaterial;
+        partialOceanBottomMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter, true);
+        partialOceanBottom.GetComponent<MeshFilter>().mesh.vertices = partialOceanBottomMesh.GetVerts();
+        partialOceanBottom.GetComponent<MeshFilter>().mesh.triangles = partialOceanBottomMesh.GetTris();
+        partialOceanBottom.GetComponent<MeshFilter>().mesh.uv = partialOceanBottomMesh.GetUV();
+        partialOceanBottom.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+        partialOceanBottom.transform.position = centerPos + Vector3.forward * 3500F;
         Destroy(ocean); oceanMesh = null;
     }
 
@@ -214,7 +238,7 @@ public class PlanetManager : MonoBehaviour {
 
     public void UpdatePotentialPlanet(int seed) {
         if (planetOutline != null) {
-            // update the outline.
+            // update the outline of our potential planet.
             planetOutline.transform.position = centerPos + Vector3.forward * distFromCenter;
             planetOutline.transform.localScale = new Vector3(planetDiameter, planetDiameter, planetDiameter);
             // setup planet metadata and base data.

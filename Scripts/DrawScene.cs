@@ -19,6 +19,7 @@ public class DrawScene : MonoBehaviour {
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
+    private SkyBoxManager skybox;
     private float timer = 0;
     private float timerMax = 0;
     // planet related stuff.
@@ -37,6 +38,7 @@ public class DrawScene : MonoBehaviour {
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
         scanBox = gameObject.AddComponent<ScanBox>();
+        skybox = gameObject.AddComponent<SkyBoxManager>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
         rnd = new System.Random();
@@ -52,7 +54,7 @@ public class DrawScene : MonoBehaviour {
             scanBox.HideScanBox();
             teleDistance = 800;
             aMainLight.Disable();
-            //skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
+            skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -71,7 +73,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 4500F;
             aMainLight.Enable();
         }
-        //skybox.setSkyOffPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
+        skybox.setSkyOffPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
     }
 
     public void TeleportFade() {

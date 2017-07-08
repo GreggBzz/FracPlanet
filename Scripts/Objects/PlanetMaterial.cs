@@ -75,7 +75,8 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "atmosphere") {
-            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrAtmosphere" + curPlanetType) as Texture;
+            Texture curTypeTexture = null;
+            curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrAtmosphere" + curPlanetType) as Texture;
             Texture curTypeNormalMap = Resources.Load("PlanetTextures/" + curPlanetType + "/nmAtmosphere" + curPlanetType) as Texture;
             Material atmosphereMaterial = new Material(Shader.Find("Standard"));
             atmosphereMaterial.SetTexture("_MainTex", curTypeTexture);
@@ -116,6 +117,26 @@ public class PlanetMaterial : MonoBehaviour {
             Material planetOutlineMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
             planetOutlineMaterial.SetTexture("_MainTex", planetOutlineTexture);
             return planetOutlineMaterial;
+        }
+
+        if (layer == "starfield") {
+            Texture starFieldTexture = Resources.Load("PlanetTextures/StarMap") as Texture;
+            Material starFieldMaterial = new Material(Shader.Find("Standard"));
+            starFieldMaterial.SetTexture("_MainTex", starFieldTexture);
+            starFieldMaterial.SetFloat("_Mode", 3);
+            starFieldMaterial.SetFloat("_Glossiness", 0F);
+            starFieldMaterial.SetFloat("_Metallic", 0F);
+            starFieldMaterial.mainTextureScale = new Vector2(12F, 12F);
+            starFieldMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            starFieldMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            starFieldMaterial.SetInt("_ZWrite", 0);
+            starFieldMaterial.DisableKeyword("_ALPHATEST_ON");
+            starFieldMaterial.EnableKeyword("_ALPHABLEND_ON");
+            starFieldMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            starFieldMaterial.renderQueue = 3000;
+            starFieldMaterial.SetColor("_SpecColor", Color.white);
+            starFieldMaterial.SetColor("_Color", Color.white);
+            return starFieldMaterial;
         }
         return new Material(Shader.Find("Standard"));
     }
