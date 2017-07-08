@@ -73,7 +73,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 4500F;
             aMainLight.Enable();
         }
-        skybox.setSkyOffPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed);
+        skybox.setSkyOffPlanet();
     }
 
     public void TeleportFade() {
@@ -215,6 +215,8 @@ public class DrawScene : MonoBehaviour {
     public void DestroyPlanets() {
         planetManager.DestroyPlanet();
         scanBox.HideScanBox();
+        skybox.setSkyOffPlanet();
+        onWhichPlanet = "";
         havePlanet = false;
     }
 

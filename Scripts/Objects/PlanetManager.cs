@@ -186,7 +186,6 @@ public class PlanetManager : MonoBehaviour {
         partialOceanTop.GetComponent<MeshFilter>().mesh.RecalculateNormals();
         partialOceanTop.transform.position = centerPos + Vector3.forward * 3500F;
         // the bottom part
-        Material oceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
         Color tmpColor = partialOceanMaterial.GetColor("_BaseColor");
         partialOceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
         partialOceanMaterial.SetColor("_TintColor", tmpColor);

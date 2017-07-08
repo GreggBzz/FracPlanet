@@ -10,7 +10,7 @@ public class Moon : MonoBehaviour {
     }
     // Update is called once per frame
     void Update () {
-        transform.RotateAround(new Vector3(0F, 750F, 3500F), Vector3.right, 10F * Time.deltaTime);
+        transform.RotateAround(new Vector3(0F, 750F, 3500F), Vector3.right, 3F * Time.deltaTime);
         transform.LookAt(new Vector3(0F, 750F, 3500F));
     }
     public void Disable() {
@@ -20,7 +20,7 @@ public class Moon : MonoBehaviour {
         enabled = false;
     }
     public void Enable(float diameter = 5000F) {
-        moon.intensity = .4F;
+        moon.intensity = .2F;
         transform.position = new Vector3(0F, (750F - diameter / 1.75F), 3500F);
         enabled = true;
     }

@@ -18,7 +18,6 @@ public class PlanetOceanDetail : MonoBehaviour {
 
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
-    private PlanetTexture textureManager;
     
     private Vector3[] vertices = new Vector3[40962];
     private Vector3[] tmpVerticies;
@@ -26,7 +25,6 @@ public class PlanetOceanDetail : MonoBehaviour {
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter, bool bottom = false) {
 
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
-        textureManager = gameObject.AddComponent<PlanetTexture>();
 
         int triCount = 0;
         int[] vertexRef = new int[40962];

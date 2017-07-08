@@ -9,14 +9,15 @@ public class SkyBoxManager : MonoBehaviour {
     private Material atmosphereMaterial;
     private bool planetSideSky;
     private PlanetMaterial materialManager;
-    
+    private float starsCutoff = 0F;
 
     // Use this for initialization
     void Start () {
         planetSideSky = false;
         materialManager = gameObject.AddComponent<PlanetMaterial>();
-        starField = new GameObject("Star Field");
+        //starField = new GameObject("Star Field");
         starField = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        starField.name = "Star Field";
         Material starFieldMaterial = materialManager.AssignMaterial("starfield");
         starField.GetComponent<Renderer>().material = starFieldMaterial;
         // reverse the sphere primitive's triangles, to invet the normals.
@@ -25,9 +26,28 @@ public class SkyBoxManager : MonoBehaviour {
         // transform and disable the collider.
         starField.GetComponent<Collider>().enabled = false;
         starField.GetComponent<Renderer>().enabled = false;
+        starsCutoff = starFieldMaterial.GetFloat("_Cutoff");
     }
 
     public void setSkyOnPlanet (string planetType, int planetSeed, float planetDiameter = 2500F) {
+        // if we're already planetside, adjust the stars on/off and fadeing during sunset/sunrise.
+        if (GameObject.Find("Sun") != null) {
+            float sunPos = GameObject.Find("Sun").transform.eulerAngles.x;
+            float curStarsCutoff = starsCutoff;
+            if (sunPos > 270 && sunPos <= 330) {
+                curStarsCutoff = starsCutoff;
+            }
+            if (sunPos < 200) {
+                curStarsCutoff = 1F;
+            }
+            // if it's "sunrise" or "sunsed" fade the alpha cutoff for the starfield.
+            if (sunPos > 330 && sunPos < 360) {
+                float fadei = (1F - starsCutoff) / 30;
+                float fadem = fadei * (sunPos - 330);
+                curStarsCutoff = starsCutoff + fadem;
+            }
+            starField.GetComponent<Renderer>().material.SetFloat("_Cutoff", curStarsCutoff);
+        }
         if (planetSideSky) return;
         if (GameObject.Find("aPlanetAtmosphere") != null) {
             Material planetSkyBox = new Material(Shader.Find("Skybox/Procedural"));
@@ -42,16 +62,17 @@ public class SkyBoxManager : MonoBehaviour {
         // disable the Atmosphere mesh renderer
         GameObject.Find("aPlanetAtmosphere").GetComponent<MeshRenderer>().enabled = false;
         // Enable and transform the starbox.
-        float starFieldDiameter = planetDiameter + 175F;
+        float starFieldDiameter = planetDiameter + 100F;
         starField.transform.localScale = new Vector3(starFieldDiameter, starFieldDiameter, starFieldDiameter);
         starField.transform.position = new Vector3(0, 750, 3500);
-        // rotate the starfield randomly a bit to give it a "random" look.
-        starField.transform.localEulerAngles = new Vector3(100F, 100F, 100F);
+        // rotate the starfield a bit to give it a "random" look.
+        starField.transform.localEulerAngles = 
+            new Vector3(starFieldRotation(planetSeed), starFieldRotation(planetSeed), starFieldRotation(planetSeed));
         starField.GetComponent<Renderer>().enabled = true;
         planetSideSky = true;
     }
 
-    public void setSkyOffPlanet (string planetType, int planetSeed) {
+    public void setSkyOffPlanet () {
         if (!planetSideSky) return;
         if (GameObject.Find("aPlanetAtmosphere") != null) {
             Material starSkyBox = Resources.Load("Materials/Skybox/starSkyBox01", typeof(Material)) as Material;
@@ -104,5 +125,10 @@ public class SkyBoxManager : MonoBehaviour {
             return (float)(rnd.NextDouble() * (0.28 - 0.08) + 0.08);
         }
         return (float)rnd.NextDouble();
+    }
+
+    private float starFieldRotation(int seed) {
+        rnd = new System.Random(seed);
+        return (float)(rnd.NextDouble() * (130 - 100) + 100);
     }
 }

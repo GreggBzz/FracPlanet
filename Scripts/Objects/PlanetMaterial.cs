@@ -123,17 +123,19 @@ public class PlanetMaterial : MonoBehaviour {
             Texture starFieldTexture = Resources.Load("PlanetTextures/StarMap") as Texture;
             Material starFieldMaterial = new Material(Shader.Find("Standard"));
             starFieldMaterial.SetTexture("_MainTex", starFieldTexture);
-            starFieldMaterial.SetFloat("_Mode", 3);
+            starFieldMaterial.SetFloat("_Mode", 1);
             starFieldMaterial.SetFloat("_Glossiness", 0F);
             starFieldMaterial.SetFloat("_Metallic", 0F);
+            starFieldMaterial.SetFloat("_Cutoff", starsAlphaCutoff(seed));
             starFieldMaterial.mainTextureScale = new Vector2(12F, 12F);
-            starFieldMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            starFieldMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            starFieldMaterial.SetInt("_ZWrite", 0);
-            starFieldMaterial.DisableKeyword("_ALPHATEST_ON");
-            starFieldMaterial.EnableKeyword("_ALPHABLEND_ON");
+            starFieldMaterial.SetOverrideTag("RenderType", "TransparentCutout");
+            starFieldMaterial.SetInt("_SrcBlend", 1);
+            starFieldMaterial.SetInt("_DstBlend", 0);
+            starFieldMaterial.SetInt("_ZWrite", 1);
+            starFieldMaterial.EnableKeyword("_ALPHATEST_ON");
+            starFieldMaterial.DisableKeyword("_ALPHABLEND_ON");
             starFieldMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            starFieldMaterial.renderQueue = 3000;
+            starFieldMaterial.renderQueue = 2450;
             starFieldMaterial.SetColor("_SpecColor", Color.white);
             starFieldMaterial.SetColor("_Color", Color.white);
             return starFieldMaterial;
@@ -277,5 +279,12 @@ public class PlanetMaterial : MonoBehaviour {
         double xTile = rnd.NextDouble() * (3F - 1F) + 1F;
         double yTile = rnd.NextDouble() * (1.04F - 1F) + 1F;
         return new Vector2((int)xTile, (int)yTile);
+    }
+
+    private float starsAlphaCutoff(int seed) {
+        // set the density of the stars by adjusting the 
+        // standard shader alpha cutoff
+        rnd = new System.Random(seed);
+        return (float)rnd.NextDouble() * (.9F - .43F) + .43F;
     }
 }
