@@ -19,7 +19,7 @@ public class PlanetGeometry : MonoBehaviour {
     private const float minRoughness = .000015F;
     private float roughness;
 
-    public int[] triangles;
+    private int[] triangles;
     private int[] tempTriangles;
 
     // scale variables.
@@ -34,7 +34,7 @@ public class PlanetGeometry : MonoBehaviour {
     // setup the random seed and include a default.
     private System.Random rnd;
 
-    public Vector3[] vertices = new Vector3[vertCount];
+    private Vector3[] vertices = new Vector3[vertCount];
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
 
     public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100, bool fullSetup = true) {
@@ -255,6 +255,14 @@ public class PlanetGeometry : MonoBehaviour {
 
     public Vector3[] GetVerts() {
         return vertices;
+    }
+
+    public void SetVerts(Vector3[] newVerts) {
+        vertices = newVerts;
+    }
+
+    public void SetTris(int[] newTris) {
+        triangles = newTris;
     }
 
 }

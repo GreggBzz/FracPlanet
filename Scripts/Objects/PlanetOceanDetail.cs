@@ -98,8 +98,8 @@ public class PlanetOceanDetail : MonoBehaviour {
         }
 
         meshGeometry.newVertIndex = vertCount;
-        meshGeometry.vertices = vertices;
-        meshGeometry.triangles = triangles;
+        meshGeometry.SetVerts(vertices);
+        meshGeometry.SetTris(triangles);
         meshGeometry.tessRounds = 1;
         meshGeometry.Generate("ocean", curDiameter, 100, false);
 

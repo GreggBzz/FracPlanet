@@ -127,7 +127,7 @@ public class PlanetMaterial : MonoBehaviour {
             starFieldMaterial.SetFloat("_Glossiness", 0F);
             starFieldMaterial.SetFloat("_Metallic", 0F);
             starFieldMaterial.SetFloat("_Cutoff", starsAlphaCutoff(seed));
-            starFieldMaterial.mainTextureScale = new Vector2(12F, 12F);
+            starFieldMaterial.mainTextureScale = new Vector2(100F, 100F);
             starFieldMaterial.SetOverrideTag("RenderType", "TransparentCutout");
             starFieldMaterial.SetInt("_SrcBlend", 1);
             starFieldMaterial.SetInt("_DstBlend", 0);
@@ -135,7 +135,7 @@ public class PlanetMaterial : MonoBehaviour {
             starFieldMaterial.EnableKeyword("_ALPHATEST_ON");
             starFieldMaterial.DisableKeyword("_ALPHABLEND_ON");
             starFieldMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            starFieldMaterial.renderQueue = 2450;
+            starFieldMaterial.renderQueue = 2900;
             starFieldMaterial.SetColor("_SpecColor", Color.white);
             starFieldMaterial.SetColor("_Color", Color.white);
             return starFieldMaterial;
@@ -285,6 +285,6 @@ public class PlanetMaterial : MonoBehaviour {
         // set the density of the stars by adjusting the 
         // standard shader alpha cutoff
         rnd = new System.Random(seed);
-        return (float)rnd.NextDouble() * (.9F - .43F) + .43F;
+        return (float)rnd.NextDouble() * (.7F - .220F) + .220F;
     }
 }
