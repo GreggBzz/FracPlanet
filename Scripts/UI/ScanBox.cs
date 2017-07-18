@@ -8,6 +8,7 @@ public class ScanBox : MonoBehaviour {
         scanBox.AddComponent<TextMesh>();
         scanBox.GetComponent<TextMesh>().text = "";
         scanBox.GetComponent<TextMesh>().fontSize = 80;
+        scanBox.GetComponent<TextMesh>().fontStyle = FontStyle.Bold;
         scanBox.GetComponent<TextMesh>().characterSize = 2.3F;
         scanBox.transform.position = new Vector3(-700, 250, 400);
         scanBox.transform.eulerAngles = new Vector3(0, -25, 0);

@@ -33,7 +33,7 @@ public class PlanetOceanDetail : MonoBehaviour {
 
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
             // mark the top 1/100th of the ocean to keep.
-            if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 100F) && (!bottom)) {
+            if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 70F) && (!bottom)) {
                 // if the vertext hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
                 // and copy it. 
                 if (vertexRef[curTriangles[i]] == 0) {
@@ -56,7 +56,7 @@ public class PlanetOceanDetail : MonoBehaviour {
                 tmpTris[triCount + 2] = vertexRef[curTriangles[i + 2]];
                 triCount += 3;
             }
-            if ((curVerts[curTriangles[i]].y) < (curDiameter / 2F - curDiameter / 110F) && (bottom)) {
+            if ((curVerts[curTriangles[i]].y) < (curDiameter / 2F - curDiameter / 300F) && (bottom)) {
                 // if the vertext hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
                 // and copy it. 
                 if (vertexRef[curTriangles[i]] == 0) {
@@ -129,10 +129,11 @@ public class PlanetOceanDetail : MonoBehaviour {
         triangles = triangles.Reverse().ToArray();
     }
 
-    public Vector3[] GetVerts() {
+    public Vector3[] GetVerts(bool bottom = false) {
         tmpVerticies = new Vector3[vertCount];
         // assign the verts to a properly sized array.
         for (int i = 0; i <= vertCount - 1; i++) {
+            if (bottom) { tmpVerticies[i] = (tmpVerticies[1] * .99F); }
             tmpVerticies[i] = vertices[i];
         }
         vertices = null;

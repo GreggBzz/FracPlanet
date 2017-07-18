@@ -71,10 +71,18 @@ public class SkyBoxManager : MonoBehaviour {
                 globalFogDistance = 10000 - ((sunPos - 330) * 3);
             }
             starField.GetComponent<Renderer>().material.SetFloat("_Cutoff", curStarsCutoff);
-            // You need to set the standard asset global fog to a public class to access it. 
+            // You'll need to set the standard asset global fog to a public class to access it. 
+            // no fog if there's no atmosphere.
+            if (GameObject.Find("aPlanetAtmosphere") == null) {
+                globalFogDistance = 10000;
+            }
             GameObject.Find("Camera (eye)").GetComponent<GlobalFog>().startDistance = globalFogDistance;
+            // Adjust the cloud alpha cutoff.
             Color32 newCloudCutoff = new Color32(cloudCutOff.r, cloudCutOff.g, cloudCutOff.b, (byte)curCloudCutoff);
             GameObject.Find("aPlanetCloud").GetComponent<Renderer>().material.SetColor("_TintColor", newCloudCutoff);
+            // Move the starbox so that it always looks right.
+            float playerHeight = GameObject.Find("Camera (eye)").transform.position.y;
+            starField.transform.position = new Vector3(0, playerHeight - 1350, 3500);
         }
         if (planetSideSky) return;
         if (GameObject.Find("aPlanetAtmosphere") != null) {
@@ -90,9 +98,7 @@ public class SkyBoxManager : MonoBehaviour {
         // disable the Atmosphere mesh renderer
         GameObject.Find("aPlanetAtmosphere").GetComponent<MeshRenderer>().enabled = false;
         // Enable and transform the starbox.
-        float starFieldDiameter = planetDiameter + (planetDiameter / 35);
-        starField.transform.localScale = new Vector3(starFieldDiameter, starFieldDiameter, starFieldDiameter);
-        starField.transform.position = new Vector3(0, 750, 3500);
+        starField.transform.localScale = new Vector3(2790, 2790, 2790);
         // rotate the starfield a bit to give it a "random" look.
         starField.transform.localEulerAngles = 
             new Vector3(starFieldRotation(planetSeed), starFieldRotation(planetSeed), starFieldRotation(planetSeed));
@@ -110,6 +116,7 @@ public class SkyBoxManager : MonoBehaviour {
             RenderSettings.sun = null;
         }
         starField.GetComponent<Renderer>().enabled = false;
+        GameObject.Find("Camera (eye)").GetComponent<GlobalFog>().startDistance = 20000;
         planetSideSky = false;
         cloudsFetched = false;
     }
@@ -123,15 +130,15 @@ public class SkyBoxManager : MonoBehaviour {
             return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
         }
         if (curPlanetType.Contains("Icy")) {
-            // more Titan/yellow kind of clouds.
-            int R = rnd.Next(150, 255); int B = rnd.Next(0, 150);
-            int G = rnd.Next(150, 255); int A = rnd.Next(5, 100);
+            // more Titan/yellow kind atmosphere
+            int R = rnd.Next(130, 255); int B = rnd.Next(0, 150);
+            int G = rnd.Next(130, 255); int A = rnd.Next(5, 100);
             return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
         }
         if (curPlanetType.Contains("Molten")) {
-            // more Venus/Hellplanet kind of clouds.
-            int R = rnd.Next(200, 255); int B = rnd.Next(200, 255);
-            int G = rnd.Next(200, 255); int A = rnd.Next(5, 100);
+            // more Venus/Hellplanet kind of atmosphere
+            int R = rnd.Next(130, 255); int B = rnd.Next(130, 255);
+            int G = rnd.Next(130, 255); int A = rnd.Next(5, 100);
             return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
         }
         return new Color32(0xFF, 0xFF, 0xFF, 0xFF);
@@ -140,17 +147,14 @@ public class SkyBoxManager : MonoBehaviour {
         rnd = new System.Random(seed);
         if (curPlanetType.Contains("Terra")) {
             // a relativly close sun.
-            // 0.04 to 0.15
             return (float)(rnd.NextDouble() * (0.15 - 0.04) + 0.04) ;
         }
         if (curPlanetType.Contains("Icy")) {
             // a distant sun.
-            // 0.01 to 0.04
             return (float)(rnd.NextDouble() * (0.04 - 0.01) + 0.01);
         }
         if (curPlanetType.Contains("Molten")) {
             // a big glowing sun!
-            // .08 to .28
             return (float)(rnd.NextDouble() * (0.28 - 0.08) + 0.08);
         }
         return (float)rnd.NextDouble();

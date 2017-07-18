@@ -120,7 +120,7 @@ public class DrawScene : MonoBehaviour {
                 Vector3 dropPoint = new Vector3(0, 20000, 3500);
                 // forumulate a rotation using FromToRotation.
                 if (onWhichPlanet.Contains("Planet")) {
-                    dropPoint = wand.transform.parent.position + new Vector3(0, 500, 0);
+                    dropPoint = new Vector3(0, wand.transform.parent.position.y, wand.transform.parent.position.z) + new Vector3(0, 100, 0);
                     if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                         toPoint = hit2.point - hit.transform.gameObject.transform.position;
                     }
@@ -133,6 +133,9 @@ public class DrawScene : MonoBehaviour {
                     }
                 }
                 // cast a ray down, and wherever that hits, that's where the player position should be.
+                if (onWhichPlanet.Contains("Planet")) {
+                    dropPoint = new Vector3(0, wand.transform.parent.position.y, wand.transform.parent.position.z) + new Vector3(0, 100, 0);
+                }
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                     wand.transform.parent.position = hit2.point;
                 }

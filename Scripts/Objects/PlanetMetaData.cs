@@ -22,6 +22,8 @@ public class PlanetMetaData : MonoBehaviour {
     public string type = "Unknown";
     public string corrdinates = "Unknown"; // really, the random seed.
     private bool partialData = false;
+    private bool[] unknowns = new bool[7];
+    private string linebreak;
 
     // Earth's diameter in meters and mass in kilograms as a refrence. 
     private const double earthScale = 12742000;
@@ -30,17 +32,23 @@ public class PlanetMetaData : MonoBehaviour {
     private System.Random rnd = new System.Random(); 
 
     public void initialize(int aSeed, float aDiameter, string aPlanetType, bool atmosphere, bool clouds, bool ocean) {
+        rnd = new System.Random(seed);
         seed = aSeed;
         diameter = aDiameter;
         planetType = aPlanetType;
         hasAtmosphere = atmosphere;
         hasOcean = ocean;
         hasClouds = clouds;
+        unknowns[0] = (rnd.NextDouble() <= .2); unknowns[1] = (rnd.NextDouble() <= .2);
+        unknowns[2] = (rnd.NextDouble() <= .2); unknowns[3] = (rnd.NextDouble() <= .4);
+        unknowns[4] = (rnd.NextDouble() <= .4); unknowns[5] = (rnd.NextDouble() <= .8);
+        unknowns[6] = (rnd.NextDouble() <= .8);
     }
 
     private string setHydrosphere() {
-        if ((partialData) && (rnd.NextDouble() <= .2)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[0]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        linebreak = ",\n                       ";
         string[] elements = { "Carbon Dioxide", "Liquid Nitrogen",
                                  "Liquid Oxygen", "Liquid Hydrogen",
                                  "Liquid Helium", "Liquid Argon", "Methane",
@@ -49,7 +57,6 @@ public class PlanetMetaData : MonoBehaviour {
                                  "Complex Chlorine Compounds", "Acetylene",
                                  "Diacetylene", "Complex Hydrocarbons", "Aerosols",
                                  "Mercury", "Sulfuric Acid", "Hydrochloric Acid" };
-        string linebreak = ",\n                       ";
 
         if (!hasOcean) { return "None";  }
         if ((planetType).Contains("Icy")) {
@@ -57,6 +64,8 @@ public class PlanetMetaData : MonoBehaviour {
                            elements[rnd.Next(0, 9)] + linebreak +
                            elements[rnd.Next(0, 9)]);
         }
+
+       // Complex Amnonia Compounds - Hydrochloric Acid
         if ((planetType).Contains("Molten")) {
             hydrosphere = (elements[rnd.Next(11, 21)] + linebreak +
                            elements[rnd.Next(11, 21)] + linebreak +
@@ -76,8 +85,9 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setAtmosphere() {
-        if ((partialData) && (rnd.NextDouble() <= .2)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[1]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        linebreak = ",\n                     ";
         string[] elements = { "Carbon Dioxide", "Nitrogen",
                                 "Nitrogen Compounds", "Nitrogen Isotopes",
                                 "Oxygen", "Ozone and Oxygen Isotopes",
@@ -89,7 +99,6 @@ public class PlanetMetaData : MonoBehaviour {
                                 "Sodium", "Potassium", "Sulfuric Acid",
                                 "Neon Gas", "Fluorine Gas",
                                 "Unknown Complex Molecules", "Water Vapor", };
-        string linebreak = ",\n                     ";
 
         if (!hasAtmosphere) { return "None"; }
         if ((planetType).Contains("Icy")) {
@@ -116,15 +125,15 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setLithosphere() {
-        if ((partialData) && (rnd.NextDouble() <= .2)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[2]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        linebreak = ",\n                       ";
         string[] elements = { "Mercury", "Hydrocarbons", "Zinc", "Aluminum", "Antimony",
                                  "Chromium", "Cobalt", "Complex Carbon", "Copper",
                                  "Gold", "Lead", "Iron", "Magnesium",
                                  "Molybdenum", "Nickel", "Platinum",
                                  "Plutonium", "Promethium", "Silicates", "Silver",
                                  "Tin", "Titanium", "Tungsten"};
-        string linebreak = ",\n                       ";
 
         if ((planetType).Contains("Icy")) {
             lithosphere = (elements[rnd.Next(0, 23)] + linebreak +
@@ -148,7 +157,7 @@ public class PlanetMetaData : MonoBehaviour {
     }
     
     private string setClimate() {
-        if ((partialData) && (rnd.NextDouble() <= .4)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[3]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
         string[] climates = { "Sub-Artic", "Artic", "Temperate", "Tropical",
                              "Searing", "Inferno" };
@@ -181,7 +190,7 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setWeather() {
-        if ((partialData) && (rnd.NextDouble() <= .4)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[4]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
         string[] weathers = { "None", "Calm", "Normal", "Severe", "Violent",
                              "Very-Violent" };
@@ -202,7 +211,7 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setGravity() {
-        if ((partialData) && (rnd.NextDouble() <= .8)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[5]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
         // Fudge bigly on the gravity forumla. Sorry Newton. 
         double tempGrav = (intMass() / earthMass) * (diameter / 2500);
@@ -212,7 +221,7 @@ public class PlanetMetaData : MonoBehaviour {
     }
     
     private string setMass() {
-        if ((partialData) && (rnd.NextDouble() <= .8)) { return "Unknown\n"; }
+        if ((partialData) && unknowns[6]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
         mass = (Math.Round(intMass(), 2) +  "x10^24 kg");
         return mass;

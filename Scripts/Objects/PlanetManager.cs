@@ -20,7 +20,6 @@ public class PlanetManager : MonoBehaviour {
     public bool hasClouds;
     // lights
     private Sun aSun;
-    private Moon aMoon;
     // sounds
     private PlanetSounds planetSound;
     // dimensions, seed, type.
@@ -48,7 +47,6 @@ public class PlanetManager : MonoBehaviour {
         planetOutline.GetComponent<Renderer>().enabled = false;
         // all the lights.
         aSun = GameObject.Find("Sun").GetComponent<Sun>();
-        aMoon = GameObject.Find("Moon").GetComponent<Moon>();
     }
 
     public void DestroyPlanet() {
@@ -91,7 +89,6 @@ public class PlanetManager : MonoBehaviour {
             Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
             terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             // activate the lights!
-            if (!aMoon.enabled) aMoon.Enable(planetDiameter);
             if (!aSun.enabled) aSun.Enable(planetDiameter);
             planetSound.EnableSounds(curPlanetType, hasOcean, hasAtmosphere, planetDiameter, terrain.GetComponent<PlanetTexture>().maxElev);
         }
@@ -112,7 +109,6 @@ public class PlanetManager : MonoBehaviour {
                 Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, false);
                 terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             }
-            aMoon.Disable();
             aSun.Disable();
             planetSound.DisableSounds();
         }
@@ -194,7 +190,7 @@ public class PlanetManager : MonoBehaviour {
         partialOceanBottom.AddComponent<MeshRenderer>();
         partialOceanBottom.GetComponent<Renderer>().material = partialOceanMaterial;
         partialOceanBottomMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter, true);
-        partialOceanBottom.GetComponent<MeshFilter>().mesh.vertices = partialOceanBottomMesh.GetVerts();
+        partialOceanBottom.GetComponent<MeshFilter>().mesh.vertices = partialOceanBottomMesh.GetVerts(true);
         partialOceanBottom.GetComponent<MeshFilter>().mesh.triangles = partialOceanBottomMesh.GetTris();
         partialOceanBottom.GetComponent<MeshFilter>().mesh.uv = partialOceanBottomMesh.GetUV();
         partialOceanBottom.GetComponent<MeshFilter>().mesh.RecalculateNormals();
