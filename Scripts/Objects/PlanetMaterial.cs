@@ -340,9 +340,8 @@ public class PlanetMaterial : MonoBehaviour {
     }
     private Vector2 TerrainTiling(string curPlanetType, int seed) {
         rnd = new System.Random(seed);
-        double xTile = rnd.NextDouble() * (3F - 1F) + 1F;
-        double yTile = rnd.NextDouble() * (1.04F - 1F) + 1F;
-        return new Vector2((int)xTile, (int)yTile);
+        float tile = (float)rnd.NextDouble() * (5.5F - 2.5F) + 2.5F;
+        return new Vector2(tile, tile);
     }
 
     private string OceanTexture(string curPlanetType, int seed) {
