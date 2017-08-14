@@ -12,6 +12,7 @@ public class PlanetTexture : MonoBehaviour {
     private adjacent[,] adjacents;
     private Vector2[] uv;
     public float maxElev = 0F;
+    public float minElev = 650000;
 
     private bool[] checkAdjacents(int vert) {
         // checks neighboring verts, returns an array of booleans to let us know which are nearby.
@@ -62,10 +63,12 @@ public class PlanetTexture : MonoBehaviour {
         if (!skip2) {
             adjacents[vert1, count].vert = vert2;
             count += 1;
+            if (count == 6) { return; }
         }
         if (!skip3) {
             adjacents[vert1, count].vert = vert3;
             count += 1;
+            if (count == 6) { return; }
         }
         adjacents[vert1, 0].count = count;
     }
@@ -138,19 +141,30 @@ public class PlanetTexture : MonoBehaviour {
         return uv;
     }
     
-    public Vector2[] AssignSplatElev(int vertCount, Vector3[] vertices) {
+    public Vector2[] AssignSplatElev(int vertCount, Vector3[] vertices, bool part = false, float curMinElev = 0, float curMaxElev = 0) {
         // for use in the terrain shader, we'll return each vert's uv4 as either as a point along an 
         // RGB fade on the y axis or a point along an RGB fade on the X axis. 
         // In the shader we can then fade up to 6 textures. 
         Vector2[] uv4 = new Vector2[vertCount];
         float[] vertLength = new float[vertCount];
-        float minElev = 650000;
-        for (int i = 0; i <= vertices.Length - 1; i++) {
-            vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
-                                             (vertices[i].y * vertices[i].y) +
-                                             (vertices[i].z * vertices[i].z));
-            if (vertLength[i] <= minElev) { minElev = vertLength[i]; }
-            if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
+        // if we're doing a partial LOD terrain mesh, use the min and max elevation from 
+        // the already created large mesh, so the terrain is textured right.
+        if (part == false) {
+            for (int i = 0; i <= vertices.Length - 1; i++) {
+                vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
+                    (vertices[i].y * vertices[i].y) +
+                    (vertices[i].z * vertices[i].z));
+                if (vertLength[i] <= minElev) { minElev = vertLength[i]; }
+                if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
+            }
+        }
+        else {
+            for (int i = 0; i <= vertices.Length - 1; i++) {
+                vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
+                    (vertices[i].y * vertices[i].y) +
+                    (vertices[i].z * vertices[i].z));
+            }
+            minElev = curMinElev; maxElev = curMaxElev;
         }
         for (int i = 0; i <= vertCount - 1; i++) {
             float normalizedElev = (vertLength[i] - minElev) / (maxElev - minElev);

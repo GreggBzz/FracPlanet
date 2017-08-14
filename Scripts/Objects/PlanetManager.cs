@@ -8,11 +8,13 @@ public class PlanetManager : MonoBehaviour {
     private PlanetLayers cloudMesh;
     private PlanetOceanDetail partialOceanTopMesh;
     private PlanetOceanDetail partialOceanBottomMesh;
+    private PlanetTerrainDetail partialTerrainTopMesh;
     // Gameobjects and boolean base attributes.
     private GameObject terrain;
     private GameObject ocean;
     private GameObject partialOceanTop;
     private GameObject partialOceanBottom;
+    private GameObject partialTerrainTop;
     public GameObject atmosphere;
     public GameObject cloud;
     public bool hasOcean;
@@ -139,6 +141,24 @@ public class PlanetManager : MonoBehaviour {
         return;
     }
 
+    public void ManageTerrain(bool onplanet) {
+        if (onplanet) {
+            if (GameObject.Find("aPlanetTopTerrain")) {
+                Destroy(partialTerrainTop); partialTerrainTopMesh = null;
+            }
+            AddPartialTerrain();
+            GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
+            GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
+            return;
+        }
+        if (!onplanet) {
+            if (GameObject.Find("aPlanetTopTerrain")) {
+                Destroy(partialTerrainTop); partialTerrainTopMesh = null;
+            }
+        }
+        return;
+    }
+
     private void AddTerrain(float dist, float planetScale) {
         Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
         terrain = new GameObject("aPlanet");
@@ -192,12 +212,39 @@ public class PlanetManager : MonoBehaviour {
         partialOceanBottomMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter, true);
         partialOceanBottom.GetComponent<MeshFilter>().mesh.vertices = partialOceanBottomMesh.GetVerts(true);
         partialOceanBottom.GetComponent<MeshFilter>().mesh.triangles = partialOceanBottomMesh.GetTris();
-        partialOceanBottom.GetComponent<MeshFilter>().mesh.uv = partialOceanBottomMesh.GetUV();
+        //partialOceanBottom.GetComponent<MeshFilter>().mesh.uv = partialOceanBottomMesh.GetUV();
         partialOceanBottom.GetComponent<MeshFilter>().mesh.RecalculateNormals();
         partialOceanBottom.transform.position = centerPos + Vector3.forward * 3500F;
         Destroy(ocean); oceanMesh = null;
     }
 
+    private void AddPartialTerrain() {
+        // we'll need a texture manager to calculate the textures.
+        PlanetTexture textureManager = gameObject.AddComponent<PlanetTexture>();
+        // create a smaller, more highly tesselated terrain mesh at the top.
+        partialTerrainTopMesh = gameObject.AddComponent<PlanetTerrainDetail>();
+        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
+        partialTerrainTop = new GameObject("aPlanetTopTerrain");
+        partialTerrainTop.AddComponent<MeshFilter>();
+        partialTerrainTop.AddComponent<MeshRenderer>();
+        partialTerrainTop.GetComponent<Renderer>().material = planetSurfaceMaterial;
+        partialTerrainTopMesh.Generate(terrain.GetComponent<MeshFilter>().mesh.triangles, terrain.GetComponent<MeshFilter>().mesh.vertices, planetDiameter);
+        partialTerrainTop.GetComponent<MeshFilter>().mesh.vertices = partialTerrainTopMesh.GetVerts();
+        partialTerrainTop.GetComponent<MeshFilter>().mesh.triangles = partialTerrainTopMesh.GetTris();
+        partialTerrainTop.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+        // setup some shorthand variables for the texture method.
+        int vertCount = partialTerrainTopMesh.GetVertCount();
+        Vector3[] verts = partialTerrainTop.GetComponent<MeshFilter>().mesh.vertices;
+        int[] tris = partialTerrainTop.GetComponent<MeshFilter>().mesh.triangles;
+        float partialMaxElev = terrain.GetComponent<PlanetTexture>().maxElev;
+        float partialMinElev = terrain.GetComponent<PlanetTexture>().minElev;
+        partialTerrainTop.GetComponent<MeshFilter>().mesh.uv = textureManager.Texture(vertCount, verts, tris);
+        partialTerrainTop.GetComponent<MeshFilter>().mesh.uv4 = textureManager.AssignSplatElev(vertCount, verts, true, partialMinElev, partialMaxElev);
+        partialTerrainTop.transform.position = terrain.transform.position;
+        // clean up.
+        textureManager = null; verts = null; tris = null;
+    }
+    
     private void AddAtmosphere(float dist) {
         Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType, curPlanetSeed);
         atmosphere = new GameObject("aPlanetAtmosphere");

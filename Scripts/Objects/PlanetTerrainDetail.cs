@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-public class PlanetOceanDetail : MonoBehaviour {
+public class PlanetTerrainDetail : MonoBehaviour {
     // keep track of how many new vertices we've added during tesselate.
     // and the parent vertices, the center of each hexagon.
     private int vertCount;
@@ -18,51 +18,28 @@ public class PlanetOceanDetail : MonoBehaviour {
 
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
-    
+
     private Vector3[] vertices = new Vector3[40962];
     private Vector3[] tmpVerticies;
 
-    public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter, bool bottom = false) {
+    public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter) {
 
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
-
 
         int triCount = 0;
         int[] vertexRef = new int[40962];
         Vector3[] tmpVerts = new Vector3[40962];
         int[] tmpTris = new int[245000];
-        int DebugPointCount = 0;
+
+        // caclulate the position of each verticie in world space, post transforms,
+        // to ensure that we tesselate the verticies around the player.
+        Transform tr = GameObject.Find("aPlanet").transform;
 
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
-            // mark the top 1/100th of the ocean to keep.
-            if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 70F) && (!bottom)) {
-                DebugPointCount += 1;
-                // if the vertex hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
-                // and copy it. 
-                if (vertexRef[curTriangles[i]] == 0) {
-                    vertexRef[curTriangles[i]] = vertCount;
-                    tmpVerts[vertCount] = curVerts[curTriangles[i]];
-                    vertCount += 1;
-                }
-                if (vertexRef[curTriangles[i + 1]] == 0) {
-                    vertexRef[curTriangles[i + 1]] = vertCount;
-                    tmpVerts[vertCount] = curVerts[curTriangles[i + 1]];
-                    vertCount += 1;
-                }
-                if (vertexRef[curTriangles[i + 2]] == 0) {
-                    vertexRef[curTriangles[i + 2]] = vertCount;
-                    tmpVerts[vertCount] = curVerts[curTriangles[i + 2]];
-                    vertCount += 1;
-                }
-                tmpTris[triCount] = vertexRef[curTriangles[i]];
-                tmpTris[triCount + 1] = vertexRef[curTriangles[i + 1]];
-                tmpTris[triCount + 2] = vertexRef[curTriangles[i + 2]];
-                triCount += 3;
-            }
-            if ((curVerts[curTriangles[i]].y) < (curDiameter / 2F - curDiameter / 300F) && (bottom)) {
-                // if the vertext hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
-                // and copy it. 
-                if (vertexRef[curTriangles[i]] == 0) {
+            if (tr.TransformPoint(curVerts[curTriangles[i]]).y > (curDiameter / 2F - curDiameter / 50F) + 750F) { 
+                    // if the vertex hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
+                    // and copy it. 
+                    if (vertexRef[curTriangles[i]] == 0) {
                     vertexRef[curTriangles[i]] = vertCount;
                     tmpVerts[vertCount] = curVerts[curTriangles[i]];
                     vertCount += 1;
@@ -93,20 +70,14 @@ public class PlanetOceanDetail : MonoBehaviour {
         }
 
         // clean up
-        if (!bottom) Debug.Log("Ocean Point Count: " + DebugPointCount);
         tmpVerts = null; tmpTris = null; vertexRef = null;
         curVerts = null; curTriangles = null;
-
-        // if we're just truncating the bottom, return. Otherwise, tesselate the top
-        if (bottom) {
-            return;
-        }
 
         meshGeometry.newVertIndex = vertCount;
         meshGeometry.SetVerts(vertices);
         meshGeometry.SetTris(triangles);
         meshGeometry.tessRounds = 1;
-        meshGeometry.Generate("ocean", curDiameter, 100, false);
+        meshGeometry.Generate("terrain", curDiameter, 100, false);
 
         triangles = meshGeometry.GetTriangles();
         vertices = meshGeometry.GetVerts();
@@ -116,7 +87,7 @@ public class PlanetOceanDetail : MonoBehaviour {
     public int[] GetTris(bool reverse = false) {
         if (reverse) {
             InvertTriangles();
-         }
+        }
         return triangles;
     }
 
@@ -124,14 +95,17 @@ public class PlanetOceanDetail : MonoBehaviour {
         triangles = triangles.Reverse().ToArray();
     }
 
-    public Vector3[] GetVerts(bool bottom = false) {
+    public Vector3[] GetVerts() {
         tmpVerticies = new Vector3[vertCount];
         // assign the verts to a properly sized array.
         for (int i = 0; i <= vertCount - 1; i++) {
-            if (bottom) { tmpVerticies[i] = (tmpVerticies[1] * .99F); }
             tmpVerticies[i] = vertices[i];
         }
         vertices = null;
         return tmpVerticies;
+    }
+
+    public int GetVertCount() {
+        return vertCount;
     }
 }

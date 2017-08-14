@@ -16,7 +16,6 @@ public class DrawScene : MonoBehaviour {
     private Vector3 startPos;
     private RaycastHit hit, hit2;
     private float teleDistance;
-    private Teleport teleport; // teleport library.
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
@@ -33,7 +32,7 @@ public class DrawScene : MonoBehaviour {
     public bool havePlanet = false; // are we rendering a planet?
     System.Random rnd;
 
-    void Start () {
+    void Start() {
         planetManager = gameObject.AddComponent<PlanetManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
@@ -45,13 +44,13 @@ public class DrawScene : MonoBehaviour {
         screenFade.enabled = true;
         rnd = new System.Random();
         // queue up 1000 random planet seeds.
-        for (int i = 0; i <= seedQueue.Length -1; i++ ) {
+        for (int i = 0; i <= seedQueue.Length - 1; i++) {
             seedQueue[i] = rnd.Next(0, 32000);
         }
     }
 
     private void Update() {
-        if (wand == null) { return;  }
+        if (wand == null) { return; }
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
             teleDistance = 800;
@@ -76,6 +75,15 @@ public class DrawScene : MonoBehaviour {
             aMainLight.Enable();
         }
         skybox.setSkyOffPlanet();
+        matchTerrainRotation();
+    }
+
+    public void matchTerrainRotation() { // hack to force the rotation of the planet detail terrain to match.
+        // because (race condition?) I don't know!!?
+        if (GameObject.Find("aPlanetTopTerrain")) {
+            GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
+            GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
+        }
     }
 
     public void TeleportFade() {
@@ -96,13 +104,14 @@ public class DrawScene : MonoBehaviour {
         if (toHome) { teleportHome = true;  return; }
         startPos = wand.transform.position;
     }
-    
+
     private void DoTeleport(bool toHome) {
         string[] planetParts = { "aPlanetCloud", "aPlanet" };
         if (toHome) {
             wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
             wand.transform.parent.position = new Vector3(0F, 0F, 0F);
-            if (GameObject.Find("aPlanet")) { planetManager.ManageOcean(false); }
+            // Create the full, low detail ocean and terrain, delete the detailed bits.
+            if (GameObject.Find("aPlanet")) { planetManager.ManageOcean(false); planetManager.ManageTerrain(false); }
             // reset terrain and clouds to upright.
             foreach (string planetPart in planetParts) {
                 if (GameObject.Find(planetPart)) {
@@ -114,12 +123,13 @@ public class DrawScene : MonoBehaviour {
         }
         if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
             if (hit.transform.gameObject.name.Contains("Planet")) {
+                // create seperate high detail top ocean and low detail bottom ocean (once).
                 planetManager.ManageOcean(true);
                 // if we hit a planet, first rotate the point on the planet we hit to the top.
                 // set the hit point (fromPoint) relative to 0,0,0 by subtracting the planet's position.
                 Vector3 toPoint = Vector3.up;
                 Vector3 fromPoint = hit.point - hit.transform.gameObject.transform.position;
-                    Vector3 dropPoint = new Vector3(0, 20000, 3500);
+                Vector3 dropPoint = new Vector3(0, 20000, 3500);
                 // correct the height of the toPoint by dropping a ray and taking it's hit point.
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                     toPoint = hit2.point - hit.transform.gameObject.transform.position;
@@ -139,11 +149,15 @@ public class DrawScene : MonoBehaviour {
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                     wand.transform.parent.position = hit2.point;
                 }
+                planetManager.ManageTerrain(true);
             }
             else {
                 wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
                 wand.transform.parent.position = hit.point;
-                if (GameObject.Find("aPlanet")) { planetManager.ManageOcean(false); }
+                if (GameObject.Find("aPlanet")) {
+                    planetManager.ManageOcean(false);
+                    planetManager.ManageTerrain(false);
+                }
             }
             onWhichPlanet = hit.transform.gameObject.name;
         }
@@ -185,9 +199,8 @@ public class DrawScene : MonoBehaviour {
         // Update our LineRenderer
         if (pointerLineRenderer && pointerLineRenderer.enabled) {
             Vector3 startPos = wand.transform.position;
-            // If our raycast hits, end the line at that positon. Otherwise,
-            // make our line point straight out for 5000 meters.
-            // If the raycast hits, the line will be green, if not, red.
+            // If our raycast hits (line will be green) end the line at that positon. Otherwise,
+            // make our line point straight out for 5000 meters, and red.
             if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
                 lineRendererVertices[1] = hit.point;
                 pointerLineRenderer.startColor = baseColor;
@@ -243,7 +256,7 @@ public class DrawScene : MonoBehaviour {
         else {
             scanBoxText = planetManager.planetMetaData.getData();
         }
-        scanBox.DisplayScanBox(scanBoxText + " " + seedQueueIndex);
+        scanBox.DisplayScanBox(scanBoxText + " Planet Seed: " + seedQueueIndex);
     }
 
     public void HideScanBox() {
