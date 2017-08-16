@@ -59,8 +59,8 @@ public class WandController : SteamVR_TrackedController {
         // draw/update the planets?
         aScene.UpdatePlanets();
 
-        // update the terrain LOD rotation, if detail terrain exists.
-        aScene.matchTerrainRotation();
+        // update the terrain LOD rotation and ensure player top dead center position if detail terrain exists.
+        aScene.MatchTerrainRotation();
 
         // Have we just teleported? Delay the transform until we fade out. Fade in once it's done.
         aScene.TeleportFade();

@@ -75,14 +75,18 @@ public class DrawScene : MonoBehaviour {
             aMainLight.Enable();
         }
         skybox.setSkyOffPlanet();
-        matchTerrainRotation();
     }
 
-    public void matchTerrainRotation() { // hack to force the rotation of the planet detail terrain to match.
-        // because (race condition?) I don't know!!?
+    public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
         if (GameObject.Find("aPlanetTopTerrain")) {
             GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
             GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
+            // drop the player from the center top onto the terrain, to ensure we're always above and the planet transform
+            // and rotation's happen below us.
+            Vector3 dropPoint = new Vector3(0, 30000, 3500);
+            if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 30000)) {
+                wand.transform.parent.position = hit2.point;
+            }
         }
     }
 
@@ -129,8 +133,8 @@ public class DrawScene : MonoBehaviour {
                 // set the hit point (fromPoint) relative to 0,0,0 by subtracting the planet's position.
                 Vector3 toPoint = Vector3.up;
                 Vector3 fromPoint = hit.point - hit.transform.gameObject.transform.position;
-                Vector3 dropPoint = new Vector3(0, 20000, 3500);
                 // correct the height of the toPoint by dropping a ray and taking it's hit point.
+                Vector3 dropPoint = new Vector3(0, 30000, 3500);
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
                     toPoint = hit2.point - hit.transform.gameObject.transform.position;
                 }
@@ -142,14 +146,11 @@ public class DrawScene : MonoBehaviour {
                         GameObject.Find(planetPart).transform.localRotation = rotateToTop * GameObject.Find(planetPart).transform.localRotation;
                     }
                 }
-                // cast a ray down, and wherever that hits, that's where the player position should be.
-                if (onWhichPlanet.Contains("Planet")) {
-                    dropPoint = new Vector3(0, wand.transform.parent.position.y, wand.transform.parent.position.z) + new Vector3(0, 100, 0);
-                }
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
-                    wand.transform.parent.position = hit2.point;
-                }
                 planetManager.ManageTerrain(true);
+                if (GameObject.Find("aPlanet")) {
+                    GameObject.Find("aPlanet").GetComponent<Renderer>().enabled = false;
+                    GameObject.Find("aPlanet").GetComponent<MeshCollider>().enabled = false;
+                }
             }
             else {
                 wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);

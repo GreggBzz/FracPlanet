@@ -21,22 +21,25 @@ public class PlanetSounds : MonoBehaviour {
 
     public void EnableSounds(string curPlanetType, bool hasOcean = false, bool hasAtmosphere = false, float diameter = 2500F, float maxElev = 2500F) {
         if (curPlanetType.Contains("Rock")) return; // no sound on Rocky planets.
-        // set the volume.
+        // If enabled, set the volume.
         float curElev = Vector3.Distance(headset.transform.position, planetCenter);
         if (enabled) { setVolume(maxElev, diameter / 2.0F, curElev); return; }
-        // if we're not enabled, setup all sounds.
+        // If we're not enabled, setup all sounds depending on ocean and atmosphere.
         if (hasOcean) {
             planetOcean.GetComponent<AudioSource>().clip = Resources.Load("PlanetSounds/" + curPlanetType.Replace("Planet", "") + "Ocean") as AudioClip;
             planetOcean.GetComponent<AudioSource>().loop = true;
             planetOcean.GetComponent<AudioSource>().enabled = true;
             planetOcean.GetComponent<AudioSource>().Play();
         }
-        planetWind.GetComponent<AudioSource>().clip = Resources.Load("PlanetSounds/" + curPlanetType.Replace("Planet", "") + "Wind") as AudioClip;
-        planetWind.GetComponent<AudioSource>().loop = true;
-        planetWind.GetComponent<AudioSource>().enabled = true;
-        planetWind.GetComponent<AudioSource>().Play();
-        setVolume(maxElev, diameter / 2.0F, curElev);
-        enabled = true;
+        // If there's an atmosphere, sound.
+        if (hasAtmosphere) {
+            planetWind.GetComponent<AudioSource>().clip = Resources.Load("PlanetSounds/" + curPlanetType.Replace("Planet", "") + "Wind") as AudioClip;
+            planetWind.GetComponent<AudioSource>().loop = true;
+            planetWind.GetComponent<AudioSource>().enabled = true;
+            planetWind.GetComponent<AudioSource>().Play();
+            setVolume(maxElev, diameter / 2.0F, curElev);
+            enabled = true;
+        }
     }
 
     public void DisableSounds() {

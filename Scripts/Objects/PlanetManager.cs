@@ -68,7 +68,10 @@ public class PlanetManager : MonoBehaviour {
             Destroy(partialOceanTop); partialOceanTop = null;
         }
         if (partialOceanBottom != null) {
-            Destroy(partialOceanBottom); partialOceanTop = null;
+            Destroy(partialOceanBottom); partialOceanBottom = null;
+        }
+        if (partialTerrainTop != null) {
+            Destroy(partialTerrainTop); partialTerrainTop = null;
         }
         planetSound.DisableSounds();
     }
@@ -76,7 +79,7 @@ public class PlanetManager : MonoBehaviour {
     public void PausePlanet(string planetName) {
         // "pause" a planet we've teleported to.
         // "unpause" all the other planets.
-        if ((terrain != null) && (terrain.name == planetName)) {
+        if (((terrain != null) && (terrain.name == planetName)) || ((partialTerrainTop != null) && (partialTerrainTop.name == planetName))) {
             terrainMesh.rotate = false;
             if (oceanMesh != null) { oceanMesh.rotate = false; }
             // if we're on the planet, change the cloud shader so it looks right, change the terrain textures so they're detailed.
@@ -147,13 +150,15 @@ public class PlanetManager : MonoBehaviour {
                 Destroy(partialTerrainTop); partialTerrainTopMesh = null;
             }
             AddPartialTerrain();
-            GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
-            GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
             return;
         }
         if (!onplanet) {
             if (GameObject.Find("aPlanetTopTerrain")) {
                 Destroy(partialTerrainTop); partialTerrainTopMesh = null;
+            }
+            if (GameObject.Find("aPlanet")) {
+                GameObject.Find("aPlanet").GetComponent<Renderer>().enabled = true;
+                GameObject.Find("aPlanet").GetComponent<MeshCollider>().enabled = true;
             }
         }
         return;
@@ -212,7 +217,6 @@ public class PlanetManager : MonoBehaviour {
         partialOceanBottomMesh.Generate(ocean.GetComponent<MeshFilter>().mesh.triangles, ocean.GetComponent<MeshFilter>().mesh.vertices, planetDiameter, true);
         partialOceanBottom.GetComponent<MeshFilter>().mesh.vertices = partialOceanBottomMesh.GetVerts(true);
         partialOceanBottom.GetComponent<MeshFilter>().mesh.triangles = partialOceanBottomMesh.GetTris();
-        //partialOceanBottom.GetComponent<MeshFilter>().mesh.uv = partialOceanBottomMesh.GetUV();
         partialOceanBottom.GetComponent<MeshFilter>().mesh.RecalculateNormals();
         partialOceanBottom.transform.position = centerPos + Vector3.forward * 3500F;
         Destroy(ocean); oceanMesh = null;
@@ -240,6 +244,8 @@ public class PlanetManager : MonoBehaviour {
         float partialMinElev = terrain.GetComponent<PlanetTexture>().minElev;
         partialTerrainTop.GetComponent<MeshFilter>().mesh.uv = textureManager.Texture(vertCount, verts, tris);
         partialTerrainTop.GetComponent<MeshFilter>().mesh.uv4 = textureManager.AssignSplatElev(vertCount, verts, true, partialMinElev, partialMaxElev);
+        partialTerrainTop.AddComponent<MeshCollider>();
+        partialTerrainTop.GetComponent<MeshCollider>().enabled = true;
         partialTerrainTop.transform.position = terrain.transform.position;
         // clean up.
         textureManager = null; verts = null; tris = null;

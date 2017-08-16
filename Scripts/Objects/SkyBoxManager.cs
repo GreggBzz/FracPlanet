@@ -79,7 +79,9 @@ public class SkyBoxManager : MonoBehaviour {
             GameObject.Find("Camera (eye)").GetComponent<GlobalFog>().startDistance = globalFogDistance;
             // Adjust the cloud alpha cutoff.
             Color32 newCloudCutoff = new Color32(cloudCutOff.r, cloudCutOff.g, cloudCutOff.b, (byte)curCloudCutoff);
-            GameObject.Find("aPlanetCloud").GetComponent<Renderer>().material.SetColor("_TintColor", newCloudCutoff);
+            if (GameObject.Find("aPlanetCloud")) {
+                GameObject.Find("aPlanetCloud").GetComponent<Renderer>().material.SetColor("_TintColor", newCloudCutoff);
+            }
             // Move the starbox so that it always looks right.
             float playerHeight = GameObject.Find("Camera (eye)").transform.position.y;
             starField.transform.position = new Vector3(0, playerHeight - 1350, 3500);
@@ -96,7 +98,9 @@ public class SkyBoxManager : MonoBehaviour {
             RenderSettings.sun = GameObject.Find("Sun").GetComponent<Light>();
         }
         // disable the Atmosphere mesh renderer
-        GameObject.Find("aPlanetAtmosphere").GetComponent<MeshRenderer>().enabled = false;
+        if (GameObject.Find("aPlanetAtmosphere") != null) {
+            GameObject.Find("aPlanetAtmosphere").GetComponent<MeshRenderer>().enabled = false;
+        }
         // Enable and transform the starbox.
         starField.transform.localScale = new Vector3(2790, 2790, 2790);
         // rotate the starfield a bit to give it a "random" look.

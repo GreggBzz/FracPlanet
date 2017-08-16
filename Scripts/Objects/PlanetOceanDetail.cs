@@ -31,12 +31,10 @@ public class PlanetOceanDetail : MonoBehaviour {
         int[] vertexRef = new int[40962];
         Vector3[] tmpVerts = new Vector3[40962];
         int[] tmpTris = new int[245000];
-        int DebugPointCount = 0;
 
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
             // mark the top 1/100th of the ocean to keep.
             if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 70F) && (!bottom)) {
-                DebugPointCount += 1;
                 // if the vertex hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
                 // and copy it. 
                 if (vertexRef[curTriangles[i]] == 0) {
@@ -93,7 +91,6 @@ public class PlanetOceanDetail : MonoBehaviour {
         }
 
         // clean up
-        if (!bottom) Debug.Log("Ocean Point Count: " + DebugPointCount);
         tmpVerts = null; tmpTris = null; vertexRef = null;
         curVerts = null; curTriangles = null;
 
