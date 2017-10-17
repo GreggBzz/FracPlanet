@@ -4,6 +4,9 @@ using System;
 // Setup mesh geometry, tesselate, bisect vectors, extend midpoints etc..
 public class PlanetGeometry : MonoBehaviour {
 
+    // is this a full mesh, or a more detailed partial mesh?
+    private bool aFullSetup = true;
+    
     // keep track of how many new vertices we've added during tesselate.
     // and the parent vertices, the center of each hexagon.
     public int newVertIndex;
@@ -21,6 +24,8 @@ public class PlanetGeometry : MonoBehaviour {
 
     private int[] triangles;
     private int[] tempTriangles;
+    private int[] vertSeed;
+    private int vertSeedCount = 0;
 
     // scale variables.
     private double radius;
@@ -41,6 +46,7 @@ public class PlanetGeometry : MonoBehaviour {
         // setup random seed and assign the planet layer.
         rnd = new System.Random(curPlanetSeed);
         planetLayer = curPlanetLayer;
+        aFullSetup = fullSetup;
 
         // setup roughness, planet scale, base verts and triangles.
         roughness = ((float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness) / (curDiameter / 2500);
@@ -187,11 +193,25 @@ public class PlanetGeometry : MonoBehaviour {
     private Vector3 DisplaceMidpoint(Vector3 p1, float displaceMag) {
         // randomly displace a midpoint up or down 50/50.
         if (planetLayer != "terrain") return p1 * 1.0F;
-        if (rnd.NextDouble() < .5F) {
-            return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
+        if (aFullSetup) {
+            if (rnd.NextDouble() < .5F) {
+                return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
+            }
+            else {
+                return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
+            }
         }
         else {
-            return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
+            // find our random seed ref and make a new random sequence
+            // so our detailed terrain is more consistent. 
+            rnd = new System.Random(vertSeed[vertSeedCount]);
+            vertSeedCount += 1;
+            if (rnd.NextDouble() < .5F) {
+                return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
+            }
+            else {
+                return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
+            }
         }
     }
 
@@ -263,6 +283,10 @@ public class PlanetGeometry : MonoBehaviour {
 
     public void SetTris(int[] newTris) {
         triangles = newTris;
+    }
+
+    public void SetVertSeeds(int[] vertSeeds) {
+        vertSeed = vertSeeds;
     }
 
 }

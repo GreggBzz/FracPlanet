@@ -82,17 +82,11 @@ public class PlanetManager : MonoBehaviour {
         if (((terrain != null) && (terrain.name == planetName)) || ((partialTerrainTop != null) && (partialTerrainTop.name == planetName))) {
             terrainMesh.rotate = false;
             if (oceanMesh != null) { oceanMesh.rotate = false; }
-            // if we're on the planet, change the cloud shader so it looks right, change the terrain textures so they're detailed.
+            // if we're on the planet, change the cloud shader so it looks right. 
             if (cloudMesh != null) {
                 Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, true);
                 cloud.GetComponent<Renderer>().material = cloudMaterial;
             }
-            if (oceanMesh != null) {
-                Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed, true);
-                oceanMesh.GetComponent<Renderer>().material = oceanMaterial;
-            }
-            Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
-            terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             // activate the lights!
             if (!aSun.enabled) aSun.Enable(planetDiameter);
             planetSound.EnableSounds(curPlanetType, hasOcean, hasAtmosphere, planetDiameter, terrain.GetComponent<PlanetTexture>().maxElev);
@@ -109,10 +103,6 @@ public class PlanetManager : MonoBehaviour {
             if (oceanMesh != null) {
                 Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed, false);
                 oceanMesh.GetComponent<Renderer>().material = oceanMaterial;
-            }
-            if (terrainMesh != null) {
-                Material terrainMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, false);
-                terrainMesh.GetComponent<Renderer>().material = terrainMaterial;
             }
             aSun.Disable();
             planetSound.DisableSounds();
