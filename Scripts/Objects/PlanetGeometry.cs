@@ -193,25 +193,15 @@ public class PlanetGeometry : MonoBehaviour {
     private Vector3 DisplaceMidpoint(Vector3 p1, float displaceMag) {
         // randomly displace a midpoint up or down 50/50.
         if (planetLayer != "terrain") return p1 * 1.0F;
-        if (aFullSetup) {
-            if (rnd.NextDouble() < .5F) {
-                return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
-            }
-            else {
-                return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
-            }
-        }
-        else {
-            // find our random seed ref and make a new random sequence
-            // so our detailed terrain is more consistent. 
+        if (!aFullSetup) {
             rnd = new System.Random(vertSeed[vertSeedCount]);
             vertSeedCount += 1;
-            if (rnd.NextDouble() < .5F) {
-                return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
-            }
-            else {
-                return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
-            }
+        }
+        if (rnd.NextDouble() < .5F) {
+            return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
+        }
+        else {
+            return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
         }
     }
 

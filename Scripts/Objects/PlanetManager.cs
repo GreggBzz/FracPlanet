@@ -274,6 +274,13 @@ public class PlanetManager : MonoBehaviour {
         planetOutline.GetComponent<Renderer>().enabled = true;
     }
 
+    public float GetOceanDiameter() {
+        if (partialOceanTopMesh != null) {
+            return partialOceanTopMesh.getDiameter();
+        }
+        return 1.0F;
+    }
+
     public void UpdatePotentialPlanet(int seed) {
         if (planetOutline != null) {
             // update the outline of our potential planet.

@@ -20,6 +20,7 @@ public class DrawScene : MonoBehaviour {
     private ScreenFader screenFade;
     private DrawScene aScene;
     private SkyBoxManager skybox;
+    private CameraEffects cameraEffect;
     private float timer = 0;
     private float timerMax = 0;
     // planet related stuff.
@@ -39,7 +40,7 @@ public class DrawScene : MonoBehaviour {
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
         scanBox = gameObject.AddComponent<ScanBox>();
         skybox = gameObject.AddComponent<SkyBoxManager>();
-
+        cameraEffect = gameObject.AddComponent<CameraEffects>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
         rnd = new System.Random();

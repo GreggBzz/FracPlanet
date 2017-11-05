@@ -13,12 +13,11 @@ public class PlanetOceanDetail : MonoBehaviour {
     private int[] tempTriangles;
 
     // scale variables.
-    private double radius;
-    private float pScale;
+    private float diameter;
 
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
-    
+
     private Vector3[] vertices = new Vector3[40962];
     private Vector3[] tmpVerticies;
 
@@ -90,6 +89,8 @@ public class PlanetOceanDetail : MonoBehaviour {
             vertices[i] = tmpVerts[i];
         }
 
+        diameter = curDiameter;
+        
         // clean up
         tmpVerts = null; tmpTris = null; vertexRef = null;
         curVerts = null; curTriangles = null;
@@ -113,8 +114,12 @@ public class PlanetOceanDetail : MonoBehaviour {
     public int[] GetTris(bool reverse = false) {
         if (reverse) {
             InvertTriangles();
-         }
+        }
         return triangles;
+    }
+
+    public float getDiameter() {
+        return diameter;
     }
 
     private void InvertTriangles() {
