@@ -123,9 +123,14 @@ public class PlanetManager : MonoBehaviour {
     }
 
     public void ManageOcean(bool onplanet) {
-        if (!hasOcean) return; // if it's a planet w/o an ocean, return.
-        if (GameObject.Find("aPlanetTopOcean") && onplanet) { return; }
-        if (onplanet) { AddPartialOceans(); return; }
+        if (!hasOcean) return; // if it's a planet w/o an ocean, return.       
+        if (GameObject.Find("aPlanetTopOcean") && onplanet) {
+            return; // we've already made the ocean detail, peace out.
+        }
+        if (onplanet) {
+            AddPartialOceans();
+            return;
+        }
         if (!GameObject.Find("aPlanetOcean")) {
             Destroy(partialOceanTop); partialOceanTopMesh = null;
             Destroy(partialOceanBottom); partialOceanBottomMesh = null;
@@ -165,8 +170,9 @@ public class PlanetManager : MonoBehaviour {
         terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
+        // Instantiate the partial, planetside detail meshes early, on planet creation.
     }
-    
+
     private void AddOcean(float dist, float planetScale) {
         Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
         ocean = new GameObject("aPlanetOcean");
@@ -178,6 +184,7 @@ public class PlanetManager : MonoBehaviour {
         oceanMesh.GenerateFull("ocean", planetDiameter, curPlanetSeed);
         oceanMesh.transform.position =  centerPos + Vector3.forward * dist;
         oceanMesh.center = oceanMesh.transform.position;
+        // Instantiate the partial, planetside detail meshes early, on planet creation.
     }
 
     private void AddPartialOceans() {
@@ -278,7 +285,7 @@ public class PlanetManager : MonoBehaviour {
         if (partialOceanTopMesh != null) {
             return partialOceanTopMesh.getDiameter();
         }
-        return 1.0F;
+        return -10000.0F; // ocean way down to prevent y < ocean false blur. 
     }
 
     public void UpdatePotentialPlanet(int seed) {

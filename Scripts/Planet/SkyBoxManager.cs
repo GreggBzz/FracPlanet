@@ -28,6 +28,7 @@ public class SkyBoxManager : MonoBehaviour {
             starField.GetComponent<MeshFilter>().mesh.triangles.Reverse().ToArray();
         // transform and disable the collider.
         starField.GetComponent<Collider>().enabled = false;
+        Destroy(starField.GetComponent<Collider>());
         starField.GetComponent<Renderer>().enabled = false;
         starsCutoff = starFieldMaterial.GetFloat("_Cutoff");
     }

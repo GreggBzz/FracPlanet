@@ -3,13 +3,14 @@ using System;
 
 public class PlanetTexture : MonoBehaviour {
     // texture manager class. Methods to texture terrain, ocean, atmosphere.
+    // for understanding this, start with the Texture Method().
 
-    private struct adjacent {
+    protected struct adjacent {
         public int vert;
         public short count;
     }
 
-    private adjacent[,] adjacents;
+    protected adjacent[,] adjacents;
     private Vector2[] uv;
     public float maxElev = 0F;
     public float minElev = 650000;
@@ -17,6 +18,11 @@ public class PlanetTexture : MonoBehaviour {
     private bool[] checkAdjacents(int vert) {
         // checks neighboring verts, returns an array of booleans to let us know which are nearby.
         bool[] matches = new bool[4];
+
+        if ((vert > adjacents.GetLength(0) - 1) || (vert < 0)) {
+            vert = 1;
+        };
+
         for (int i = 0; i <= 5; i++) {
             if (adjacents[vert, i].vert == -99) {
                 return matches;
@@ -107,6 +113,7 @@ public class PlanetTexture : MonoBehaviour {
         // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
         // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
+
         adjacents = new adjacent[vertCount, 6];
         uv = new Vector2[vertCount];
 
@@ -128,8 +135,11 @@ public class PlanetTexture : MonoBehaviour {
         vertList[0] = 0;
         do {
             do {
-                checkedMatches = checkAdjacents(vertList[vi]);
-                uv[vertList[vi]] = assignAdjacent(checkedMatches, UnityEngine.Random.Range(0, 12));
+                if (vertList[vi] != -1) {
+                    checkedMatches = checkAdjacents(vertList[vi]);
+                    uv[vertList[vi]] = assignAdjacent(checkedMatches, UnityEngine.Random.Range(0, 12));
+                    // catch the stray unassinged vertlist[vi].
+                }
                 vi += 1;
                 doneVerts += 1;
             } while (vertList[vi] != -1);
