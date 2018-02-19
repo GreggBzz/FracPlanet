@@ -62,18 +62,20 @@ void vert (inout appdata_full v) {
     float4 _waveZmove = float4 (0.006, .02, -0.02, 0.1);
    
     float4 waves;
+
     waves = v.vertex.x * _waveXSize;
     waves += v.vertex.z * _waveZSize;
  
     waves += _Time.x * (1 - _ShakeTime * 2 - v.color.b ) * waveSpeed *_WindSpeed;
  
     float4 s, c;
-    waves = frac (waves);
+    // frac will return the decimal.  frac(0.5) = 0.5
+	waves = frac (waves);
     FastSinCos (waves, s,c);
  
     float waveAmount = v.texcoord.y * (v.color.a + _ShakeBending);
-    s *= waveAmount;
  
+    s *= waveAmount;
     s *= normalize (waveSpeed);
  
     s = s * s;

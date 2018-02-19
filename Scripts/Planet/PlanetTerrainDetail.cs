@@ -32,7 +32,6 @@ public class PlanetTerrainDetail : MonoBehaviour {
         int[] vertSeeds = new int[40962]; // store the added verts indicies for
         // instantiating a rnd that can do consistent fractal displacement post transform and during an arbitrary order.
         int[] tmpTris = new int[245000];
-
         // caclulate the position of each verticie in world space, post transforms,
         // to ensure that we tesselate the verticies around the player.
         Transform tr = GameObject.Find("aPlanet").transform;

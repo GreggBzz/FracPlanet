@@ -32,9 +32,13 @@ public class DrawScene : MonoBehaviour {
     public int planetSeed;
     public bool havePlanet = false; // are we rendering a planet?
     System.Random rnd;
+    // biomes
+    private GrassManager grassManager;
+
 
     void Start() {
         planetManager = gameObject.AddComponent<PlanetManager>();
+        grassManager = gameObject.AddComponent<GrassManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
@@ -57,6 +61,9 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 800;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
+            // Grass experiment.
+            grassManager.AddGrass(true);
+            grassManager.PlaceGrass(true);
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -76,6 +83,7 @@ public class DrawScene : MonoBehaviour {
             aMainLight.Enable();
         }
         skybox.setSkyOffPlanet();
+        grassManager.DisableGrass();
     }
 
     public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
@@ -147,6 +155,8 @@ public class DrawScene : MonoBehaviour {
                         GameObject.Find(planetPart).transform.localRotation = rotateToTop * GameObject.Find(planetPart).transform.localRotation;
                     }
                 }
+                // see MatchTerrainRotation() to see the player position transform, after the terrain has rotated.
+                // we drop the player with that. It's called once a frame.
                 planetManager.ManageTerrain(true);
                 if (GameObject.Find("aPlanet")) {
                     GameObject.Find("aPlanet").GetComponent<Renderer>().enabled = false;
@@ -164,6 +174,7 @@ public class DrawScene : MonoBehaviour {
             onWhichPlanet = hit.transform.gameObject.name;
         }
         PausePlanet();
+        //grassManager.HideGrass();
     }
 
     private bool Waited(float seconds) {

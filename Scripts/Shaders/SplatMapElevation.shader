@@ -26,7 +26,7 @@
 	}
 		CGPROGRAM
         #pragma surface surf StandardSpecular addshadow finalcolor:setColor
-        #pragma target 4.0
+        #pragma target 5.0
 
 		struct Input {
 		  float2 uv4_Control;

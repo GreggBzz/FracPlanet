@@ -43,6 +43,7 @@ public class PlanetGeometry : MonoBehaviour {
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
 
     public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100, bool fullSetup = true) {
+                
         // setup random seed and assign the planet layer.
         rnd = new System.Random(curPlanetSeed);
         planetLayer = curPlanetLayer;
