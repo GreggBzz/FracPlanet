@@ -5,9 +5,9 @@ public class GrassManager : MonoBehaviour {
     private bool grassEnabled = false;
     // For ~100FPS on a 1060, shoot for < 2500 grass in the FOV using 10 materials.
     // Because of dynamic batching, performance roughly scales with (grassMaterials * grassCount).
-    public const int grassCount = 3000;
+    public const int grassCount = 4000;
     public const int grassMaterials = 10;
-    public const float grassArea = 20;
+    public const float grassArea = 30;
 
     private Grass[] grassMesh = new Grass[grassCount];
     private GameObject[] grassBunch = new GameObject[grassCount];
@@ -50,7 +50,8 @@ public class GrassManager : MonoBehaviour {
             float zPos = Random.Range(-grassArea, grassArea);
             grassPos[i] = new Vector2(xPos, zPos);
 
-            grassBunch[i].GetComponent<MeshFilter>().mesh.RecalculateNormals();
+            grassMesh[i].SetNormals(grassBunch[i].GetComponent<MeshFilter>().mesh.normals);
+            grassBunch[i].GetComponent<MeshFilter>().mesh.normals = grassMesh[i].GetNormals();
             grassBunch[i].GetComponent<MeshFilter>().mesh.RecalculateBounds();
             grassBunch[i].GetComponent<Renderer>().enabled = false;
         }
@@ -60,7 +61,7 @@ public class GrassManager : MonoBehaviour {
 
     private Material GetMaterial() {
         Material aGrassMaterial;
-        Texture grassTexture = Resources.Load("BiomeTextures/grassTest" + Random.Range(8, 13)) as Texture;
+        Texture grassTexture = Resources.Load("BiomeTextures/Grass" + Random.Range(1, 4)) as Texture;
         //Texture grassTexture = Resources.Load("BiomeTextures/grassTest3") as Texture;
         aGrassMaterial = new Material(Shader.Find("Custom/SimpleGrassSine"));
         aGrassMaterial.SetTexture("_MainTex", grassTexture);

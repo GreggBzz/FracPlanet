@@ -11,7 +11,8 @@ Properties {
  
 SubShader {
     Tags {"Queue"="AlphaTest" "IgnoreProjector"="True" "RenderType"="TransparentCutout"}
-   
+    Cull Off
+
 CGPROGRAM
 #pragma target 5.0
 #pragma surface surf Lambert alphatest:_Cutoff vertex:vert addshadow
@@ -39,9 +40,8 @@ void vert (inout appdata_full v) {
 }
  
  void surf (Input IN, inout SurfaceOutput o) {
-    fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+    fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * (_Color + unity_AmbientSky) * 0.5;
     o.Albedo = c.rgb;
-    o.Emission = c.rgb * tex2D(_Illum, IN.uv_Illum).a;
     o.Alpha = c.a;
 }
 ENDCG
