@@ -9,10 +9,12 @@ public class GrassManager : MonoBehaviour {
     public const int grassMaterials = 10;
     public const float grassArea = 30;
 
+    public bool procedualGrassLocations = false;
+
     private Grass[] grassMesh = new Grass[grassCount];
     private GameObject[] grassBunch = new GameObject[grassCount];
     private Material[] grassMaterial = new Material[grassMaterials];
-    private Vector2[] grassPos = new Vector2[grassCount];
+    private Vector3[] grassPos = new Vector3[grassCount];
 
     void Start () {
 	}
@@ -48,7 +50,7 @@ public class GrassManager : MonoBehaviour {
 
             float xPos = Random.Range(-grassArea, grassArea);
             float zPos = Random.Range(-grassArea, grassArea);
-            grassPos[i] = new Vector2(xPos, zPos);
+            grassPos[i] = new Vector3(xPos,0F,zPos);
 
             grassMesh[i].SetNormals(grassBunch[i].GetComponent<MeshFilter>().mesh.normals);
             grassBunch[i].GetComponent<MeshFilter>().mesh.normals = grassMesh[i].GetNormals();
@@ -61,16 +63,16 @@ public class GrassManager : MonoBehaviour {
 
     private Material GetMaterial() {
         Material aGrassMaterial;
-        Texture grassTexture = Resources.Load("BiomeTextures/Grass" + Random.Range(1, 4)) as Texture;
+        Texture grassTexture = Resources.Load("BiomeTextures/Grass" + Random.Range(1, 5)) as Texture;
         //Texture grassTexture = Resources.Load("BiomeTextures/grassTest3") as Texture;
         aGrassMaterial = new Material(Shader.Find("Custom/SimpleGrassSine"));
         aGrassMaterial.SetTexture("_MainTex", grassTexture);
         aGrassMaterial.SetTexture("_Illum", grassTexture);
         aGrassMaterial.SetColor("_Color", GetColor());
         aGrassMaterial.renderQueue = 1000;
-        aGrassMaterial.SetFloat("_XStrength", Random.Range(.01F, .7F));
+        aGrassMaterial.SetFloat("_XStrength", Random.Range(.01F, .1F));
         aGrassMaterial.SetFloat("_XDisp", Random.Range(-.7F, .7F));
-        aGrassMaterial.SetFloat("_WindFrequency", Random.Range(.05F, .07F));
+        aGrassMaterial.SetFloat("_WindFrequency", Random.Range(.09F, .25F));
         return aGrassMaterial;
     }
     private Color32 GetColor() {
@@ -103,7 +105,7 @@ public class GrassManager : MonoBehaviour {
         grassEnabled = true;
     }
 
-    public void PlaceGrass(bool onPlanet = false) {
+    public void PlaceGrass(bool onPlanet = false, Vector3[] grassMap = null) {
 
         if (!grassMade) { return; }
         if (!grassEnabled) { EnableGrass(); }
@@ -112,7 +114,7 @@ public class GrassManager : MonoBehaviour {
         
         if (onPlanet) {
             for (int i = 0; i <= grassCount - 1; i++) {
-                Vector3 dropPoint = new Vector3(grassPos[i].x, 30000, (3500 + grassPos[i].y));
+                Vector3 dropPoint = new Vector3(grassPos[i].x, 25000, (3500 + grassPos[i].z));
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
                     grassBunch[i].transform.position = hit.point;
                 }
@@ -120,9 +122,8 @@ public class GrassManager : MonoBehaviour {
         }
         else {
             for (int i = 0; i <= grassCount - 1; i++) {
-                grassBunch[i].transform.position = new Vector3(grassPos[i].x, 0, grassPos[i].y);
+                grassBunch[i].transform.position = new Vector3(grassPos[i].x, 0, grassPos[i].z);
             }
         }
     }
 }
- 

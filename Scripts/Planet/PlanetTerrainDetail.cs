@@ -7,8 +7,6 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // and the parent vertices, the center of each hexagon.
     private int vertCount;
 
-    private int debugCount;
-
     private int[] triangles;
     private int[] tempTriangles;
 
@@ -19,11 +17,36 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
 
+    // biomes
+    private bool[] grassVertices = new bool[40962];
+    private bool grassSet = false;
+    private Vector3[] grassLocations = new Vector3[4000];
+    private int grassCount = 0;
+    
+    // verts
     private Vector3[] vertices = new Vector3[40962];
     private Vector3[] tmpVerticies;
 
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter) {
 
+        // Setup Grass Locations for whole planet. If they've been set, bypass.
+        if (!grassSet) {
+            int grassCount = 0;
+            int aGrassTemp = 0;
+            do {
+                aGrassTemp = UnityEngine.Random.Range(0, curVerts.Length);
+                if (grassVertices[aGrassTemp]) {
+                    continue;
+                }
+                else {
+                    grassVertices[aGrassTemp] = true;
+                    grassCount += 1;
+                }
+            } while (grassCount < 4000);
+            grassSet = true;
+            grassCount = 0;
+        }
+        
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
 
         int triCount = 0;
@@ -65,8 +88,29 @@ public class PlanetTerrainDetail : MonoBehaviour {
                 tmpTris[triCount + 1] = vertexRef[curTriangles[i + 1]];
                 tmpTris[triCount + 2] = vertexRef[curTriangles[i + 2]];
                 triCount += 3;
+                // Lastly, deal with the grass and other biomes placement.
+                if (grassVertices[curTriangles[i]]) {
+                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i]]).x;
+                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i]]).z;
+                    grassCount += 1;
+                }
+                if (grassVertices[curTriangles[i + 1]]) {
+                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i + 1]]).x;
+                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i + 1]]).z;
+                    grassCount += 1;
+                }
+                if (grassVertices[curTriangles[i + 2]]) {
+                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i + 2]]).x;
+                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i + 2]]).z;
+                    grassCount += 1;
+                }
+                
             }
         }
+
+        // Drop the grass locations into the GrassManager object. 
+        GameObject.Find("Controller (right)").GetComponent<GrassManager>().procedualGrassLocations = true;
+        
         triangles = new int[triCount];
 
         for (int i = 0; i <= triCount - 1; i++) {

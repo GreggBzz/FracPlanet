@@ -3,14 +3,14 @@ using System;
 
 public class PlanetTexture : MonoBehaviour {
     // texture manager class. Methods to texture terrain, ocean, atmosphere.
-    // for understanding this, start with the Texture Method().
+    // for understanding this, start with the Texture() Method.
 
-    protected struct adjacent {
+    private struct adjacent {
         public int vert;
         public short count;
     }
 
-    protected adjacent[,] adjacents;
+    private adjacent[,] adjacents;
     private Vector2[] uv;
     public float maxElev = 0F;
     public float minElev = 650000;
@@ -147,7 +147,6 @@ public class PlanetTexture : MonoBehaviour {
             vertList = updateVertList(vertCount, tmpVertList);
             vi = 0;
         } while (doneVerts <= vertCount - 1);
-
         return uv;
     }
     
