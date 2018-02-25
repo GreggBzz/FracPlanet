@@ -101,7 +101,7 @@
         o.Smoothness = _Smoothness;
         o.Specular = _Specular;
         o.Albedo = combinedColor;
-        //o.Normal = clamp(combinedNormal, -1, 1);
+        o.Normal = clamp(combinedNormal, -1, 1);
         o.Alpha = 0.0;
 	}
 

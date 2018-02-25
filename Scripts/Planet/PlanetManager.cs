@@ -35,6 +35,9 @@ public class PlanetManager : MonoBehaviour {
     private PlanetMaterial materialManager; // Manage the planet layer materials with a class.
     public PlanetMetaData planetMetaData; // The metadata for the planet, compounds, mass, weather etc.
 
+    //biomes
+    private GrassManager grassManager;
+
     private System.Random rnd; // chance for current planet atmosphere, clouds?
 
     public void Start() {
@@ -170,7 +173,8 @@ public class PlanetManager : MonoBehaviour {
         terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
-        // Instantiate the partial, planetside detail meshes early, on planet creation.
+        // We'll need Biomes for later.
+        grassManager = GameObject.Find("aPlanet").AddComponent<GrassManager>();
     }
 
     private void AddOcean(float dist, float planetScale) {
@@ -188,13 +192,13 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddPartialOceans() {
+        partialOceanTop = new GameObject("aPlanetTopOcean");
         // create a smaller, more highly tesselated ocean mesh at the top for better looking water.
-        partialOceanTopMesh = gameObject.AddComponent<PlanetOceanDetail>();
+        partialOceanTopMesh = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetOceanDetail>();
         // truncate the existing ocean mesh leaving the bottom part so everything looks right.
-        partialOceanBottomMesh = gameObject.AddComponent<PlanetOceanDetail>();
+        partialOceanBottomMesh = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetOceanDetail>();
         // the top part
         Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType, curPlanetSeed);
-        partialOceanTop = new GameObject("aPlanetTopOcean");
         partialOceanTop.AddComponent<MeshFilter>();
         partialOceanTop.AddComponent<MeshRenderer>();
         partialOceanTop.GetComponent<Renderer>().material = partialOceanMaterial;
@@ -220,12 +224,12 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddPartialTerrain() {
-        // we'll need a texture manager to calculate the textures.
-        PlanetTexture textureManager = gameObject.AddComponent<PlanetTexture>();
         // create a smaller, more highly tesselated terrain mesh at the top.
-        partialTerrainTopMesh = gameObject.AddComponent<PlanetTerrainDetail>();
-        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
         partialTerrainTop = new GameObject("aPlanetTopTerrain");
+        partialTerrainTopMesh = GameObject.Find("aPlanetTopTerrain").AddComponent<PlanetTerrainDetail>();
+        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
+        // we'll need a texture manager to calculate the textures.
+        PlanetTexture textureManager = GameObject.Find("aPlanetTopTerrain").AddComponent<PlanetTexture>();
         partialTerrainTop.AddComponent<MeshFilter>();
         partialTerrainTop.AddComponent<MeshRenderer>();
         partialTerrainTop.GetComponent<Renderer>().material = planetSurfaceMaterial;
@@ -246,6 +250,8 @@ public class PlanetManager : MonoBehaviour {
         partialTerrainTop.transform.position = terrain.transform.position;
         // clean up.
         textureManager = null; verts = null; tris = null;
+        // Deal with our biomes:
+        grassManager.PlaceAndEnableGrass();
     }
     
     private void AddAtmosphere(float dist) {

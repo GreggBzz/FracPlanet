@@ -6,6 +6,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // keep track of how many new vertices we've added during tesselate.
     // and the parent vertices, the center of each hexagon.
     private int vertCount;
+    private const int maxVertCount = 40962;
 
     private int[] triangles;
     private int[] tempTriangles;
@@ -13,104 +14,80 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // scale variables.
     private double radius;
     private float pScale;
+    private Transform toTop;
 
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
 
     // biomes
-    private bool[] grassVertices = new bool[40962];
-    private bool grassSet = false;
-    private Vector3[] grassLocations = new Vector3[4000];
-    private int grassCount = 0;
-    
+    private GrassManager grassManager;
+      
     // verts
-    private Vector3[] vertices = new Vector3[40962];
+    private Vector3[] vertices = new Vector3[maxVertCount];
     private Vector3[] tmpVerticies;
 
+    void Awake() {
+        grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
+        toTop = GameObject.Find("aPlanet").transform;
+    }
+
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter) {
-
-        // Setup Grass Locations for whole planet. If they've been set, bypass.
-        if (!grassSet) {
-            int grassCount = 0;
-            int aGrassTemp = 0;
-            do {
-                aGrassTemp = UnityEngine.Random.Range(0, curVerts.Length);
-                if (grassVertices[aGrassTemp]) {
-                    continue;
-                }
-                else {
-                    grassVertices[aGrassTemp] = true;
-                    grassCount += 1;
-                }
-            } while (grassCount < 4000);
-            grassSet = true;
-            grassCount = 0;
-        }
-        
+        // setup the tesselate script for later.
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
-
+        // Add all the grass gameobjects. 
+        // Pick 35000 grass locations for whole planet. If they've been set, bypass.
+        grassManager.AddGrass();
+        grassManager.PositionGrass(35000, curVerts.Length);
+        // disable all the displayed grass for now.
+        grassManager.DisableGrass(); 
+        // how many new triangles we're adding.
         int triCount = 0;
-        int[] vertexRef = new int[40962];
-        Vector3[] tmpVerts = new Vector3[40962];
-        int[] vertSeeds = new int[40962]; // store the added verts indicies for
-        // instantiating a rnd that can do consistent fractal displacement post transform and during an arbitrary order.
+        // a refrence array of which old verts to copy.
+        int[] vertexRef = new int[maxVertCount];
+        // the temporary triangles array that will end up being the new mesh.
+        Vector3[] tmpVerts = new Vector3[maxVertCount];
+        // store the added verts indicies for instantiating a rnd that can do consistent fractal 
+        // displacement post transform and during an arbitrary order.
+        int[] vertSeeds = new int[maxVertCount];
+        // the temporary triangle array that will end up being the new tris.
         int[] tmpTris = new int[245000];
-        // caclulate the position of each verticie in world space, post transforms,
-        // to ensure that we tesselate the verticies around the player.
-        Transform tr = GameObject.Find("aPlanet").transform;
 
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
-            // if the verticie is located near the player, who is top dead center on the planet, add it.
-            if (tr.TransformPoint(curVerts[curTriangles[i]]).y > (curDiameter / 2F - curDiameter / 50F) + 750F) { 
-                // if the vertex hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
-                // and copy it. 
+            // check the height of the current vert, only cutoff the topmost bit of the origin mesh, near the player at top dead center.
+            float vertHeight = toTop.TransformPoint(curVerts[curTriangles[i]]).y;
+            float cutoffHeight = (curDiameter / 2F - curDiameter / 50F) + 750F;
+            if (vertHeight > cutoffHeight) {
+                // if the vertex hasn't been copied, mark it in the refrence array: vertexRef[curTriangles[i]] = vertCount
                 if (vertexRef[curTriangles[i]] == 0) {
                     vertexRef[curTriangles[i]] = vertCount;
+                    // copy the vertex to the tmpVerts array, with which we'll build a new mesh.
                     tmpVerts[vertCount] = curVerts[curTriangles[i]];
-                    // which old vertex indicie does this new vert corrospond to?
-                    // use that for consistent fractal displacement later.
+                    // keep track of which old vert the copied one came from, so we can have consistend seeds to use.
                     vertSeeds[vertCount] = curTriangles[i];
                     vertCount += 1;
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]));
                 }
                 if (vertexRef[curTriangles[i + 1]] == 0) {
                     vertexRef[curTriangles[i + 1]] = vertCount;
                     tmpVerts[vertCount] = curVerts[curTriangles[i + 1]];
                     vertSeeds[vertCount] = curTriangles[i + 1];
                     vertCount += 1;
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]));
                 }
                 if (vertexRef[curTriangles[i + 2]] == 0) {
                     vertexRef[curTriangles[i + 2]] = vertCount;
                     tmpVerts[vertCount] = curVerts[curTriangles[i + 2]];
                     vertSeeds[vertCount] = curTriangles[i + 2];
                     vertCount += 1;
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]));
                 }
                 tmpTris[triCount] = vertexRef[curTriangles[i]];
                 tmpTris[triCount + 1] = vertexRef[curTriangles[i + 1]];
                 tmpTris[triCount + 2] = vertexRef[curTriangles[i + 2]];
                 triCount += 3;
-                // Lastly, deal with the grass and other biomes placement.
-                if (grassVertices[curTriangles[i]]) {
-                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i]]).x;
-                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i]]).z;
-                    grassCount += 1;
-                }
-                if (grassVertices[curTriangles[i + 1]]) {
-                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i + 1]]).x;
-                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i + 1]]).z;
-                    grassCount += 1;
-                }
-                if (grassVertices[curTriangles[i + 2]]) {
-                    grassLocations[grassCount].x = tr.TransformPoint(curVerts[curTriangles[i + 2]]).x;
-                    grassLocations[grassCount].z = tr.TransformPoint(curVerts[curTriangles[i + 2]]).z;
-                    grassCount += 1;
-                }
-                
             }
         }
 
-        // Drop the grass locations into the GrassManager object. 
-        GameObject.Find("Controller (right)").GetComponent<GrassManager>().procedualGrassLocations = true;
-        
         triangles = new int[triCount];
 
         for (int i = 0; i <= triCount - 1; i++) {
@@ -124,16 +101,25 @@ public class PlanetTerrainDetail : MonoBehaviour {
         tmpVerts = null; tmpTris = null; vertexRef = null;
         curVerts = null; curTriangles = null;
 
+        // Tesselate the new mesh.
         meshGeometry.newVertIndex = vertCount;
         meshGeometry.SetVerts(vertices);
         meshGeometry.SetTris(triangles);
         meshGeometry.SetVertSeeds(vertSeeds);
         meshGeometry.tessRounds = 1;
         meshGeometry.Generate("terrain", curDiameter, 100, false);
-
+        // Assign the tesselated mesh geometry to our mesh.
         triangles = meshGeometry.GetTriangles();
         vertices = meshGeometry.GetVerts();
         vertCount = meshGeometry.GetVertIndex();
+    }
+
+    private void CheckForGrass(int curVertIndex, Vector3 curVertPos) {
+        if (grassManager.grassCluster[curVertIndex].haveGrass) {
+            grassManager.grassCluster[curVertIndex].centerLocation.x = curVertPos.x;
+            grassManager.grassCluster[curVertIndex].centerLocation.y = curVertPos.z;
+            grassManager.grassCluster[curVertIndex].display = true;
+        }
     }
 
     public int[] GetTris(bool reverse = false) {

@@ -32,13 +32,9 @@ public class DrawScene : MonoBehaviour {
     public int planetSeed;
     public bool havePlanet = false; // are we rendering a planet?
     System.Random rnd;
-    // biomes
-    private GrassManager grassManager;
-
-
+    
     void Start() {
         planetManager = gameObject.AddComponent<PlanetManager>();
-        grassManager = gameObject.AddComponent<GrassManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
         screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
         aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
@@ -61,9 +57,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 800;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
-            // Grass experiment.
-            grassManager.AddGrass(true);
-            grassManager.PlaceGrass(true);
+            //GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -83,7 +77,6 @@ public class DrawScene : MonoBehaviour {
             aMainLight.Enable();
         }
         skybox.setSkyOffPlanet();
-        grassManager.DisableGrass();
     }
 
     public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
