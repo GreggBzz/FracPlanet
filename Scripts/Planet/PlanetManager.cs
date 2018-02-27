@@ -55,6 +55,9 @@ public class PlanetManager : MonoBehaviour {
     }
 
     public void DestroyPlanet() {
+        if (GameObject.Find("allTheGrass") != null) {
+            terrain.GetComponent<GrassManager>().DestroyGrass();
+        }
         if (terrainMesh != null) {
             Destroy(terrain); terrainMesh = null;
         }
@@ -77,6 +80,7 @@ public class PlanetManager : MonoBehaviour {
             Destroy(partialTerrainTop); partialTerrainTop = null;
         }
         planetSound.DisableSounds();
+
     }
 
     public void PausePlanet(string planetName) {

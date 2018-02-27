@@ -57,7 +57,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 800;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
-            //GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+            GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -167,6 +167,7 @@ public class DrawScene : MonoBehaviour {
             onWhichPlanet = hit.transform.gameObject.name;
         }
         PausePlanet();
+        //GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
         //grassManager.HideGrass();
     }
 

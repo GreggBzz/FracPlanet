@@ -65,21 +65,21 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     // keep track of which old vert the copied one came from, so we can have consistend seeds to use.
                     vertSeeds[vertCount] = curTriangles[i];
                     vertCount += 1;
-                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]));
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                 }
                 if (vertexRef[curTriangles[i + 1]] == 0) {
                     vertexRef[curTriangles[i + 1]] = vertCount;
                     tmpVerts[vertCount] = curVerts[curTriangles[i + 1]];
                     vertSeeds[vertCount] = curTriangles[i + 1];
                     vertCount += 1;
-                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]));
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
                 if (vertexRef[curTriangles[i + 2]] == 0) {
                     vertexRef[curTriangles[i + 2]] = vertCount;
                     tmpVerts[vertCount] = curVerts[curTriangles[i + 2]];
                     vertSeeds[vertCount] = curTriangles[i + 2];
                     vertCount += 1;
-                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]));
+                    CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
                 }
                 tmpTris[triCount] = vertexRef[curTriangles[i]];
                 tmpTris[triCount + 1] = vertexRef[curTriangles[i + 1]];
@@ -114,8 +114,9 @@ public class PlanetTerrainDetail : MonoBehaviour {
         vertCount = meshGeometry.GetVertIndex();
     }
 
-    private void CheckForGrass(int curVertIndex, Vector3 curVertPos) {
+    private void CheckForGrass(int curVertIndex, Vector3 curVertPos, float curDiameter) {
         if (grassManager.grassCluster[curVertIndex].haveGrass) {
+            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= GrassManager.drawDistance) { return; }
             grassManager.grassCluster[curVertIndex].centerLocation.x = curVertPos.x;
             grassManager.grassCluster[curVertIndex].centerLocation.y = curVertPos.z;
             grassManager.grassCluster[curVertIndex].display = true;
