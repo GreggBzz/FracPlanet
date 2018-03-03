@@ -37,7 +37,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
         // Add all the grass gameobjects. 
         // Pick 35000 grass locations for whole planet. If they've been set, bypass.
         grassManager.AddGrass();
-        grassManager.PositionGrass(35000, curVerts.Length);
+        grassManager.PositionGrass();
         // disable all the displayed grass for now.
         grassManager.DisableGrass(); 
         // how many new triangles we're adding.

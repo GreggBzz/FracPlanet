@@ -124,6 +124,11 @@ public class DrawScene : MonoBehaviour {
                     GameObject.Find(planetPart).transform.eulerAngles = new Vector3(0, 0, 0);
                 }
             }
+            if (GameObject.Find("aPlanet") != null) {
+                if (GameObject.Find("aPlanet").GetComponent<GrassManager>() != null) {
+                    GameObject.Find("aPlanet").GetComponent<GrassManager>().DisableGrass();
+                }
+            }
             onWhichPlanet = "";
             return;
         }

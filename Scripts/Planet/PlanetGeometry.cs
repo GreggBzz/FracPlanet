@@ -10,6 +10,7 @@ public class PlanetGeometry : MonoBehaviour {
     // keep track of how many new vertices we've added during tesselate.
     // and the parent vertices, the center of each hexagon.
     public int newVertIndex;
+    public float diameter;
 
     public string planetLayer; // terrain, ocean, atmosphere?
 
@@ -43,12 +44,12 @@ public class PlanetGeometry : MonoBehaviour {
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
 
     public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100, bool fullSetup = true) {
-                
         // setup random seed and assign the planet layer.
         rnd = new System.Random(curPlanetSeed);
         planetLayer = curPlanetLayer;
         aFullSetup = fullSetup;
-
+        // for public access, store diameter.
+        diameter = curDiameter;
         // setup roughness, planet scale, base verts and triangles.
         roughness = ((float)rnd.NextDouble() * (maxRoughness - minRoughness) + minRoughness) / (curDiameter / 2500);
         pScale = 100.0F / curDiameter;
