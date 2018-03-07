@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 public class WandController : SteamVR_TrackedController {
 
@@ -8,6 +9,9 @@ public class WandController : SteamVR_TrackedController {
     public Vector3 menuPos;
     public RadialMenuManager radialMenu;
     private DrawScene aScene;
+
+    private DateTime before;
+    private DateTime after;
 
   
     protected override void Start() {
@@ -20,6 +24,7 @@ public class WandController : SteamVR_TrackedController {
         base.Update();
         // high level, we're either teleporting, making a planet or nothing.
         // if we're rendering a planet, limit the user options.
+
         string switch_string = radialMenu.whatIsSelected;
         if (radialMenu.whatIsSelected.Contains("Planet")) switch_string = "Planet";
         switch (switch_string)
@@ -58,13 +63,10 @@ public class WandController : SteamVR_TrackedController {
 
         // draw/update the planets?
         aScene.UpdatePlanets();
-
         // update the terrain LOD rotation and ensure player top dead center position if detail terrain exists.
         aScene.MatchTerrainRotation();
-
         // Have we just teleported? Delay the transform until we fade out. Fade in once it's done.
         aScene.TeleportFade();
-       
         // draw/update the radial menu.
         radialMenu.UpdateMenu(GetTouchpadAxis(), transform, controller.GetTouch(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad));
     }

@@ -16,6 +16,7 @@ public class DrawScene : MonoBehaviour {
     private Vector3 startPos;
     private RaycastHit hit, hit2;
     private float teleDistance;
+    private bool rotationMatched;
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
@@ -48,6 +49,7 @@ public class DrawScene : MonoBehaviour {
         for (int i = 0; i <= seedQueue.Length - 1; i++) {
             seedQueue[i] = rnd.Next(0, 32000);
         }
+        rotationMatched = false;
     }
 
     private void Update() {
@@ -57,7 +59,7 @@ public class DrawScene : MonoBehaviour {
             teleDistance = 800;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
-            GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+            UpdatePlanetObjects();
             return;
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
@@ -80,6 +82,7 @@ public class DrawScene : MonoBehaviour {
     }
 
     public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
+        if (rotationMatched) { return; }
         if (GameObject.Find("aPlanetTopTerrain")) {
             GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
             GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
@@ -90,7 +93,14 @@ public class DrawScene : MonoBehaviour {
                 wand.transform.parent.position = hit2.point;
             }
         }
+        rotationMatched = true;
     }
+
+    private void UpdatePlanetObjects() {
+        // update all the planet objects. 
+        GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+    }
+
 
     public void TeleportFade() {
         // control the teleport fader, called every update from wandcontroller.
@@ -113,6 +123,7 @@ public class DrawScene : MonoBehaviour {
 
     private void DoTeleport(bool toHome) {
         string[] planetParts = { "aPlanetCloud", "aPlanet" };
+        rotationMatched = false;
         if (toHome) {
             wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
             wand.transform.parent.position = new Vector3(0F, 0F, 0F);
@@ -172,8 +183,6 @@ public class DrawScene : MonoBehaviour {
             onWhichPlanet = hit.transform.gameObject.name;
         }
         PausePlanet();
-        //GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
-        //grassManager.HideGrass();
     }
 
     private bool Waited(float seconds) {
@@ -277,6 +286,7 @@ public class DrawScene : MonoBehaviour {
 
     public void UpdatePlanets() {
         if (wand == null) { return; }
+        if (havePlanet) { return; }
         string switch_string = wand.radialMenu.whatIsSelected;
         switch (switch_string) {
             case "Next":

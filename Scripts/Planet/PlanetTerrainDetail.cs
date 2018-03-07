@@ -19,8 +19,9 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // mesh tesselation setup is done in the geometry class.
     private PlanetGeometry meshGeometry;
 
-    // biomes
+    // planet objects
     private GrassManager grassManager;
+    private RocksManager rocksManager;
       
     // verts
     private Vector3[] vertices = new Vector3[maxVertCount];
@@ -34,11 +35,9 @@ public class PlanetTerrainDetail : MonoBehaviour {
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter) {
         // setup the tesselate script for later.
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
-        // Add all the grass gameobjects. 
-        // Pick 35000 grass locations for whole planet. If they've been set, bypass.
+        // setup planet objects
         grassManager.AddGrass();
         grassManager.PositionGrass();
-        // disable all the displayed grass for now.
         grassManager.DisableGrass(); 
         // how many new triangles we're adding.
         int triCount = 0;

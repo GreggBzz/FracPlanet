@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 public class PlanetManager : MonoBehaviour {
-    // Meshes.
+    // meshes.
     private PlanetLayers terrainMesh;
     private PlanetLayers oceanMesh;
     private PlanetLayers atmosphereMesh;
@@ -32,11 +32,12 @@ public class PlanetManager : MonoBehaviour {
     private Vector3 centerPos = new Vector3(0, 750, 0);
 
     public GameObject planetOutline; // public for user(wand) manipulated transforms.
-    private PlanetMaterial materialManager; // Manage the planet layer materials with a class.
-    public PlanetMetaData planetMetaData; // The metadata for the planet, compounds, mass, weather etc.
+    private PlanetMaterial materialManager; // manage the planet layer materials with a class.
+    public PlanetMetaData planetMetaData; // the metadata for the planet, compounds, mass, weather etc.
 
-    //biomes
+    // planet objects
     private GrassManager grassManager;
+    private RocksManager rocksManager;
 
     private System.Random rnd; // chance for current planet atmosphere, clouds?
 
@@ -177,8 +178,10 @@ public class PlanetManager : MonoBehaviour {
         terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
-        // We'll need Biomes for later.
+        // we'll need Biomes for later.
         grassManager = GameObject.Find("aPlanet").AddComponent<GrassManager>();
+        // we'll need rocks for later.
+        rocksManager = GameObject.Find("aPlanet").AddComponent<RocksManager>();
     }
 
     private void AddOcean(float dist, float planetScale) {
@@ -192,7 +195,6 @@ public class PlanetManager : MonoBehaviour {
         oceanMesh.GenerateFull("ocean", planetDiameter, curPlanetSeed);
         oceanMesh.transform.position =  centerPos + Vector3.forward * dist;
         oceanMesh.center = oceanMesh.transform.position;
-        // Instantiate the partial, planetside detail meshes early, on planet creation.
     }
 
     private void AddPartialOceans() {
@@ -201,7 +203,7 @@ public class PlanetManager : MonoBehaviour {
         partialOceanTopMesh = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetOceanDetail>();
         // truncate the existing ocean mesh leaving the bottom part so everything looks right.
         partialOceanBottomMesh = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetOceanDetail>();
-        // the top part
+        // make the top part.
         Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType, curPlanetSeed);
         partialOceanTop.AddComponent<MeshFilter>();
         partialOceanTop.AddComponent<MeshRenderer>();
@@ -211,7 +213,7 @@ public class PlanetManager : MonoBehaviour {
         partialOceanTop.GetComponent<MeshFilter>().mesh.triangles = partialOceanTopMesh.GetTris();
         partialOceanTop.GetComponent<MeshFilter>().mesh.RecalculateNormals();
         partialOceanTop.transform.position = centerPos + Vector3.forward * 3500F;
-        // the bottom part
+        // make the bottom part
         Color tmpColor = partialOceanMaterial.GetColor("_BaseColor");
         partialOceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
         partialOceanMaterial.SetColor("_TintColor", tmpColor);
@@ -254,7 +256,7 @@ public class PlanetManager : MonoBehaviour {
         partialTerrainTop.transform.position = terrain.transform.position;
         // clean up.
         textureManager = null; verts = null; tris = null;
-        // Deal with our biomes:
+        // deal with our biomes.
         grassManager.PlaceAndEnableGrass();
     }
     

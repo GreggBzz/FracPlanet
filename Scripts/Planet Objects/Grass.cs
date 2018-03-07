@@ -1,42 +1,46 @@
 ﻿using UnityEngine;
 using System;
 public class Grass {
-    private Vector3[] vertices = new Vector3[7];
-    private Vector2[] uv = new Vector2[7];
-    private Vector3[] normals = new Vector3[7];
-    private int[] triangles = new int[9];
+    private Vector3[] vertices = new Vector3[12];
+    private Vector2[] uv = new Vector2[12];
+    private Vector3[] normals = new Vector3[12];
+    private int[] triangles = new int[18];
 
-    // Make one bnunch of billboard grass, three planes, each a triangle, offset by 60 degrees. 
-    public void Generate(float scaler = 1.2F, float width = 1.2F, float height = 1.2F, float variety = 3F) {
+    // Make one bunch of billboard grass, three planes, offset by 60 degrees. 
+    public void Generate(float scaler = .5F, float width = .8F, float height = 1.0F, float variety = 3F) {
 
         float scale = UnityEngine.Random.Range(scaler - (scaler / 3), scaler + (scaler / 3));
         float angle;
-        // 6 points around the circle. 
-        for (int i = 1; i <= 6; i++) {
+        // 6 x 2 points around the circle, one high, one low.
+        for (int i = 0; i <= 5; i++) {
             angle = 60 * i * Mathf.Deg2Rad;
-            vertices[i - 1].z = (float)(Math.Sin(angle)) * width;
-            vertices[i - 1].x = (float)(Math.Cos(angle)) * width;
-            vertices[i - 1].y = 0;
+            vertices[i].z = vertices[11 - i].z = (float)(Math.Sin(angle)) * width;
+            vertices[i].x = vertices[11 - i].x = (float)(Math.Cos(angle)) * width;
+            vertices[i].y = 0; vertices[11 - i].y = height;
             // set normals to "mostly" up, but add a little wiggle for variety.
-            normals[i - 1] = new Vector3(UnityEngine.Random.Range(0F, .2F), 1.0F, UnityEngine.Random.Range(0F, .2F));
+            normals[i] = normals[11 - i] = new Vector3(UnityEngine.Random.Range(0F, .2F), 1.0F, UnityEngine.Random.Range(0F, .2F));
         }
-        // on point in the middle.
-        vertices[6] = new Vector3(0F, height, 0F);
 
         // assemble the triangles along each plane. Culling is off in the shader so we don't 
         // have to worry about assembling a backside.
-        triangles[0] = 0; triangles[1] = 6; triangles[2] = 3;
-        triangles[3] = 1; triangles[4] = 6; triangles[5] = 4;
-        triangles[6] = 2; triangles[7] = 6; triangles[8] = 5;
+        triangles[0] = 0; triangles[1] = 11; triangles[2] = 3;
+        triangles[3] = 11; triangles[4] = 8; triangles[5] = 3;
+        triangles[6] = 1; triangles[7] = 10; triangles[8] = 4;
+
+        triangles[9] = 10; triangles[10] = 7; triangles[11] = 4;
+        triangles[12] = 5; triangles[13] = 6; triangles[14] = 2;
+        triangles[15] = 6; triangles[16] = 9; triangles[17] = 2;
+
 
         // texture and scale.
-        for (int i = 0; i <= 2; i++) {
+        uv[0] = uv[1] = uv[5] = new Vector2(0F, 0F);
+        uv[6] = uv[10] = uv[11] = new Vector2(0F, 1F);
+        uv[2] = uv[4] = uv[3] = new Vector2(1F, 0F);
+        uv[9] = uv[7] = uv[8] = new Vector2(1F, 1F);
+
+        for (int i = 0; i <= 11; i++) {
             vertices[i] *= scale;
-            uv[i].x = 0F; uv[i].y = 0F;
-            vertices[i + 3] *= scale;
-            uv[i + 3].x = 1F; uv[i].y = 0F;
         }
-        uv[6].x = .5F; uv[6].y = 1F;
     }
 
 
