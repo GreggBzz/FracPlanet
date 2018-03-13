@@ -11,9 +11,9 @@ public class RocksManager : MonoBehaviour {
     public const float drawDistance = 100;
     private int wholePlanetVertCount;
     private const int rocksTextures = 3; // unique textures;
-    private const int rocksTextureVariety = 5; // unique varieties per texture;
-    private const int rocksMaxCount = 20000; // total rocks gameobjects, displayed or not.
-    private const float rocksScatterArea = 20F;
+    private const int rocksTextureVariety = 5; // unique texture + displacement varieties of rock;
+    private const int rocksMaxCount = 5000; // total rocks gameobjects, displayed or not.
+    private const float rocksScatterArea = 30F;
     private const int rocksClusterSize = 10;
 
 
@@ -33,7 +33,7 @@ public class RocksManager : MonoBehaviour {
         public Vector2 centerLocation;
         public Vector2[] offset;
         public int type;
-        public bool haverocks;
+        public bool haveRocks;
         public bool display;
     }
     public RocksCluster[] rocksCluster;
@@ -51,10 +51,14 @@ public class RocksManager : MonoBehaviour {
         planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().minElev;
     }
 
-    public void Addrocks() {
+    public void AddRocks() {
         if (rocksMade) { return; }
         // make the mother of all rocks as our starting primative.
         GameObject mamaRock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        // Mark all the duplicate verts in mamaRock. 901 is a magic number that indicates
+        // the number of verts + the number of duplicated vert collections in the sphere primative.
+        int[] dupeVerts = new int[901];
+        dupeVerts = MarkDupeVerts(mamaRock.GetComponent<MeshFilter>().mesh.vertices);
         // setup the materials.
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= rocksTextureVariety - 1; i2++) {
@@ -65,16 +69,41 @@ public class RocksManager : MonoBehaviour {
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
                 rocksMesh[i, i2] = new Rocks();
-                rocksMesh[i, i2].Generate(mamaRock.GetComponent<MeshFilter>().mesh.vertices, mamaRock.GetComponent<MeshFilter>().mesh.triangles);
+                rocksMesh[i, i2].Generate(mamaRock.GetComponent<MeshFilter>().mesh.vertices, mamaRock.GetComponent<MeshFilter>().mesh.triangles,
+                                          mamaRock.GetComponent<MeshFilter>().mesh.uv, dupeVerts);
                 MakeaRock(i, i2);
             }
         }
         rocksMade = true;
-        Disablerocks();
+        Destroy(mamaRock);
+        DisableRocks();
     }
 
+    private int[] MarkDupeVerts(Vector3[] verts) {
+        int[] dupeVerts = new int[901];
+        int arraySize = 0;
+        bool[] checkedVerts = new bool[verts.Length];
+        for (int i = 0; i <= verts.Length - 1; i++) {
+            if (checkedVerts[i]) { continue; }
+            Vector3 tmpVert = verts[i];
+            dupeVerts[arraySize] =  i; arraySize += 1;
+            checkedVerts[i] = true;
+            for (int i2 = 0; i2 <= verts.Length - 1; i2++) {
+                if (checkedVerts[i2]) { continue; }
+                if (tmpVert == verts[i2]) {
+                    dupeVerts[arraySize] = i2; arraySize += 1;
+                    checkedVerts[i2] = true;
+                }
+            }
+            // mark the end of a duplicated vert collection in the array.
+            dupeVerts[arraySize] = -99; arraySize += 1;
+        }
+        return dupeVerts;
+    }
+
+
     // on first teleport, position the rocks around the entire planet.
-    public void Positionrocks() {
+    public void PositionRocks() {
         if (globalrocksLocations) { return; }
         float waterLine = (planetRadius - planetMinElevation) / (planetMaxElevation - planetMinElevation);
         // cycle around the entire planets parent verts and place rocks based on elevation and waterline.
@@ -86,7 +115,7 @@ public class RocksManager : MonoBehaviour {
             else if ((rocksElevations[i].y > waterLine - .015F) && (rocksElevations[i].y <= waterLine + .08F)) {
                 // big chance of rocks.
                 if (UnityEngine.Random.Range(0F, 1F) >= .14F) {
-                    rocksCluster[i].haverocks = true;
+                    rocksCluster[i].haveRocks = true;
                     rocksCluster[i].type = 1;
                     rocksCluster[i].offset = new Vector2[rocksClusterSize];
                     float scatterX = UnityEngine.Random.Range(rocksScatterArea / 3, rocksScatterArea);
@@ -105,7 +134,7 @@ public class RocksManager : MonoBehaviour {
             else if ((rocksElevations[i].y > waterLine + .08F) && (rocksElevations[i].y <= waterLine + .35F)) {
                 // sorta chance of rocks.
                 if (UnityEngine.Random.Range(0F, 1F) >= .6F) {
-                    rocksCluster[i].haverocks = true;
+                    rocksCluster[i].haveRocks = true;
                     rocksCluster[i].type = UnityEngine.Random.Range(2, 4);
                     rocksCluster[i].offset = new Vector2[rocksClusterSize];
                     float scatterX = UnityEngine.Random.Range(rocksScatterArea / 3, rocksScatterArea);
@@ -124,7 +153,7 @@ public class RocksManager : MonoBehaviour {
             else {
                 // small chance for rocks, last 2 types.
                 if (UnityEngine.Random.Range(0F, 1F) >= .8F) {
-                    rocksCluster[i].haverocks = true;
+                    rocksCluster[i].haveRocks = true;
                     rocksCluster[i].type = 4;
                     rocksCluster[i].offset = new Vector2[rocksClusterSize];
                     float scatterX = UnityEngine.Random.Range(rocksScatterArea / 3, rocksScatterArea);
@@ -145,10 +174,11 @@ public class RocksManager : MonoBehaviour {
     }
 
     private Material GetMaterial(int type) {
-        Texture rocksTexture = Resources.Load("ObjectsTextures/icerocks" + type) as Texture;
-        Material arockMaterial = new Material(Shader.Find("Custom/SimplerockStatic"));
+        Texture rocksTexture = Resources.Load("RockTextures/TerraRocks" + type) as Texture;
+        Texture rocksNormal = Resources.Load("RockTextures/nmTerraRocks" + type) as Texture;
+        Material arockMaterial = new Material(Shader.Find("Custom/SimpleRockBump"));
         arockMaterial.SetTexture("_MainTex", rocksTexture);
-        arockMaterial.SetTexture("_Illum", rocksTexture);
+        arockMaterial.SetTexture("_BumpMap", rocksNormal);
         arockMaterial.SetColor("_Color", GetColor());
         arockMaterial.renderQueue = 1000;
         return arockMaterial;
@@ -175,7 +205,7 @@ public class RocksManager : MonoBehaviour {
         return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
     }
 
-    public void Destroyrocks() {
+    public void DestroyRocks() {
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
                 Destroy(aRock[i, i2]);
@@ -187,7 +217,7 @@ public class RocksManager : MonoBehaviour {
         rocksMade = false;
     }
 
-    public void Disablerocks() {
+    public void DisableRocks() {
         if (!rocksMade) { return; }
         rocksPlacedTimes = 0;
         for (int i = 0; i <= rocksTextures - 1; i++) {
@@ -200,39 +230,46 @@ public class RocksManager : MonoBehaviour {
         }
     }
 
-    public void PlaceAndEnablerocks() {
+    public void PlaceAndEnableRocks() {
         if (!rocksMade) { return; }
         // hack to deal with a race condition where the mesh collider isn't calculated before raycast rocks placement.
         if (rocksPlacedTimes >= 3) { return; }
 
-        Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
-
-        RaycastHit hit;
-        for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
-            if (!rocksCluster[i].display) { continue; }
-
-            int curType = rocksCluster[i].type - 1;
-
-            for (int i2 = 0; i2 <= rocksClusterSize - 1; i2++) {
-                Vector2 offset = new Vector2(rocksCluster[i].offset[i2].x, rocksCluster[i].offset[i2].y);
-                Vector3 dropPoint = new Vector3(rocksCluster[i].centerLocation.x + offset.x, 25000, rocksCluster[i].centerLocation.y + offset.y);
-                if (displayedrocksCount[curType] >= (rocksMaxCount / rocksTextures)) {
-                    break;
-                }
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
-                    aRock[curType, displayedrocksCount[curType]].transform.position = hit.point;
-                    aRock[curType, displayedrocksCount[curType]].GetComponent<Renderer>().enabled = true;
-                    aRock[curType, displayedrocksCount[curType]].GetComponent<Renderer>().material = rocksMaterial[curType, Math.Abs((int)offset.x) % rocksTextureVariety];
-                    displayedrocksCount[curType] += 1;
-                }
-            }
-
-        }
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = displayedrocksCount[i]; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
                 aRock[i, i2].GetComponent<Renderer>().enabled = false;
             }
             displayedrocksCount[i] = 0;
+        }
+
+        Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
+        RaycastHit hit;
+        for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
+            if (!rocksCluster[i].display) { continue; }
+
+            UnityEngine.Random.InitState(i);
+
+            int curType = rocksCluster[i].type - 1;
+
+            for (int i2 = 0; i2 <= rocksClusterSize - 1; i2++) {
+                if (displayedrocksCount[curType] >= (int)(rocksMaxCount / rocksTextures)) {
+                    break;
+                }
+
+                int rockToDrop = UnityEngine.Random.Range(0, (int)(rocksMaxCount / rocksTextures) + 1);
+                if (aRock[curType, rockToDrop].GetComponent<Renderer>().enabled) { continue; }
+
+                Vector2 offset = new Vector2(rocksCluster[i].offset[i2].x, rocksCluster[i].offset[i2].y);
+                Vector3 dropPoint = new Vector3(rocksCluster[i].centerLocation.x + offset.x, 25000, rocksCluster[i].centerLocation.y + offset.y);
+
+                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
+                    aRock[curType, rockToDrop].transform.position = hit.point;
+                    aRock[curType, rockToDrop].GetComponent<Renderer>().enabled = true;
+                    aRock[curType, rockToDrop].GetComponent<Renderer>().material = rocksMaterial[curType, Math.Abs((int)offset.x) % rocksTextureVariety];
+                    displayedrocksCount[curType] += 1;
+                }
+            }
+
         }
         rocksPlacedTimes += 1;
     }

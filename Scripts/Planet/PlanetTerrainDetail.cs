@@ -29,6 +29,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
 
     void Awake() {
         grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
+        rocksManager = GameObject.Find("aPlanet").GetComponent<RocksManager>();
         toTop = GameObject.Find("aPlanet").transform;
     }
 
@@ -38,7 +39,11 @@ public class PlanetTerrainDetail : MonoBehaviour {
         // setup planet objects
         grassManager.AddGrass();
         grassManager.PositionGrass();
-        grassManager.DisableGrass(); 
+        grassManager.DisableGrass();
+
+        rocksManager.AddRocks();
+        rocksManager.PositionRocks();
+        rocksManager.DisableRocks();
         // how many new triangles we're adding.
         int triCount = 0;
         // a refrence array of which old verts to copy.
@@ -65,6 +70,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[vertCount] = curTriangles[i];
                     vertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
+                    CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                 }
                 if (vertexRef[curTriangles[i + 1]] == 0) {
                     vertexRef[curTriangles[i + 1]] = vertCount;
@@ -72,6 +78,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[vertCount] = curTriangles[i + 1];
                     vertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
+                    CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
                 if (vertexRef[curTriangles[i + 2]] == 0) {
                     vertexRef[curTriangles[i + 2]] = vertCount;
@@ -79,6 +86,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[vertCount] = curTriangles[i + 2];
                     vertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
+                    CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
                 }
                 tmpTris[triCount] = vertexRef[curTriangles[i]];
                 tmpTris[triCount + 1] = vertexRef[curTriangles[i + 1]];
@@ -119,6 +127,15 @@ public class PlanetTerrainDetail : MonoBehaviour {
             grassManager.grassCluster[curVertIndex].centerLocation.x = curVertPos.x;
             grassManager.grassCluster[curVertIndex].centerLocation.y = curVertPos.z;
             grassManager.grassCluster[curVertIndex].display = true;
+        }
+    }
+
+    private void CheckForRocks(int curVertIndex, Vector3 curVertPos, float curDiameter) {
+        if (rocksManager.rocksCluster[curVertIndex].haveRocks) {
+            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= GrassManager.drawDistance) { return; }
+            rocksManager.rocksCluster[curVertIndex].centerLocation.x = curVertPos.x;
+            rocksManager.rocksCluster[curVertIndex].centerLocation.y = curVertPos.z;
+            rocksManager.rocksCluster[curVertIndex].display = true;
         }
     }
 

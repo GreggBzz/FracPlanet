@@ -99,6 +99,7 @@ public class DrawScene : MonoBehaviour {
     private void UpdatePlanetObjects() {
         // update all the planet objects. 
         GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+        GameObject.Find("aPlanet").GetComponent<RocksManager>().PlaceAndEnableRocks();
     }
 
 

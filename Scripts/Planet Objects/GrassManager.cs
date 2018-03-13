@@ -226,7 +226,7 @@ public class GrassManager : MonoBehaviour {
             for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
                 Vector2 offset = new Vector2(grassCluster[i].offset[i2].x, grassCluster[i].offset[i2].y);
                 Vector3 dropPoint = new Vector3(grassCluster[i].centerLocation.x + offset.x, 25000, grassCluster[i].centerLocation.y + offset.y);
-                if (displayedGrassCount[curType] >= (grassMaxCount / grassTextures)) {
+                if (displayedGrassCount[curType] >= (int)(grassMaxCount / grassTextures)) {
                     break;
                 }
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {

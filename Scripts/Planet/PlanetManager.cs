@@ -59,6 +59,9 @@ public class PlanetManager : MonoBehaviour {
         if (GameObject.Find("allTheGrass") != null) {
             terrain.GetComponent<GrassManager>().DestroyGrass();
         }
+        if (GameObject.Find("allTheRocks") != null) {
+            terrain.GetComponent<RocksManager>().DestroyRocks();
+        }
         if (terrainMesh != null) {
             Destroy(terrain); terrainMesh = null;
         }
@@ -258,6 +261,7 @@ public class PlanetManager : MonoBehaviour {
         textureManager = null; verts = null; tris = null;
         // deal with our biomes.
         grassManager.PlaceAndEnableGrass();
+        rocksManager.PlaceAndEnableRocks();
     }
     
     private void AddAtmosphere(float dist) {
