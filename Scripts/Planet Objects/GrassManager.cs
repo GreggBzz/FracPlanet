@@ -11,11 +11,11 @@ public class GrassManager : MonoBehaviour {
     public const float drawDistance = 100;
     private const float animateDistance = 15;
     private int wholePlanetVertCount;
-    private const int grassTextures = 3; // unique textures;
+    private const int grassTextures = 8; // unique textures;
     private const int grassTextureVariety = 5; // unique varieties per texture;
-    private const int grassMaxCount = 20000; // total grass gameobjects, displayed or not.
+    private const int grassMaxCount = 25000; // total grass gameobjects, displayed or not.
     private const float grassScatterArea = 20F;
-    private const int grassClusterSize = 700;
+    private const int grassClusterSize = 800;
 
 
     private GameObject allTheGrass;
@@ -29,6 +29,8 @@ public class GrassManager : MonoBehaviour {
     private float planetMaxElevation;
     private float planetMinElevation;
     private bool globalGrassLocations = false;
+
+    private string curPlanetType = "";
 
     // a cluster of grass to place. 
     public struct GrassCluster {
@@ -51,8 +53,9 @@ public class GrassManager : MonoBehaviour {
         planetRadius = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().diameter / 2F;
         planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().maxElev;
         planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().minElev;
+        curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
     }
-    
+
     public void AddGrass() {
         if (grassMade) { return; }
         // setup the materials.
@@ -87,65 +90,48 @@ public class GrassManager : MonoBehaviour {
                 // big chance of grass.
                 if (UnityEngine.Random.Range(0F, 1F) >= .14F) {
                     grassCluster[i].haveGrass = true;
-                    grassCluster[i].type = 1;
-                    grassCluster[i].offset = new Vector2[grassClusterSize];
-                    float scatterX = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    float scatterZ = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
-                        float phi = UnityEngine.Random.Range(0F, 2 * (float)Math.PI);
-                        float rand = UnityEngine.Random.Range(0F, 1F);
-                        float xPos = (float)(Math.Sqrt(rand) * Math.Cos(phi));
-                        float zPos = (float)(Math.Sqrt(rand) * Math.Sin(phi));
-                        xPos = xPos * scatterX;
-                        zPos = zPos * scatterZ;
-                        grassCluster[i].offset[i2] = new Vector2(xPos, zPos);
-                    }
+                    grassCluster[i].type = UnityEngine.Random.Range(1, 4);
                 }
             }
             else if ((grassElevations[i].y > waterLine + .08F) && (grassElevations[i].y <= waterLine + .35F)) {
                 // sorta chance of grass.
                 if (UnityEngine.Random.Range(0F, 1F) >= .6F) {
                     grassCluster[i].haveGrass = true;
-                    grassCluster[i].type = UnityEngine.Random.Range(2, 4);
-                    grassCluster[i].offset = new Vector2[grassClusterSize];
-                    float scatterX = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    float scatterZ = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
-                        float phi = UnityEngine.Random.Range(0F, 2 * (float)Math.PI);
-                        float rand = UnityEngine.Random.Range(0F, 1F);
-                        float xPos = (float)(Math.Sqrt(rand) * Math.Cos(phi));
-                        float zPos = (float)(Math.Sqrt(rand) * Math.Sin(phi));
-                        xPos = xPos * scatterX;
-                        zPos = zPos * scatterZ;
-                        grassCluster[i].offset[i2] = new Vector2(xPos, zPos);
-                    }
+                    grassCluster[i].type = UnityEngine.Random.Range(5, 8);
                 }
             }
             else {
-                // small chance for grass, last 2 types.
+                // small chance for grass
                 if (UnityEngine.Random.Range(0F, 1F) >= .8F) {
                     grassCluster[i].haveGrass = true;
-                    grassCluster[i].type = 4;
-                    grassCluster[i].offset = new Vector2[grassClusterSize];
-                    float scatterX = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    float scatterZ = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
-                    for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
-                        float phi = UnityEngine.Random.Range(0F, 2 * (float)Math.PI);
-                        float rand = UnityEngine.Random.Range(0F, 1F);
-                        float xPos = (float)(Math.Sqrt(rand) * Math.Cos(phi));
-                        float zPos = (float)(Math.Sqrt(rand) * Math.Sin(phi));
-                        xPos = xPos * scatterX;
-                        zPos = zPos * scatterZ;
-                        grassCluster[i].offset[i2] = new Vector2(xPos, zPos);
-                    }
+                    grassCluster[i].type = UnityEngine.Random.Range(8, 9);
                 }
+            }
+            if (grassCluster[i].haveGrass) {
+                MakeGrassCluster(i);
             }
         }
         globalGrassLocations = true;
     }
 
+    private void MakeGrassCluster(int i) {
+        // create a grass cluster at the vert index, i.
+        grassCluster[i].offset = new Vector2[grassClusterSize];
+        float scatterX = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
+        float scatterZ = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
+        for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
+            float phi = UnityEngine.Random.Range(0F, 2 * (float)Math.PI);
+            float rand = UnityEngine.Random.Range(0F, 1F);
+            float xPos = (float)(Math.Sqrt(rand) * Math.Cos(phi));
+            float zPos = (float)(Math.Sqrt(rand) * Math.Sin(phi));
+            xPos = xPos * scatterX;
+            zPos = zPos * scatterZ;
+            grassCluster[i].offset[i2] = new Vector2(xPos, zPos);
+        }
+    }
+
     private void GetMaterials(int type, out Material aGrassMaterial, out Material aStaticGrassMaterial) {
-        Texture grassTexture = Resources.Load("BiomeTextures/iceGrass" + type) as Texture;
+        Texture grassTexture = Resources.Load("SurfaceObjects/Grass/" + curPlanetType + "/" + curPlanetType.ToLower() + "Grass" + type) as Texture;
         aGrassMaterial = new Material(Shader.Find("Custom/SimpleGrassSine"));
         aGrassMaterial.SetTexture("_MainTex", grassTexture);
         aGrassMaterial.SetTexture("_Illum", grassTexture);
@@ -213,7 +199,14 @@ public class GrassManager : MonoBehaviour {
     public void PlaceAndEnableGrass() {
         if (!grassMade) { return; }
         // hack to deal with a race condition where the mesh collider isn't calculated before raycast grass placement.
-        if (grassPlacedTimes >= 3) { return; }
+        if (grassPlacedTimes > 3) { return; }
+
+        for (int i = 0; i <= grassTextures - 1; i++) {
+            for (int i2 = 0; i2 <= (grassMaxCount / grassTextures) - 1; i2++) {
+                aGrass[i, i2].GetComponent<Renderer>().enabled = false;
+            }
+            displayedGrassCount[i] = 0;
+        }
 
         Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
 
@@ -224,29 +217,27 @@ public class GrassManager : MonoBehaviour {
             int curType = grassCluster[i].type - 1;
 
             for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {
-                Vector2 offset = new Vector2(grassCluster[i].offset[i2].x, grassCluster[i].offset[i2].y);
-                Vector3 dropPoint = new Vector3(grassCluster[i].centerLocation.x + offset.x, 25000, grassCluster[i].centerLocation.y + offset.y);
-                if (displayedGrassCount[curType] >= (int)(grassMaxCount / grassTextures)) {
+                if (displayedGrassCount[curType] >= (int)(grassMaxCount / grassTextures) - 1) {
                     break;
                 }
+
+                int grassToDrop = UnityEngine.Random.Range(0, (int)(grassMaxCount / grassTextures));
+                if (aGrass[curType, grassToDrop].GetComponent<Renderer>().enabled) { continue; }
+
+                Vector2 offset = new Vector2(grassCluster[i].offset[i2].x, grassCluster[i].offset[i2].y);
+                Vector3 dropPoint = new Vector3(grassCluster[i].centerLocation.x + offset.x, 25000, grassCluster[i].centerLocation.y + offset.y);
+
                 if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
-                    aGrass[curType, displayedGrassCount[curType]].transform.position = hit.point;
-                    aGrass[curType, displayedGrassCount[curType]].GetComponent<Renderer>().enabled = true;
+                    aGrass[curType, grassToDrop].transform.position = hit.point;
+                    aGrass[curType, grassToDrop].GetComponent<Renderer>().enabled = true;
                     if (Vector3.Distance(hit.point, cameraPos) >= 15) {
-                        aGrass[curType, displayedGrassCount[curType]].GetComponent<Renderer>().material = staticGrassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
+                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = staticGrassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
                     } else {
-                        aGrass[curType, displayedGrassCount[curType]].GetComponent<Renderer>().material = grassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
+                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = grassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
                     }
                     displayedGrassCount[curType] += 1;
                 }
             }
-
-        }
-        for (int i = 0; i <= grassTextures - 1; i++) {
-            for (int i2 = displayedGrassCount[i]; i2 <= (grassMaxCount / grassTextures) - 1; i2++) {
-                aGrass[i, i2].GetComponent<Renderer>().enabled = false;
-            }
-            displayedGrassCount[i] = 0;
         }
         grassPlacedTimes += 1;
     }

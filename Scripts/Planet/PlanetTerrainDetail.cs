@@ -22,25 +22,39 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // planet objects
     private GrassManager grassManager;
     private RocksManager rocksManager;
-      
+    private string curPlanetType = "";
+
     // verts
     private Vector3[] vertices = new Vector3[maxVertCount];
     private Vector3[] tmpVerticies;
 
     void Awake() {
-        grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
-        rocksManager = GameObject.Find("aPlanet").GetComponent<RocksManager>();
-        toTop = GameObject.Find("aPlanet").transform;
+        if (GameObject.Find("aPlanet") != null) {
+            grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
+            rocksManager = GameObject.Find("aPlanet").GetComponent<RocksManager>();
+            toTop = GameObject.Find("aPlanet").transform;
+        }
+        curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
     }
 
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter) {
+   
+        if (GameObject.Find("aPlanet")) {
+            // disable the bigger less detailed mesh's collider. 
+            GameObject.Find("aPlanet").GetComponent<MeshCollider>().enabled = false;
+            // reset it's position before we tuck it under the player a tad.
+            GameObject.Find("aPlanet").transform.position = new Vector3(0, 750, 3500);
+        }
         // setup the tesselate script for later.
         meshGeometry = gameObject.AddComponent<PlanetGeometry>();
         // setup planet objects
-        grassManager.AddGrass();
-        grassManager.PositionGrass();
-        grassManager.DisableGrass();
 
+        if (curPlanetType == "Terra" || curPlanetType == "Icy") {
+            grassManager.AddGrass();
+            grassManager.PositionGrass();
+            grassManager.DisableGrass();
+        }
+        
         rocksManager.AddRocks();
         rocksManager.PositionRocks();
         rocksManager.DisableRocks();
@@ -56,11 +70,13 @@ public class PlanetTerrainDetail : MonoBehaviour {
         // the temporary triangle array that will end up being the new tris.
         int[] tmpTris = new int[245000];
 
+        Vector3 playerPos = new Vector3(0F, 750F + curDiameter / 2F, 3500F); 
+        float cutoffDistance = 125F;
+
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
-            // check the height of the current vert, only cutoff the topmost bit of the origin mesh, near the player at top dead center.
-            float vertHeight = toTop.TransformPoint(curVerts[curTriangles[i]]).y;
-            float cutoffHeight = (curDiameter / 2F - curDiameter / 50F) + 750F;
-            if (vertHeight > cutoffHeight) {
+            Vector3 vertPos = toTop.TransformPoint(curVerts[curTriangles[i]]);
+            // check the distance of the current vert, only cutoff the closest ones.
+            if (Vector3.Distance(vertPos, playerPos) < cutoffDistance) {
                 // if the vertex hasn't been copied, mark it in the refrence array: vertexRef[curTriangles[i]] = vertCount
                 if (vertexRef[curTriangles[i]] == 0) {
                     vertexRef[curTriangles[i]] = vertCount;

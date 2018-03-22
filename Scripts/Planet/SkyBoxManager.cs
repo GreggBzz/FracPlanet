@@ -7,6 +7,7 @@ public class SkyBoxManager : MonoBehaviour {
     private System.Random rnd;
     private PlanetLayers atmosphereMesh;
     private GameObject starField;
+    private GameObject theSun;
     private Material atmosphereMaterial;
     private bool planetSideSky;
     private PlanetMaterial materialManager;
@@ -31,6 +32,10 @@ public class SkyBoxManager : MonoBehaviour {
         Destroy(starField.GetComponent<Collider>());
         starField.GetComponent<Renderer>().enabled = false;
         starsCutoff = starFieldMaterial.GetFloat("_Cutoff");
+        if (GameObject.Find("Sun") != null) {
+            theSun = GameObject.Find("Sun");
+        }
+
     }
 
     public void setSkyOnPlanet (string planetType, int planetSeed, float planetDiameter = 2500F) {
@@ -72,6 +77,12 @@ public class SkyBoxManager : MonoBehaviour {
                 globalFogDistance = 10000 - ((sunPos - 330) * 3);
             }
             starField.GetComponent<Renderer>().material.SetFloat("_Cutoff", curStarsCutoff);
+
+            // dim the sun a bit, or not at all if it's daytime and we cutting off the stars.           
+            theSun.GetComponent<Light>().intensity = curStarsCutoff;
+            //    theSun.GetComponent<Light>().intensity = curStarsCutoff * .75F;
+            
+
             // You'll need to set the standard asset global fog to a public class to access it. 
             // no fog if there's no atmosphere.
             if (GameObject.Find("aPlanetAtmosphere") == null) {

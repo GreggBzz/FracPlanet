@@ -33,7 +33,7 @@ public class DrawScene : MonoBehaviour {
     public int planetSeed;
     public bool havePlanet = false; // are we rendering a planet?
     System.Random rnd;
-    
+
     void Start() {
         planetManager = gameObject.AddComponent<PlanetManager>();
         wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
@@ -106,7 +106,7 @@ public class DrawScene : MonoBehaviour {
     public void TeleportFade() {
         // control the teleport fader, called every update from wandcontroller.
         if (!teleporting) return;
-        screenFade.fadeIn = false; 
+        screenFade.fadeIn = false;
         if (!Waited(.3F)) return;
         DoTeleport(teleportHome);
         screenFade.fadeIn = true;
@@ -118,7 +118,7 @@ public class DrawScene : MonoBehaviour {
     public void Teleport(bool toHome = false) {
         // kick off a teleport sequence, set teleporting to true.
         teleporting = true;
-        if (toHome) { teleportHome = true;  return; }
+        if (toHome) { teleportHome = true; return; }
         startPos = wand.transform.position;
     }
 
@@ -169,8 +169,8 @@ public class DrawScene : MonoBehaviour {
                 // we drop the player with that. It's called once a frame.
                 planetManager.ManageTerrain(true);
                 if (GameObject.Find("aPlanet")) {
-                    GameObject.Find("aPlanet").GetComponent<Renderer>().enabled = false;
-                    GameObject.Find("aPlanet").GetComponent<MeshCollider>().enabled = false;
+                    // tuck the less detailed mesh under the player a bit.
+                    GameObject.Find("aPlanet").transform.position = new Vector3(0F, 748.5F, 3500F);
                 }
             }
             else {
@@ -200,7 +200,7 @@ public class DrawScene : MonoBehaviour {
         if (pointerLineRenderer != null) {
             pointerLineRenderer = null;
             Destroy(pointerLine);
-         }
+        }
     }
 
     public void AddPointerLine(Color newBaseColor, Color newHitColor) {
@@ -300,7 +300,7 @@ public class DrawScene : MonoBehaviour {
                 break;
             case "Previous":
                 seedQueueIndex -= 1;
-                if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length -1; }
+                if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length - 1; }
                 planetSeed = seedQueue[seedQueueIndex];
                 rnd = new System.Random(planetSeed);
                 planetManager.planetDiameter = rnd.Next(500, 5000);

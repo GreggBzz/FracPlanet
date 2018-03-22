@@ -20,7 +20,7 @@ public class Moon : MonoBehaviour {
         enabled = false;
     }
     public void Enable(float diameter = 5000F) {
-        moon.intensity = .2F;
+        moon.intensity = .03F;
         transform.position = new Vector3(0F, (750F - diameter / 1.75F), 3500F);
         enabled = true;
     }
