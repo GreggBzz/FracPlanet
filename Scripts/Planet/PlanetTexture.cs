@@ -114,6 +114,16 @@ public class PlanetTexture : MonoBehaviour {
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
         // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
 
+        System.Random rnd; int seed;
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+
+        rnd = new System.Random(seed);
+        
         adjacents = new adjacent[vertCount, 6];
         uv = new Vector2[vertCount];
 
@@ -137,7 +147,7 @@ public class PlanetTexture : MonoBehaviour {
             do {
                 if (vertList[vi] != -1) {
                     checkedMatches = checkAdjacents(vertList[vi]);
-                    uv[vertList[vi]] = assignAdjacent(checkedMatches, UnityEngine.Random.Range(0, 12));
+                    uv[vertList[vi]] = assignAdjacent(checkedMatches, rnd.Next(0, 12));
                     // catch the stray unassinged vertlist[vi].
                 }
                 vi += 1;

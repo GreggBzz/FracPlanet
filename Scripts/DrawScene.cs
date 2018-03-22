@@ -44,7 +44,7 @@ public class DrawScene : MonoBehaviour {
         cameraEffect = gameObject.AddComponent<CameraEffects>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
-        rnd = new System.Random();
+        rnd = new System.Random(42); // what's the meaning of life, eh?
         // queue up 1000 random planet seeds.
         for (int i = 0; i <= seedQueue.Length - 1; i++) {
             seedQueue[i] = rnd.Next(0, 32000);

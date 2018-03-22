@@ -29,11 +29,11 @@ public class PlanetMetaData : MonoBehaviour {
     private const double earthScale = 12742000;
     private const double earthMass = 5.972; // x10 ^ 24th.
 
-    private System.Random rnd = new System.Random(); 
+    private System.Random rnd;
 
     public void initialize(int aSeed, float aDiameter, string aPlanetType, bool atmosphere, bool clouds, bool ocean) {
-        rnd = new System.Random(seed);
         seed = aSeed;
+        rnd = new System.Random(seed);
         diameter = aDiameter;
         planetType = aPlanetType;
         hasAtmosphere = atmosphere;
@@ -46,8 +46,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setHydrosphere() {
-        if ((partialData) && unknowns[0]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[0]) { return "Unknown\n"; }
         linebreak = ",\n                       ";
         string[] elements = { "Carbon Dioxide", "Liquid Nitrogen",
                                  "Liquid Oxygen", "Liquid Hydrogen",
@@ -85,8 +85,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setAtmosphere() {
-        if ((partialData) && unknowns[1]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[1]) { return "Unknown\n"; }
         linebreak = ",\n                     ";
         string[] elements = { "Carbon Dioxide", "Nitrogen",
                                 "Nitrogen Compounds", "Nitrogen Isotopes",
@@ -125,8 +125,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setLithosphere() {
-        if ((partialData) && unknowns[2]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[2]) { return "Unknown\n"; }
         linebreak = ",\n                       ";
         string[] elements = { "Mercury", "Hydrocarbons", "Zinc", "Aluminum", "Antimony",
                                  "Chromium", "Cobalt", "Complex Carbon", "Copper",
@@ -157,8 +157,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
     
     private string setClimate() {
-        if ((partialData) && unknowns[3]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[3]) { return "Unknown\n"; }
         string[] climates = { "Sub-Artic", "Artic", "Temperate", "Tropical",
                              "Searing", "Inferno" };
         int highK = 0; int lowK = 0; int lowI = 0; int highI = 0;
@@ -190,8 +190,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setWeather() {
-        if ((partialData) && unknowns[4]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[4]) { return "Unknown\n"; }
         string[] weathers = { "None", "Calm", "Normal", "Severe", "Violent",
                              "Very-Violent" };
         if (!hasAtmosphere) {
@@ -211,8 +211,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
 
     private string setGravity() {
-        if ((partialData) && unknowns[5]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[5]) { return "Unknown\n"; }
         // Fudge bigly on the gravity forumla. Sorry Newton. 
         double tempGrav = (intMass() / earthMass) * (diameter / 2500);
         tempGrav = Math.Round(tempGrav, 2);
@@ -221,8 +221,8 @@ public class PlanetMetaData : MonoBehaviour {
     }
     
     private string setMass() {
-        if ((partialData) && unknowns[6]) { return "Unknown\n"; }
         rnd = new System.Random(seed);
+        if ((partialData) && unknowns[6]) { return "Unknown\n"; }
         mass = (Math.Round(intMass(), 2) +  "x10^24 kg");
         return mass;
     }

@@ -37,15 +37,24 @@ public class PlanetGeometry : MonoBehaviour {
         public int midPoint;
     }
 
-    // setup the random seed and include a default.
+    // setup the random generator and seed.
     private System.Random rnd;
+    int seed;
 
     private Vector3[] vertices = new Vector3[vertCount];
     private doneMidpoint[,] doneMidpoints = new doneMidpoint[vertCount, 6];
 
     public void Generate(string curPlanetLayer, float curDiameter, int curPlanetSeed = 100, bool fullSetup = true) {
         // setup random seed and assign the planet layer.
-        rnd = new System.Random(curPlanetSeed);
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+
+        rnd = new System.Random(seed);
+        
         planetLayer = curPlanetLayer;
         aFullSetup = fullSetup;
         // for public access, store diameter.

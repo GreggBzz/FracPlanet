@@ -95,7 +95,7 @@ public class PlanetManager : MonoBehaviour {
             if (oceanMesh != null) { oceanMesh.rotate = false; }
             // if we're on the planet, change the cloud shader so it looks right. 
             if (cloudMesh != null) {
-                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, true);
+                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, true);
                 cloud.GetComponent<Renderer>().material = cloudMaterial;
             }
             // activate the lights!
@@ -108,11 +108,11 @@ public class PlanetManager : MonoBehaviour {
             if (oceanMesh != null) { oceanMesh.rotate = true; }
             // if we're not on a planet, change the terrain textures so they look blended and not tiled, change the clouds back.
             if (cloudMesh != null) {
-                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed, false);
+                Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, false);
                 cloud.GetComponent<Renderer>().material = cloudMaterial;
             }
             if (oceanMesh != null) {
-                Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed, false);
+                Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, false);
                 oceanMesh.GetComponent<Renderer>().material = oceanMaterial;
             }
             aSun.Disable();
@@ -171,7 +171,7 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddTerrain(float dist, float planetScale) {
-        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed);
+        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType);
         terrain = new GameObject("aPlanet");
         terrain.AddComponent<MeshFilter>();
         terrain.AddComponent<MeshRenderer>();
@@ -188,7 +188,7 @@ public class PlanetManager : MonoBehaviour {
     }
 
     private void AddOcean(float dist, float planetScale) {
-        Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType, curPlanetSeed);
+        Material oceanMaterial = materialManager.AssignMaterial("ocean", curPlanetType);
         ocean = new GameObject("aPlanetOcean");
         ocean.AddComponent<MeshFilter>();
         ocean.AddComponent<MeshRenderer>();
@@ -207,7 +207,7 @@ public class PlanetManager : MonoBehaviour {
         // truncate the existing ocean mesh leaving the bottom part so everything looks right.
         partialOceanBottomMesh = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetOceanDetail>();
         // make the top part.
-        Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType, curPlanetSeed);
+        Material partialOceanMaterial = materialManager.AssignMaterial("partialOcean", curPlanetType);
         partialOceanTop.AddComponent<MeshFilter>();
         partialOceanTop.AddComponent<MeshRenderer>();
         partialOceanTop.GetComponent<Renderer>().material = partialOceanMaterial;
@@ -236,7 +236,7 @@ public class PlanetManager : MonoBehaviour {
         // create a smaller, more highly tesselated terrain mesh at the top.
         partialTerrainTop = new GameObject("aPlanetTopTerrain");
         partialTerrainTopMesh = GameObject.Find("aPlanetTopTerrain").AddComponent<PlanetTerrainDetail>();
-        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, curPlanetSeed, true);
+        Material planetSurfaceMaterial = materialManager.AssignMaterial("terrain", curPlanetType, true);
         // we'll need a texture manager to calculate the textures.
         PlanetTexture textureManager = GameObject.Find("aPlanetTopTerrain").AddComponent<PlanetTexture>();
         partialTerrainTop.AddComponent<MeshFilter>();
@@ -265,7 +265,7 @@ public class PlanetManager : MonoBehaviour {
     }
     
     private void AddAtmosphere(float dist) {
-        Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType, curPlanetSeed);
+        Material atmosphereMaterial = materialManager.AssignMaterial("atmosphere", curPlanetType);
         atmosphere = new GameObject("aPlanetAtmosphere");
         atmosphere.AddComponent<MeshFilter>();
         atmosphere.AddComponent<MeshRenderer>();
@@ -279,7 +279,7 @@ public class PlanetManager : MonoBehaviour {
     }
 
     public void AddClouds(float dist) {
-        Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType, curPlanetSeed);
+        Material cloudMaterial = materialManager.AssignMaterial("cloud", curPlanetType);
         cloud = new GameObject("aPlanetCloud");
         cloud.AddComponent<MeshFilter>();
         cloud.AddComponent<MeshRenderer>();
@@ -323,7 +323,7 @@ public class PlanetManager : MonoBehaviour {
             }
             // no chace for atmosphere and clouds, no ocean.
             if (curPlanetType.Contains("Rock")) { hasAtmosphere = false; hasOcean = false; hasClouds = false; }
-            planetMetaData.initialize(seed, planetDiameter, curPlanetType, hasAtmosphere, hasClouds, hasOcean);
+            planetMetaData.initialize(curPlanetSeed, planetDiameter, curPlanetType, hasAtmosphere, hasClouds, hasOcean);
         }
     }
 }

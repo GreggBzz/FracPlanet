@@ -5,6 +5,7 @@ using UnityStandardAssets.ImageEffects;
 
 public class SkyBoxManager : MonoBehaviour {
     private System.Random rnd;
+    private int seed;
     private PlanetLayers atmosphereMesh;
     private GameObject starField;
     private GameObject theSun;
@@ -35,7 +36,13 @@ public class SkyBoxManager : MonoBehaviour {
         if (GameObject.Find("Sun") != null) {
             theSun = GameObject.Find("Sun");
         }
-
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+        rnd = new System.Random(seed);
     }
 
     public void setSkyOnPlanet (string planetType, int planetSeed, float planetDiameter = 2500F) {
@@ -101,9 +108,9 @@ public class SkyBoxManager : MonoBehaviour {
         if (planetSideSky) return;
         if (GameObject.Find("aPlanetAtmosphere") != null) {
             Material planetSkyBox = new Material(Shader.Find("Skybox/Procedural"));
-            planetSkyBox.SetColor("_SkyTint", AtmosphereColor(planetType, planetSeed));
-            planetSkyBox.SetColor("_GroundColor", AtmosphereColor(planetType, planetSeed));
-            planetSkyBox.SetFloat("_SunSize", SunSize(planetType, planetSeed));
+            planetSkyBox.SetColor("_SkyTint", AtmosphereColor(planetType));
+            planetSkyBox.SetColor("_GroundColor", AtmosphereColor(planetType));
+            planetSkyBox.SetFloat("_SunSize", SunSize(planetType));
             if (GameObject.Find("Camera (eye)") != null) {
                 GameObject.Find("Camera (eye)").GetComponent<Skybox>().material = planetSkyBox;
             }
@@ -117,7 +124,7 @@ public class SkyBoxManager : MonoBehaviour {
         starField.transform.localScale = new Vector3(2790, 2790, 2790);
         // rotate the starfield a bit to give it a "random" look.
         starField.transform.localEulerAngles = 
-            new Vector3(starFieldRotation(planetSeed), starFieldRotation(planetSeed), starFieldRotation(planetSeed));
+            new Vector3(starFieldRotation(), starFieldRotation(), starFieldRotation());
         starField.GetComponent<Renderer>().enabled = true;
         planetSideSky = true;
     }
@@ -137,8 +144,7 @@ public class SkyBoxManager : MonoBehaviour {
         cloudsFetched = false;
     }
 
-    private Color32 AtmosphereColor(string curPlanetType, int seed) {
-        rnd = new System.Random(seed);
+    private Color32 AtmosphereColor(string curPlanetType) {
         if (curPlanetType.Contains("Terra")) {
             // random earth atmosphere.
             int R = rnd.Next(0, 20); int B = rnd.Next(40, 150);
@@ -159,8 +165,7 @@ public class SkyBoxManager : MonoBehaviour {
         }
         return new Color32(0xFF, 0xFF, 0xFF, 0xFF);
     }
-    private float SunSize(string curPlanetType, int seed) {
-        rnd = new System.Random(seed);
+    private float SunSize(string curPlanetType) {
         if (curPlanetType.Contains("Terra")) {
             // a relativly close sun.
             return (float)(rnd.NextDouble() * (0.15 - 0.04) + 0.04) ;
@@ -176,8 +181,7 @@ public class SkyBoxManager : MonoBehaviour {
         return (float)rnd.NextDouble();
     }
 
-    private float starFieldRotation(int seed) {
-        rnd = new System.Random(seed);
+    private float starFieldRotation() {
         return (float)(rnd.NextDouble() * (130 - 100) + 100);
     }
 }
