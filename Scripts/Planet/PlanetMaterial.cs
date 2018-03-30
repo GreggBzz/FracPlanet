@@ -55,13 +55,11 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "ocean") {
-            txrPostFix = "f";
-            if (reassign) { txrPostFix = ""; }
-            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType + txrPostFix) as Texture;
+            Texture curTypeTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType) as Texture;
             Material oceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
             oceanMaterial.SetColor("_TintColor", OceanColor(curPlanetType));
             oceanMaterial.SetTexture("_MainTex", curTypeTexture);
-            oceanMaterial.mainTextureScale = OceanTiling();
+            oceanMaterial.mainTextureScale = OceanTiling(reassign);
             return oceanMaterial;
         }
 
@@ -136,12 +134,10 @@ public class PlanetMaterial : MonoBehaviour {
             for (int i = 0; i <= terrainTextures.Length - 1; i++) {
                 txrPostFix = curPlanetType + (i + 1);
                 terrainNormals[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + txrPostFix) as Texture;
-                // if we're far away, load the less detailed diffuse textures.
-                if (reassign) { txrPostFix = curPlanetType + (i + 1); } else { txrPostFix = curPlanetType + (i + 1) + "f"; }
                 terrainTextures[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/txr" + txrPostFix) as Texture;
                 planetSurfaceMaterial.SetTexture("_Texture" + (i + 1), terrainTextures[i]);
                 planetSurfaceMaterial.SetTexture("_Normal" + (i + 1), terrainNormals[i]);
-                planetSurfaceMaterial.SetTextureScale("_Texture" + (i + 1), TerrainTiling(curPlanetType));
+                planetSurfaceMaterial.SetTextureScale("_Texture" + (i + 1), TerrainTiling(curPlanetType, reassign));
                 planetSurfaceMaterial.SetTextureScale("_Normal" + (i + 1), planetSurfaceMaterial.GetTextureScale("_Texture" + (i + 1)));
             }
             return planetSurfaceMaterial;
@@ -306,7 +302,8 @@ public class PlanetMaterial : MonoBehaviour {
         }
     }
 
-    private Vector2 OceanTiling() {
+    private Vector2 OceanTiling(bool reassign) {
+        if (!reassign) { return new Vector2(4, 4); }
         int xTile = rnd.Next(1, 4);
         int yTile = rnd.Next(1, 4);
         return new Vector2(xTile, yTile);
@@ -333,7 +330,9 @@ public class PlanetMaterial : MonoBehaviour {
         }
         return new Vector2(1F, 1F);
     }
-    private Vector2 TerrainTiling(string curPlanetType) {
+    private Vector2 TerrainTiling(string curPlanetType, bool reassign) {
+        // if we're far away, repeat the texture very densely, so obvious tile patterns are diffused.
+        if (!reassign) return new Vector2(5, 5);
         float tile = (float)rnd.NextDouble() * (1.375F - .625F) + .625F;
         return new Vector2(tile, tile);
     }

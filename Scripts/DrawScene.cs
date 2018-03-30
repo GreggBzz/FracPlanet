@@ -4,19 +4,13 @@ public class DrawScene : MonoBehaviour {
     // the WandController object for the right controller.
     private WandController wand;
     private MainLight aMainLight;
-    // A line drawn from the controller.
-    public LineRenderer pointerLineRenderer;
-    private Vector3[] lineRendererVertices = new Vector3[2];
-    public GameObject pointerLine;
-    private Color baseColor;
-    private Color hitColor;
     public string onWhichPlanet = "";
     // teleporting stuff.
     private bool teleporting, teleportHome;
     private Vector3 startPos;
     private RaycastHit hit, hit2;
-    private float teleDistance;
     private bool rotationMatched;
+    private TeleportArc teleportArc;
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
@@ -36,9 +30,16 @@ public class DrawScene : MonoBehaviour {
 
     void Start() {
         planetManager = gameObject.AddComponent<PlanetManager>();
-        wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
-        screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
-        aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
+        if (GameObject.Find("Controller (right)") != null) {
+            wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
+            teleportArc = GameObject.Find("Controller (right)").GetComponent<TeleportArc>();
+        }
+        if (GameObject.Find("ScreenFader") != null) {
+            screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
+        }
+        if (GameObject.Find("Main Light") != null) {
+            aMainLight = GameObject.Find("Main Light").GetComponent<MainLight>();
+        }
         scanBox = gameObject.AddComponent<ScanBox>();
         skybox = gameObject.AddComponent<SkyBoxManager>();
         cameraEffect = gameObject.AddComponent<CameraEffects>();
@@ -56,7 +57,7 @@ public class DrawScene : MonoBehaviour {
         if (wand == null) { return; }
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
-            teleDistance = 800;
+            teleportArc.teleDistance = 800F;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
             UpdatePlanetObjects();
@@ -64,21 +65,19 @@ public class DrawScene : MonoBehaviour {
         }
         if ((havePlanet) && (!onWhichPlanet.Contains("Planet"))) {
             UpdateScanBox();
-            teleDistance = 4500F;
             aMainLight.Enable();
         }
         if ((!havePlanet) && (wand.radialMenu.curMenuType != ("Planet Menu - Child"))) {
             HideScanBox();
-            teleDistance = 4500F;
             aMainLight.Enable();
         }
         if ((!havePlanet) && (wand.radialMenu.curMenuType == ("Planet Menu - Child"))) {
             planetManager.UpdatePotentialPlanet(seedQueue[seedQueueIndex]);
             UpdateScanBox(true);
-            teleDistance = 4500F;
             aMainLight.Enable();
         }
         skybox.setSkyOffPlanet();
+        teleportArc.teleDistance = 4500F;
     }
 
     public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
@@ -144,7 +143,7 @@ public class DrawScene : MonoBehaviour {
             onWhichPlanet = "";
             return;
         }
-        if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
+        if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleportArc.teleDistance)) {
             if (hit.transform.gameObject.name.Contains("Planet")) {
                 // create seperate high detail top ocean and low detail bottom ocean (once).
                 planetManager.ManageOcean(true);
@@ -194,49 +193,6 @@ public class DrawScene : MonoBehaviour {
             return true;
         }
         return false;
-    }
-
-    public void DestroyPointerLine() {
-        if (pointerLineRenderer != null) {
-            pointerLineRenderer = null;
-            Destroy(pointerLine);
-        }
-    }
-
-    public void AddPointerLine(Color newBaseColor, Color newHitColor) {
-        if (pointerLineRenderer != null) {
-            return;
-        }
-        baseColor = newBaseColor;
-        hitColor = newHitColor;
-        pointerLine = new GameObject("Pointer Line");
-        pointerLineRenderer = pointerLine.AddComponent<LineRenderer>();
-        pointerLineRenderer.material = new Material(Shader.Find("Particles/Additive"));
-        pointerLineRenderer.startWidth = 0.01f;
-        pointerLineRenderer.endWidth = 0.01f;
-        pointerLineRenderer.numPositions = 2;
-    }
-
-    public void UpdatePointerLine() {
-        // Update our LineRenderer
-        if (pointerLineRenderer && pointerLineRenderer.enabled) {
-            Vector3 startPos = wand.transform.position;
-            // If our raycast hits (line will be green) end the line at that positon. Otherwise,
-            // make our line point straight out for 5000 meters, and red.
-            if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleDistance)) {
-                lineRendererVertices[1] = hit.point;
-                pointerLineRenderer.startColor = baseColor;
-                pointerLineRenderer.endColor = baseColor;
-            }
-            else {
-                lineRendererVertices[1] = startPos + wand.transform.forward * teleDistance;
-                pointerLineRenderer.startColor = hitColor;
-                pointerLineRenderer.endColor = hitColor;
-            }
-
-            lineRendererVertices[0] = wand.transform.position;
-            pointerLineRenderer.SetPositions(lineRendererVertices);
-        }
     }
 
     public void AddPlanet() {

@@ -2,6 +2,8 @@
 using System;
 
 public class GrassManager : MonoBehaviour {
+    private int seed;
+
     private bool grassMade = false;
     private bool grassEnabled = false;
     private int grassPlacedTimes = 0;
@@ -44,6 +46,15 @@ public class GrassManager : MonoBehaviour {
 
 
     void Awake () {
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+
+        UnityEngine.Random.InitState(seed);
+
         wholePlanetVertCount = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().newVertIndex;
         grassCluster = new GrassCluster[wholePlanetVertCount];
         // partent object to stuff all the little grass children into.
@@ -213,7 +224,7 @@ public class GrassManager : MonoBehaviour {
         RaycastHit hit;
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
             if (!grassCluster[i].display) { continue; }
-
+            UnityEngine.Random.InitState(i);
             int curType = grassCluster[i].type - 1;
 
             for (int i2 = 0; i2 <= grassClusterSize - 1; i2++) {

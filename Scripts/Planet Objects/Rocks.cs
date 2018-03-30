@@ -6,7 +6,7 @@ public class Rocks {
     private int[] triangles;
 
     // Make some rocks.
-    public void Generate(Vector3[] curVerts, int[] curTriangles, Vector2[] curUv, int[] dupeVerts, float jagginess = 1.4F, float scaler = .5F, int seed = 42) {
+    public void Generate(Vector3[] curVerts, int[] curTriangles, Vector2[] curUv, int[] dupeVerts, float jagginess = 1.4F, float scaler = .5F) {
         float scaleY, scaleX, scaleZ, rotateX, rotateY, rotateZ;
         if (jagginess < 1.2F) {
             scaleY = UnityEngine.Random.Range(scaler - (scaler / 10), scaler + (scaler * 3));

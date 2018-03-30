@@ -2,6 +2,8 @@
 using System;
 
 public class RocksManager : MonoBehaviour {
+    private int seed;
+
     private bool rocksMade = false;
     private bool rocksEnabled = false;
     private int rocksPlacedTimes = 0;
@@ -10,7 +12,7 @@ public class RocksManager : MonoBehaviour {
     // because of dynamic batching, performance roughly scales with (rocksMaterials * rocksCount).
     public const float drawDistance = 100;
     private int wholePlanetVertCount;
-    private const int rocksTextures = 6; // unique textures;
+    private const int rocksTextures = 8; // unique textures;
     private const int rocksTextureVariety = 10; // unique texture + displacement varieties of rock;
     private const int rocksMaxCount = 5000; // total rocks gameobjects, displayed or not.
     private const float rocksScatterArea = 30F;
@@ -42,6 +44,15 @@ public class RocksManager : MonoBehaviour {
 
 
     void Awake() {
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+
+        UnityEngine.Random.InitState(seed);
+
         wholePlanetVertCount = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().newVertIndex;
         rocksCluster = new RocksCluster[wholePlanetVertCount];
         // partent object to stuff all the little rocks children into.
@@ -135,14 +146,14 @@ public class RocksManager : MonoBehaviour {
                 // sorta chance of rocks.
                 if (UnityEngine.Random.Range(0F, 1F) >= .6F) {
                     rocksCluster[i].haveRocks = true;
-                    rocksCluster[i].type = UnityEngine.Random.Range(3, 7);
+                    rocksCluster[i].type = UnityEngine.Random.Range(3, 9);
                 }
             }
             else {
                 // good chance for rocks, last 2 types.
                 if (UnityEngine.Random.Range(0F, 1F) >= .8F) {
                     rocksCluster[i].haveRocks = true;
-                    rocksCluster[i].type = UnityEngine.Random.Range(3, 7);
+                    rocksCluster[i].type = UnityEngine.Random.Range(3, 9);
                 }
             }
             if (rocksCluster[i].haveRocks) {
