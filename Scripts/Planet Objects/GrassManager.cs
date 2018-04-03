@@ -14,7 +14,7 @@ public class GrassManager : MonoBehaviour {
     private const float animateDistance = 15;
     private int wholePlanetVertCount;
     private const int grassTextures = 8; // unique textures;
-    private const int grassTextureVariety = 5; // unique varieties per texture;
+    private const int grassTextureVariety = 3; // unique varieties per texture;
     private const int grassMaxCount = 25000; // total grass gameobjects, displayed or not.
     private const float grassScatterArea = 20F;
     private const int grassClusterSize = 800;

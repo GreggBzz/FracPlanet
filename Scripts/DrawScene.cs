@@ -10,7 +10,7 @@ public class DrawScene : MonoBehaviour {
     private Vector3 startPos;
     private RaycastHit hit, hit2;
     private bool rotationMatched;
-    private TeleportArc teleportArc;
+    private TelePortParabola teleportArc;
     // screen fader.
     private ScreenFader screenFade;
     private DrawScene aScene;
@@ -32,7 +32,7 @@ public class DrawScene : MonoBehaviour {
         planetManager = gameObject.AddComponent<PlanetManager>();
         if (GameObject.Find("Controller (right)") != null) {
             wand = GameObject.Find("Controller (right)").GetComponent<WandController>();
-            teleportArc = GameObject.Find("Controller (right)").GetComponent<TeleportArc>();
+            teleportArc = GameObject.Find("Controller (right)").GetComponent<TelePortParabola>();
         }
         if (GameObject.Find("ScreenFader") != null) {
             screenFade = GameObject.Find("ScreenFader").GetComponent<ScreenFader>();
@@ -57,7 +57,7 @@ public class DrawScene : MonoBehaviour {
         if (wand == null) { return; }
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
-            teleportArc.teleDistance = 800F;
+            teleportArc.teleDistance = 40F;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
             UpdatePlanetObjects();

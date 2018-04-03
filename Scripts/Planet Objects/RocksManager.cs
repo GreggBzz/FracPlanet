@@ -13,7 +13,7 @@ public class RocksManager : MonoBehaviour {
     public const float drawDistance = 100;
     private int wholePlanetVertCount;
     private const int rocksTextures = 8; // unique textures;
-    private const int rocksTextureVariety = 10; // unique texture + displacement varieties of rock;
+    private const int rocksTextureVariety = 5; // unique texture + displacement varieties of rock;
     private const int rocksMaxCount = 5000; // total rocks gameobjects, displayed or not.
     private const float rocksScatterArea = 30F;
     private const int rocksClusterSize = 15;

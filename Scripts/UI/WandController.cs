@@ -9,7 +9,7 @@ public class WandController : SteamVR_TrackedController {
     public Vector3 menuPos;
     public RadialMenuManager radialMenu;
     private DrawScene aScene;
-    private TeleportArc teleportArc;
+    private TelePortParabola teleportArc;
 
     private DateTime before;
     private DateTime after;
@@ -19,7 +19,7 @@ public class WandController : SteamVR_TrackedController {
         base.Start();
         aScene = gameObject.AddComponent<DrawScene>();
         radialMenu = gameObject.AddComponent<RadialMenuManager>();
-        teleportArc = gameObject.AddComponent<TeleportArc>();
+        teleportArc = gameObject.AddComponent<TelePortParabola>();
     }
 
     protected override void Update() {
@@ -32,7 +32,7 @@ public class WandController : SteamVR_TrackedController {
         switch (switch_string)
         {
             case "Teleport":
-                teleportArc.AddTeleportLine(Color.green, Color.red);
+                teleportArc.EnableTeleportLine(Color.green, Color.red);
                 break;
             case "Planet":
                 aScene.SetPlanetType(radialMenu.whatIsSelected);
@@ -53,13 +53,13 @@ public class WandController : SteamVR_TrackedController {
             default:
                 if (radialMenu.curMenuType != null) {
                     if (!radialMenu.curMenuType.Contains(" - Child")) {
-                        teleportArc.DestroyTeleportLine();
+                        teleportArc.DisableTeleportLine();
                     }
                 }
                 break;
         }
         // draw/update the pointer line?
-        if (teleportArc.lineRenderer && teleportArc.lineRenderer.enabled) {
+        if (teleportArc.lineEnabled) {
             teleportArc.UpdateTeleportLine();
         }
 
@@ -106,7 +106,7 @@ public class WandController : SteamVR_TrackedController {
                 radialMenu.Cycle("Destroy Menu");
                 break;
             default:
-                teleportArc.DestroyTeleportLine();
+                teleportArc.DisableTeleportLine();
                 break;
         }
         // do we need to pause any planets?
@@ -116,7 +116,7 @@ public class WandController : SteamVR_TrackedController {
     public override void OnMenuClicked(ClickedEventArgs e) {
         base.OnMenuClicked(e);
         aScene.DestroyPlanetOutline();
-        teleportArc.DestroyTeleportLine();
+        teleportArc.DisableTeleportLine();
         // if we're rendering a planet, don't let the user do anything besides destroy/teleport.
         if (aScene.havePlanet) {
             radialMenu.Cycle("Destroy Menu");
