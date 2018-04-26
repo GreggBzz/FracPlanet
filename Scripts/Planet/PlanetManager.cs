@@ -215,11 +215,20 @@ public class PlanetManager : MonoBehaviour {
         partialOceanTop.GetComponent<MeshFilter>().mesh.vertices = partialOceanTopMesh.GetVerts();
         partialOceanTop.GetComponent<MeshFilter>().mesh.triangles = partialOceanTopMesh.GetTris();
         partialOceanTop.GetComponent<MeshFilter>().mesh.RecalculateNormals();
+        partialOceanTop.GetComponent<MeshFilter>().mesh.RecalculateTangents();
+        partialOceanTop.AddComponent<MeshCollider>();
+        partialOceanTop.GetComponent<MeshCollider>().enabled = true;
+        partialOceanTop.layer = 4; // Builtin water.
         partialOceanTop.transform.position = centerPos + Vector3.forward * 3500F;
-        // make the bottom part
-        Color tmpColor = partialOceanMaterial.GetColor("_BaseColor");
+        // Texture the partial ocean.
+        PlanetTexture textureManager = GameObject.Find("aPlanetTopOcean").AddComponent<PlanetTexture>();
+        int vertCount = partialOceanTopMesh.GetVertCount();
+        Vector3[] verts = partialOceanTopMesh.GetComponent<MeshFilter>().mesh.vertices;
+        int[] tris = partialOceanTopMesh.GetComponent<MeshFilter>().mesh.triangles;
+        partialOceanTop.GetComponent<MeshFilter>().mesh.uv = textureManager.Texture(vertCount, verts, tris);
+        // make the bottom part, dark grey to blend.
         partialOceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
-        partialOceanMaterial.SetColor("_TintColor", tmpColor);
+        partialOceanMaterial.SetColor("_TintColor", new Color32(24, 24, 24, 255));
         partialOceanBottom = new GameObject("aPlanetBottomOcean");
         partialOceanBottom.AddComponent<MeshFilter>();
         partialOceanBottom.AddComponent<MeshRenderer>();
@@ -260,8 +269,8 @@ public class PlanetManager : MonoBehaviour {
         // clean up.
         textureManager = null; verts = null; tris = null;
         // deal with our biomes.
-        grassManager.PlaceAndEnableGrass();
         rocksManager.PlaceAndEnableRocks();
+        grassManager.PlaceAndEnableGrass();
     }
     
     private void AddAtmosphere(float dist) {

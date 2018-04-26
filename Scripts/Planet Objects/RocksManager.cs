@@ -5,19 +5,20 @@ public class RocksManager : MonoBehaviour {
     private int seed;
 
     private bool rocksMade = false;
-    private bool rocksEnabled = false;
-    private int rocksPlacedTimes = 0;
 
-    // for ~100FPS on a 1060, shoot for < 3500 rocks in the FOV using 10 materials (texture * variety).
+    // variables used to space out rock placement over many frames without using an IENUmerator (slow!).
+    private int rocksPlacedDelay = 0;
+    private bool rocksPlaced;
+
+    // for ~100FPS on a 1060, shoot for < 3500 rocks in the FOV using 10 materials (texture * varietyF).
     // because of dynamic batching, performance roughly scales with (rocksMaterials * rocksCount).
-    public const float drawDistance = 100;
+    public const float drawDistance = 90;
     private int wholePlanetVertCount;
     private const int rocksTextures = 8; // unique textures;
-    private const int rocksTextureVariety = 5; // unique texture + displacement varieties of rock;
+    private const int rocksTextureVariety = 3; // unique texture + displacement varieties of rock;
     private const int rocksMaxCount = 5000; // total rocks gameobjects, displayed or not.
     private const float rocksScatterArea = 30F;
     private const int rocksClusterSize = 15;
-
 
     private GameObject allTheRocks;
     private Rocks[,] rocksMesh = new Rocks[rocksTextures, (rocksMaxCount / rocksTextures)];
@@ -202,6 +203,9 @@ public class RocksManager : MonoBehaviour {
         aRock[textureIndex, countIndex].GetComponent<MeshFilter>().mesh.uv = rocksMesh[textureIndex, countIndex].GetUv();
         aRock[textureIndex, countIndex].GetComponent<MeshFilter>().mesh.RecalculateNormals();
         aRock[textureIndex, countIndex].GetComponent<Renderer>().enabled = false;
+        aRock[textureIndex, countIndex].AddComponent<MeshCollider>();
+        aRock[textureIndex, countIndex].GetComponent<MeshCollider>().enabled = true;
+        aRock[textureIndex, countIndex].layer = 8;
         // put all the rocks under the parent object in the inspector.
         aRock[textureIndex, countIndex].transform.parent = allTheRocks.transform;
     }
@@ -220,13 +224,15 @@ public class RocksManager : MonoBehaviour {
             }
         }
         Destroy(allTheRocks);
-        rocksPlacedTimes = 0;
+        rocksPlacedDelay = 0;
+        rocksPlaced = false;
         rocksMade = false;
     }
 
     public void DisableRocks() {
         if (!rocksMade) { return; }
-        rocksPlacedTimes = 0;
+        rocksPlacedDelay = 0;
+        rocksPlaced = false;
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
                 aRock[i, i2].GetComponent<Renderer>().enabled = false; ;
@@ -238,9 +244,9 @@ public class RocksManager : MonoBehaviour {
     }
 
     public void PlaceAndEnableRocks() {
-        if (!rocksMade) { return; }
+        if ((!rocksMade) || (rocksPlaced)) { return; }
         // hack to deal with a race condition where the mesh collider isn't calculated before raycast rocks placement.
-        if (rocksPlacedTimes > 3) { return; }
+        if (rocksPlacedDelay < 2 ) { rocksPlacedDelay += 1; return; }
 
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
@@ -251,6 +257,9 @@ public class RocksManager : MonoBehaviour {
 
         Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
         RaycastHit hit;
+
+        int layerMask = LayerMask.GetMask("Default"); // only hit the terrain.
+        
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
             if (!rocksCluster[i].display) { continue; }
             UnityEngine.Random.InitState(i);
@@ -262,20 +271,18 @@ public class RocksManager : MonoBehaviour {
                 }
 
                 int rockToDrop = UnityEngine.Random.Range(0, (int)(rocksMaxCount / rocksTextures));
-                if (aRock[curType, rockToDrop].GetComponent<Renderer>().enabled) { continue; }
-
+                
                 Vector2 offset = new Vector2(rocksCluster[i].offset[i2].x, rocksCluster[i].offset[i2].y);
                 Vector3 dropPoint = new Vector3(rocksCluster[i].centerLocation.x + offset.x, 25000, rocksCluster[i].centerLocation.y + offset.y);
 
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
+                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000, layerMask)) {
                     aRock[curType, rockToDrop].transform.position = hit.point;
                     aRock[curType, rockToDrop].GetComponent<Renderer>().enabled = true;
                     aRock[curType, rockToDrop].GetComponent<Renderer>().material = rocksMaterial[curType, Math.Abs((int)offset.x) % rocksTextureVariety];
                     displayedrocksCount[curType] += 1;
                 }
             }
-
         }
-        rocksPlacedTimes += 1;
+        rocksPlaced = true;
     }
 }

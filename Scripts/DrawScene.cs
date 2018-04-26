@@ -7,7 +7,6 @@ public class DrawScene : MonoBehaviour {
     public string onWhichPlanet = "";
     // teleporting stuff.
     private bool teleporting, teleportHome;
-    private Vector3 startPos;
     private RaycastHit hit, hit2;
     private bool rotationMatched;
     private TelePortParabola teleportArc;
@@ -15,7 +14,7 @@ public class DrawScene : MonoBehaviour {
     private ScreenFader screenFade;
     private DrawScene aScene;
     private SkyBoxManager skybox;
-    private CameraEffects cameraEffect;
+    //private CameraEffects cameraEffect;
     private float timer = 0;
     private float timerMax = 0;
     // planet related stuff.
@@ -42,7 +41,7 @@ public class DrawScene : MonoBehaviour {
         }
         scanBox = gameObject.AddComponent<ScanBox>();
         skybox = gameObject.AddComponent<SkyBoxManager>();
-        cameraEffect = gameObject.AddComponent<CameraEffects>();
+        //cameraEffect = gameObject.AddComponent<CameraEffects>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
         rnd = new System.Random(42); // what's the meaning of life, eh?
@@ -57,7 +56,6 @@ public class DrawScene : MonoBehaviour {
         if (wand == null) { return; }
         if (onWhichPlanet.Contains("Planet")) {
             scanBox.HideScanBox();
-            teleportArc.teleDistance = 40F;
             aMainLight.Disable();
             skybox.setSkyOnPlanet(planetManager.curPlanetType, planetManager.curPlanetSeed, planetManager.planetDiameter);
             UpdatePlanetObjects();
@@ -82,13 +80,16 @@ public class DrawScene : MonoBehaviour {
 
     public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
         if (rotationMatched) { return; }
+
+        int layerMask = LayerMask.GetMask("Default", "Rocks"); // hit only rocks and terrain.
+
         if (GameObject.Find("aPlanetTopTerrain")) {
             GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
             GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
             // drop the player from the center top onto the terrain, to ensure we're always above and the planet transform
             // and rotation's happen below us.
             Vector3 dropPoint = new Vector3(0, 30000, 3500);
-            if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 30000)) {
+            if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 30000, layerMask)) {
                 wand.transform.parent.position = hit2.point;
             }
         }
@@ -97,8 +98,8 @@ public class DrawScene : MonoBehaviour {
 
     private void UpdatePlanetObjects() {
         // update all the planet objects. 
-        GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
         GameObject.Find("aPlanet").GetComponent<RocksManager>().PlaceAndEnableRocks();
+        GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
     }
 
 
@@ -118,10 +119,13 @@ public class DrawScene : MonoBehaviour {
         // kick off a teleport sequence, set teleporting to true.
         teleporting = true;
         if (toHome) { teleportHome = true; return; }
-        startPos = wand.transform.position;
     }
 
     private void DoTeleport(bool toHome) {
+        bool drawArc = false;
+        if (onWhichPlanet.Contains("Planet")) {
+            drawArc = true;
+        }
         string[] planetParts = { "aPlanetCloud", "aPlanet" };
         rotationMatched = false;
         if (toHome) {
@@ -138,52 +142,55 @@ public class DrawScene : MonoBehaviour {
             if (GameObject.Find("aPlanet") != null) {
                 if (GameObject.Find("aPlanet").GetComponent<GrassManager>() != null) {
                     GameObject.Find("aPlanet").GetComponent<GrassManager>().DisableGrass();
+                    //GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = true;
                 }
             }
             onWhichPlanet = "";
             return;
         }
-        if (Physics.Raycast(startPos, wand.transform.forward, out hit, teleportArc.teleDistance)) {
-            if (hit.transform.gameObject.name.Contains("Planet")) {
-                // create seperate high detail top ocean and low detail bottom ocean (once).
-                planetManager.ManageOcean(true);
-                // if we hit a planet, first rotate the point on the planet we hit to the top.
-                // set the hit point (fromPoint) relative to 0,0,0 by subtracting the planet's position.
-                Vector3 toPoint = Vector3.up;
-                Vector3 fromPoint = hit.point - hit.transform.gameObject.transform.position;
-                // correct the height of the toPoint by dropping a ray and taking it's hit point.
-                Vector3 dropPoint = new Vector3(0, 30000, 3500);
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
-                    toPoint = hit2.point - hit.transform.gameObject.transform.position;
-                }
-                // forumulate a quaternion rotation using FromToRotation.
-                Quaternion rotateToTop = Quaternion.FromToRotation(fromPoint, toPoint);
-                // roate each part of the planet using the caclulated rotation
-                foreach (string planetPart in planetParts) {
-                    if (GameObject.Find(planetPart)) {
-                        GameObject.Find(planetPart).transform.localRotation = rotateToTop * GameObject.Find(planetPart).transform.localRotation;
-                    }
-                }
-                // see MatchTerrainRotation() to see the player position transform, after the terrain has rotated.
-                // we drop the player with that. It's called once a frame.
-                planetManager.ManageTerrain(true);
-                if (GameObject.Find("aPlanet")) {
-                    // tuck the less detailed mesh under the player a bit.
-                    GameObject.Find("aPlanet").transform.position = new Vector3(0F, 748.5F, 3500F);
+        hit = teleportArc.UpdateTeleportLine(drawArc);
+        if (hit.point == new Vector3()) { return; }
+        if (hit.transform.gameObject.name.Contains("Planet")) {
+            // create seperate high detail top ocean and low detail bottom ocean (once).
+            planetManager.ManageOcean(true);
+            // if we hit a planet, first rotate the point on the planet we hit to the top.
+            // set the hit point (fromPoint) relative to 0,0,0 by subtracting the planet's position.
+            Vector3 toPoint = Vector3.up;
+            Vector3 fromPoint = hit.point - hit.transform.gameObject.transform.position;
+            // correct the height of the toPoint by dropping a ray and taking it's hit point.
+            Vector3 dropPoint = new Vector3(0, 30000, 3500);
+            if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 20000)) {
+                toPoint = hit2.point - hit.transform.gameObject.transform.position;
+            }
+            // forumulate a quaternion rotation using FromToRotation.
+            Quaternion rotateToTop = Quaternion.FromToRotation(fromPoint, toPoint);
+            // roate each part of the planet using the caclulated rotation
+            foreach (string planetPart in planetParts) {
+                if (GameObject.Find(planetPart)) {
+                    GameObject.Find(planetPart).transform.localRotation = rotateToTop * GameObject.Find(planetPart).transform.localRotation;
                 }
             }
-            else {
-                wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
-                wand.transform.parent.position = hit.point;
-                if (GameObject.Find("aPlanet")) {
-                    planetManager.ManageOcean(false);
-                    planetManager.ManageTerrain(false);
-                }
+            // see MatchTerrainRotation() to see the player position transform, after the terrain has rotated.
+            // we drop the player with that. It's called once a frame.
+            planetManager.ManageTerrain(true);
+            if (GameObject.Find("aPlanet")) {
+                // tuck the less detailed mesh under the player a bit.
+                GameObject.Find("aPlanet").transform.position = new Vector3(0F, 748.5F, 3500F);
+                //GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = false;
             }
-            onWhichPlanet = hit.transform.gameObject.name;
         }
+        else {
+            wand.transform.parent.eulerAngles = new Vector3(0F, 0F, 0F);
+            wand.transform.parent.position = hit.point;
+            if (GameObject.Find("aPlanet")) {
+                planetManager.ManageOcean(false);
+                planetManager.ManageTerrain(false);
+            }
+        }
+        onWhichPlanet = hit.transform.gameObject.name;
         PausePlanet();
     }
+
 
     private bool Waited(float seconds) {
         timerMax = seconds;

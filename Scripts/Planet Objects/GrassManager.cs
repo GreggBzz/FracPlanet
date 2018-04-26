@@ -5,27 +5,29 @@ public class GrassManager : MonoBehaviour {
     private int seed;
 
     private bool grassMade = false;
-    private bool grassEnabled = false;
-    private int grassPlacedTimes = 0;
 
+    // variables used to space out grass placement over many frames without using an IENUmerator (slow!).
+    private int grassPlacedDelay = 0;
+    private bool grassPlaced;
+    
     // for ~100FPS on a 1060, shoot for < 3500 grass in the FOV using 10 materials (texture * variety).
     // because of dynamic batching, performance roughly scales with (grassMaterials * grassCount).
-    public const float drawDistance = 100;
-    private const float animateDistance = 15;
+    public const float drawDistance = 70;
+    private const float animateDistance = 8;
     private int wholePlanetVertCount;
-    private const int grassTextures = 8; // unique textures;
-    private const int grassTextureVariety = 3; // unique varieties per texture;
-    private const int grassMaxCount = 25000; // total grass gameobjects, displayed or not.
+    public const int grassTextures = 8; // unique textures, we'll use a texture atlas with n grasses in a strip.
+    private const int grassColorVariety = 7; // unique color varieties.
+    private const int grassMaxCount = 40000; // total grass gameobjects, displayed or not.
     private const float grassScatterArea = 20F;
-    private const int grassClusterSize = 800;
+    private const int grassClusterSize = 400;
 
 
     private GameObject allTheGrass;
     private Grass[,] grassMesh = new Grass[grassTextures, (grassMaxCount / grassTextures)];
     private GameObject[,] aGrass = new GameObject[grassTextures, (grassMaxCount / grassTextures)];
     private int[] displayedGrassCount = new int[grassTextures];
-    private Material[,] grassMaterial = new Material[grassTextures, grassTextureVariety];
-    private Material[,] staticGrassMaterial = new Material[grassTextures, grassTextureVariety];
+    private Material[] grassMaterial = new Material[grassColorVariety];
+    private Material[] staticGrassMaterial = new Material[grassColorVariety];
     private Vector2[] grassElevations;
     private float planetRadius;
     private float planetMaxElevation;
@@ -70,16 +72,14 @@ public class GrassManager : MonoBehaviour {
     public void AddGrass() {
         if (grassMade) { return; }
         // setup the materials.
-        for (int i = 0; i <= grassTextures - 1; i++) {
-            for (int i2 = 0; i2 <= grassTextureVariety - 1; i2++) {
-                GetMaterials(i + 1, out grassMaterial[i, i2], out staticGrassMaterial[i, i2]);
-            }
+        for (int i = 0; i <= grassColorVariety - 1; i++) {
+            GetMaterials(i + 1, out grassMaterial[i], out staticGrassMaterial[i]);
         }
         // make the grass meshes and gameobjects.
         for (int i = 0; i <= grassTextures - 1; i++) {
             for (int i2 = 0; i2 <= (grassMaxCount / grassTextures) - 1; i2++) {
                 grassMesh[i, i2] = new Grass();
-                grassMesh[i, i2].Generate();
+                grassMesh[i, i2].Generate(.5f, .8f, 1.0f, i);
                 MakeAGrass(i, i2);
             }
         }
@@ -142,7 +142,7 @@ public class GrassManager : MonoBehaviour {
     }
 
     private void GetMaterials(int type, out Material aGrassMaterial, out Material aStaticGrassMaterial) {
-        Texture grassTexture = Resources.Load("SurfaceObjects/Grass/" + curPlanetType + "/" + curPlanetType.ToLower() + "Grass" + type) as Texture;
+        Texture grassTexture = Resources.Load("SurfaceObjects/Grass/" + curPlanetType + "/" + curPlanetType.ToLower() + "Grass01") as Texture;
         aGrassMaterial = new Material(Shader.Find("Custom/SimpleGrassSine"));
         aGrassMaterial.SetTexture("_MainTex", grassTexture);
         aGrassMaterial.SetTexture("_Illum", grassTexture);
@@ -190,13 +190,15 @@ public class GrassManager : MonoBehaviour {
             }
         }
         Destroy(allTheGrass);
-        grassPlacedTimes = 0;
+        grassPlacedDelay = 0;
+        grassPlaced = false;
         grassMade = false;
     }
 
     public void DisableGrass() {
         if (!grassMade) { return; }
-        grassPlacedTimes = 0;
+        grassPlacedDelay = 0;
+        grassPlaced = false;
         for (int i = 0; i <= grassTextures - 1; i++) {
             for (int i2 = 0; i2 <= (grassMaxCount / grassTextures) - 1; i2++) {
                 aGrass[i, i2].GetComponent<Renderer>().enabled = false; ;
@@ -208,20 +210,22 @@ public class GrassManager : MonoBehaviour {
     }
     
     public void PlaceAndEnableGrass() {
-        if (!grassMade) { return; }
+        if ((!grassMade) || (grassPlaced)) { return; }
         // hack to deal with a race condition where the mesh collider isn't calculated before raycast grass placement.
-        if (grassPlacedTimes > 3) { return; }
+        if (grassPlacedDelay < 3 ) { grassPlacedDelay += 1; return; }
 
-        for (int i = 0; i <= grassTextures - 1; i++) {
-            for (int i2 = 0; i2 <= (grassMaxCount / grassTextures) - 1; i2++) {
+        for (int i = 0; i <= aGrass.GetLength(0) - 1; i++) {
+            for (int i2 = 0; i2 <= aGrass.GetLength(1) - 1; i2++) {
                 aGrass[i, i2].GetComponent<Renderer>().enabled = false;
             }
             displayedGrassCount[i] = 0;
         }
 
         Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
-
         RaycastHit hit;
+
+        int layerMask = LayerMask.GetMask("Default"); // hit only terrain.
+
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
             if (!grassCluster[i].display) { continue; }
             UnityEngine.Random.InitState(i);
@@ -238,18 +242,18 @@ public class GrassManager : MonoBehaviour {
                 Vector2 offset = new Vector2(grassCluster[i].offset[i2].x, grassCluster[i].offset[i2].y);
                 Vector3 dropPoint = new Vector3(grassCluster[i].centerLocation.x + offset.x, 25000, grassCluster[i].centerLocation.y + offset.y);
 
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000)) {
+                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000, layerMask)) {
                     aGrass[curType, grassToDrop].transform.position = hit.point;
                     aGrass[curType, grassToDrop].GetComponent<Renderer>().enabled = true;
-                    if (Vector3.Distance(hit.point, cameraPos) >= 15) {
-                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = staticGrassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
+                    if (Vector3.Distance(hit.point, cameraPos) >= animateDistance) {
+                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = staticGrassMaterial[Math.Abs((int)offset.x) % grassColorVariety];
                     } else {
-                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = grassMaterial[curType, Math.Abs((int)offset.x) % grassTextureVariety];
+                        aGrass[curType, grassToDrop].GetComponent<Renderer>().material = grassMaterial[Math.Abs((int)offset.x) % grassColorVariety];
                     }
                     displayedGrassCount[curType] += 1;
                 }
             }
         }
-        grassPlacedTimes += 1;
+        grassPlaced = true;
     }
 }

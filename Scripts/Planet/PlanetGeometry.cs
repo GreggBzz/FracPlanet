@@ -29,7 +29,7 @@ public class PlanetGeometry : MonoBehaviour {
     private int vertSeedCount = 0;
 
     // scale variables.
-    private double radius;
+    private float radius;
     private float pScale;
 
     private struct doneMidpoint {
@@ -37,6 +37,9 @@ public class PlanetGeometry : MonoBehaviour {
         public int midPoint;
     }
 
+    // A detail class for adding rivers, mountains, plains and platues. 
+    private PlanetGeometryDetail detailMaker;
+    
     // setup the random generator and seed.
     private System.Random rnd;
     int seed;
@@ -54,7 +57,7 @@ public class PlanetGeometry : MonoBehaviour {
         }
 
         rnd = new System.Random(seed);
-        
+
         planetLayer = curPlanetLayer;
         aFullSetup = fullSetup;
         // for public access, store diameter.
@@ -79,6 +82,11 @@ public class PlanetGeometry : MonoBehaviour {
             triangles = null;
             triangles = tempTriangles;
             tempTriangles = null;
+        }
+        // If we're doing initial setup, add any interesting features, like valleys's and rivers.
+        if ((fullSetup) && curPlanetLayer == "terrain") {
+            detailMaker = gameObject.AddComponent<PlanetGeometryDetail>();
+            detailMaker.Initialize(triangles, vertices, vertCount, radius, curPlanetSeed);
         }
     }
 
@@ -209,10 +217,10 @@ public class PlanetGeometry : MonoBehaviour {
             vertSeedCount += 1;
         }
         if (rnd.NextDouble() < .5F) {
-            return p1 * (float)((displaceMag * roughness) * rnd.NextDouble() + 1.0F);
+            return p1 * (float)((displaceMag * roughness * .9) * rnd.NextDouble() + 1.0F);
         }
         else {
-            return p1 * (1.0F - (float)((displaceMag * roughness) * rnd.NextDouble()));
+            return p1 * (1.0F - (float)((displaceMag * roughness * .9) * rnd.NextDouble()));
         }
     }
 

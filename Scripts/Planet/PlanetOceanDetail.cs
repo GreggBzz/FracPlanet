@@ -32,8 +32,8 @@ public class PlanetOceanDetail : MonoBehaviour {
         int[] tmpTris = new int[245000];
 
         for (int i = 0; i <= curTriangles.Length - 1; i += 3) {
-            // mark the top 1/100th of the ocean to keep.
-            if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 70F) && (!bottom)) {
+            // mark the top ~1/4rd of the ocean to keep.
+            if ((curVerts[curTriangles[i]].y) > (curDiameter / 2F - curDiameter / 30F) && (!bottom)) {
                 // if the vertex hasn't been copied, mark it in the refrence array (vertxRef[oldVerti] = NewVerti)
                 // and copy it. 
                 if (vertexRef[curTriangles[i]] == 0) {
@@ -126,12 +126,17 @@ public class PlanetOceanDetail : MonoBehaviour {
         triangles = triangles.Reverse().ToArray();
     }
 
+    public int GetVertCount() {
+        return vertCount;
+    }
+
     public Vector3[] GetVerts(bool bottom = false) {
         tmpVerticies = new Vector3[vertCount];
         // assign the verts to a properly sized array.
         for (int i = 0; i <= vertCount - 1; i++) {
             if (bottom) { tmpVerticies[i] = (tmpVerticies[1] * .99F); }
             tmpVerticies[i] = vertices[i];
+            //tmpVerticies[i].y = 1;
         }
         vertices = null;
         return tmpVerticies;

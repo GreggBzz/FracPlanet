@@ -4,9 +4,7 @@ using UnityEngine;
 using UnityStandardAssets.ImageEffects;
 
 public class CameraEffects : MonoBehaviour {
-    private int count = 0;
     private GameObject aCamera;
-    private float oceanHeight = -10000F; // ocean way down to prevent y < ocean false blur. 
     private Shader blurFastShader;
     private DrawScene aScene;
     private int debugcount = 0;
@@ -23,22 +21,21 @@ public class CameraEffects : MonoBehaviour {
 	}
 
     private void RenderEffects() {
+        int layerMask = LayerMask.GetMask("Water");
         // do something to the camera.
         if (aScene.onWhichPlanet != "") {
-//            debugcount += 1;
-            oceanHeight = gameObject.GetComponent<PlanetManager>().GetOceanDiameter();
-            float yPos = GameObject.Find("[CameraRig]").transform.position.y;
-            if (yPos < (oceanHeight / 2 + 750F)) {
-                aCamera.GetComponent<BlurOptimized>().enabled = false;
+            debugcount += 1;
+            Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
+            if (Physics.Raycast(cameraPos + Vector3.up * 300F, Vector3.down, 300F, layerMask)) { 
+                //aCamera.GetComponent<BlurOptimized>().enabled = false;
             }
-            else { 
-                aCamera.GetComponent<BlurOptimized>().enabled = false;
+            else {
+                //aCamera.GetComponent<BlurOptimized>().enabled = false;
             }
-//            if (debugcount == 100) {
-//                Debug.Log("Blur Enable: " + aCamera.GetComponent<BlurOptimized>().enabled);
-//                Debug.Log("Ocean Height: " + (oceanHeight / 2 + 750) + ", Camera Height " + yPos);
-//                debugcount = 0;
-//            }
+            //if (debugcount == 100) {
+            //    Debug.Log("Underwater: " + underWater);
+            //    debugcount = 0;
+            //}
         }
         else 
             aCamera.GetComponent<BlurOptimized>().enabled = false;

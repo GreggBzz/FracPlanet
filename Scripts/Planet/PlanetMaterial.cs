@@ -71,32 +71,48 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "partialOcean") {
-            Texture waterFallBack = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType) as Texture;
-            Texture waterBumpMap = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + curPlanetType + "Ocean" + OceanTexture(curPlanetType)) as Texture;
-            Texture waterGradient = Resources.Load("HydroTextures/WaterProDaytimeGradient") as Texture;
-            Material partialOceanMaterial = new Material(Shader.Find("Custom/SimpleWater4VR"));
-            partialOceanMaterial.SetTexture("_ReflectionTex", waterGradient);
-            partialOceanMaterial.SetTexture("_MainTex", waterFallBack);
-            partialOceanMaterial.SetTexture("_BumpMap", waterBumpMap);
-            partialOceanMaterial.SetVector("_DistortParams", new Vector4(.5F, 1F, 2F, 1.15F));
-            partialOceanMaterial.SetVector("_InvFadeParemeter", new Vector4(1F, 1F, 0.5F, 1F));
-            partialOceanMaterial.SetVector("_AnimationTiling", new Vector4(2.2F, 2.2F, -1.1F, -1.1F));
-            partialOceanMaterial.SetVector("_AnimationDirection", new Vector4(1F, 1F, 1F, 1F));
-            partialOceanMaterial.SetVector("_BumpTiling", new Vector4(0.05F, 0.05F, 0.05F, 0.05F));
-            partialOceanMaterial.SetVector("_BumpDirection", WaveBumpSpeed(curPlanetType));
-            partialOceanMaterial.SetFloat("_FresnelScale", 0.6F);
-            partialOceanMaterial.SetColor("_BaseColor", OceanColor(curPlanetType));
-            partialOceanMaterial.SetColor("_ReflectionColor", OceanColor(curPlanetType));
-            partialOceanMaterial.SetColor("_SpecularColor", OceanColor(curPlanetType, true));
-            partialOceanMaterial.SetVector("_WorldLightDir", new Vector4(0.05F, 0.15F, -0.5F, 0.0F));
-            partialOceanMaterial.SetFloat("_Shininess", 2.0F);
-            partialOceanMaterial.SetFloat("_GerstnerIntensity", 1.0F);
-            partialOceanMaterial.SetVector("_GAmplitude", new Vector4(0.2F, 0.2F, 0.1F, 0.1F));
-            partialOceanMaterial.SetVector("_GFrequency", new Vector4(0.5F, 0.5F, 0.5F, 0.5F));
-            partialOceanMaterial.SetVector("_GSteepness", new Vector4(1.0F, 1.0F, 1.0F, 1.0F));
-            partialOceanMaterial.SetVector("_GSpeed", WaveSpeed(curPlanetType));
-            partialOceanMaterial.SetVector("_GDirectionAB", new Vector4(0.3F, 0.85F, 0.85F, 0.25F));
-            partialOceanMaterial.SetVector("_GDirectionCD", new Vector4(0.1F, 0.9F, 0.5F, 0.5F));
+            Texture baseTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/txrOcean" + curPlanetType) as Texture;
+            Texture heightMap = Resources.Load("PlanetTextures/WaterHeight") as Texture;
+            Texture normalMap1 = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + curPlanetType + "Ocean" + OceanTexture(curPlanetType)) as Texture;
+            Texture normalMap2 = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + curPlanetType + "Ocean" + OceanTexture(curPlanetType)) as Texture;
+            Material partialOceanMaterial = new Material(Shader.Find("VRWaterShader/ZWrite Double Sided"));
+            // Base
+            partialOceanMaterial.SetTexture("_BaseTexture", baseTexture);
+            partialOceanMaterial.SetVector("_BaseTexture_ST", new Vector4(.05F, .05F, 0F, 0F));
+            partialOceanMaterial.SetColor("_BaseColor", OceanColor(curPlanetType, false));
+            // Primary
+            partialOceanMaterial.SetTexture("_PrimaryHeightmap", heightMap);
+            partialOceanMaterial.SetVector("_PrimaryHeightmap_ST", new Vector4(.5F, .5F, 0F, 0F));
+            partialOceanMaterial.SetFloat("_PrimaryHeightStrength", .05F);
+            partialOceanMaterial.SetTexture("_PrimaryNormalmap", normalMap1);
+            partialOceanMaterial.SetVector("_PrimaryNormalmap_ST", new Vector4(.1F, .1F, 0F, 0F));
+            partialOceanMaterial.SetVector("_PrimaryUandVspeedZWNotused", new Vector4(.05F, .0F, 0F, 0F));
+            // Secondary
+            partialOceanMaterial.SetTexture("_SecondaryHeightmap", heightMap);
+            partialOceanMaterial.SetVector("_SecondaryHeightmap_ST", new Vector4(.5F, .5F, 0F, 0F));
+            partialOceanMaterial.SetFloat("_SecondaryHeightStrength", .03F);
+            partialOceanMaterial.SetTexture("_SecondaryNormalmap", normalMap2);
+            partialOceanMaterial.SetVector("_SecondaryNormalmap_ST", new Vector4(.1F, .1F, 0F, 0F));
+            partialOceanMaterial.SetVector("_SecondaryUandVspeedZWNotused", new Vector4(0F, .3F, 0F, 0F));
+            // Cubemap
+            partialOceanMaterial.SetFloat("_CubemapStrength", .3F);
+            partialOceanMaterial.SetFloat("_CubemapFresnel", .01F);
+            // Blend
+            partialOceanMaterial.SetFloat("_BlendBlendDistance", .2F);
+            // Tesselation
+            partialOceanMaterial.SetFloat("_TessellationStrength", 10);
+            partialOceanMaterial.SetFloat("_TessellationNearCap", 1);
+            partialOceanMaterial.SetFloat("_TessellationFarCap", 20);
+            // Specular
+            partialOceanMaterial.SetFloat("_OverallMetallic", .4F);
+            partialOceanMaterial.SetFloat("_OverallGloss", .3F);
+            partialOceanMaterial.SetFloat("_OverallNormalStrength", .4F);
+            // Wave Height
+            partialOceanMaterial.SetFloat("_OverallWaveHeight", 7F);
+            // Reractrion
+            partialOceanMaterial.SetFloat("_SSRefractionDecaydistance", 22F);
+            partialOceanMaterial.SetFloat("_SSRefractionRefractionFresnel", 1.6F);
+            partialOceanMaterial.SetFloat("_SSRefractionStrength", .08F);
             return partialOceanMaterial;
         }
 
@@ -180,15 +196,15 @@ public class PlanetMaterial : MonoBehaviour {
         }
         if (curPlanetType.Contains("Terra")) {
             R = rnd.Next(30, 80); B = rnd.Next(40, 160);
-            G = rnd.Next(30, 90); A = rnd.Next(130, 210);
+            G = rnd.Next(30, 90); A = rnd.Next(245, 255);
         }
         if (curPlanetType.Contains("Icy")) {
             R = rnd.Next(30, 255); B = rnd.Next(30, 255);
-            G = rnd.Next(30, 255); A = rnd.Next(130, 210);
+            G = rnd.Next(30, 255); A = rnd.Next(245, 255);
         }
         if (curPlanetType.Contains("Molten")) {
             R = rnd.Next(40, 105); B = rnd.Next(40, 105);
-            G = rnd.Next(40, 105); A = rnd.Next(130, 210);
+            G = rnd.Next(40, 105); A = rnd.Next(245, 255);
         }
         return new Color32((byte)R, (byte)G, (byte)B, (byte)A);
     }

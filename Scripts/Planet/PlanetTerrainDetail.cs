@@ -148,7 +148,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
 
     private void CheckForRocks(int curVertIndex, Vector3 curVertPos, float curDiameter) {
         if (rocksManager.rocksCluster[curVertIndex].haveRocks) {
-            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= GrassManager.drawDistance) { return; }
+            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= RocksManager.drawDistance) { return; }
             rocksManager.rocksCluster[curVertIndex].centerLocation.x = curVertPos.x;
             rocksManager.rocksCluster[curVertIndex].centerLocation.y = curVertPos.z;
             rocksManager.rocksCluster[curVertIndex].display = true;

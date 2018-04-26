@@ -3,7 +3,7 @@ Properties {
     _Color ("Main Color", Color) = (1,1,1,1)
     _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
     _Illum ("Illumin (A)", 2D) = "white" {}
-    _Cutoff ("Alpha cutoff", Range(0,1)) = 0.5
+    _Cutoff ("Alpha cutoff", Range(0,1)) = 0.2
 	_XStrength ("X Strength", Range (0.0, 1.0)) = 0.0
 	_XDisp ("X Displacement", Range (-1.0, 1.0)) = 0.0
 	_WindFrequency ("Wind Frequency", Range (0, 1.0)) = 0.0

@@ -6,8 +6,6 @@ public class TelePortParabola : MonoBehaviour {
     private WandController wand;
     private RaycastHit hit, hit2;
 
-    private int DebugCounter = 0;
-
     public float teleDistance = 1000f;
     private float animationOffset = 0f;
 
@@ -43,7 +41,7 @@ public class TelePortParabola : MonoBehaviour {
             dashes[i].gameObject.GetComponent<LineRenderer>().material = dashMaterial;
             dashes[i].gameObject.GetComponent<LineRenderer>().startWidth = 0.01f;
             dashes[i].gameObject.GetComponent<LineRenderer>().endWidth = 0.01f;
-            dashes[i].gameObject.GetComponent<LineRenderer>().numPositions = 2;
+            dashes[i].gameObject.GetComponent<LineRenderer>().positionCount = 2;
             dashes[i].positions = new Vector3[2];
             dashes[i].gameObject.GetComponent<LineRenderer>().SetPositions(dashes[i].positions);
             dashes[i].gameObject.GetComponent<LineRenderer>().enabled = false;
@@ -65,14 +63,15 @@ public class TelePortParabola : MonoBehaviour {
         lineEnabled = true;
     }
 
-    public void UpdateTeleportLine(bool arc = true) {
+    public RaycastHit UpdateTeleportLine(bool arc = true) {
         // Update our dashed teleporting line.
-        if (!lineEnabled) { return; }
-        if (arc) { DrawArc(); return; }
-        DrawStraght();
+        if (!lineEnabled) { return new RaycastHit(); }
+        if (arc) { return DrawArc(); }
+        return DrawStraght();
     }
 
     public RaycastHit DrawArc() {
+        dashLength = .1f;
         // the dash's (teleport arc's) horozontal direction.
         Vector3 flatForward = new Vector3(wand.transform.forward.x, 0F, wand.transform.forward.z);
         Vector3 startPos = wand.transform.position + wand.transform.forward * 0f;
@@ -94,6 +93,9 @@ public class TelePortParabola : MonoBehaviour {
         }
         // dash it up.
         int p0 = 0; int p1 = 0; bool skip = false;
+       
+        int layerMask = 1 << 4; layerMask = ~layerMask; // hit everythig but water. 
+
         for (int i = 0; i <= (numDashes * 2) - 1; i++) {
             do {
                 p1 += 1;
@@ -106,9 +108,13 @@ public class TelePortParabola : MonoBehaviour {
                 dashes[i / 2].gameObject.GetComponent<LineRenderer>().startColor = arcColor;
                 dashes[i / 2].gameObject.GetComponent<LineRenderer>().endColor = arcColor;
                 dashes[i / 2].gameObject.GetComponent<LineRenderer>().enabled = true;
-                if (Physics.Raycast(arcPoints[p0], arcPoints[p1] - arcPoints[p0], out hit, dashLength * 5f)) {
+                if (Physics.Raycast(arcPoints[p0], arcPoints[p1] - arcPoints[p0], out hit, dashLength * 5f, layerMask)) {
                     for (int i2 = i / 2; i2 <= numDashes - 1; i2++) {
                         dashes[i2].gameObject.GetComponent<LineRenderer>().enabled = false;
+                    }
+                    if (hit.transform.gameObject.name.Contains("Rock")) {
+                        arcColor = Color.red;
+                        return new RaycastHit();
                     }
                     arcColor = Color.green;
                     return hit;
@@ -127,16 +133,6 @@ public class TelePortParabola : MonoBehaviour {
         dashLength = teleDistance / (numDashes * 2);
         int curDash = 0;
 
-        if (Physics.Raycast(dashStartPos, wand.transform.forward, out hit, teleDistance)) {
-            arcColor = Color.green;
-            animationOffset += Time.deltaTime * 5 * dashLength;
-            if (animationOffset > 2 * dashLength) { animationOffset = 0f; }
-        }
-        else {
-            arcColor = Color.red;
-            animationOffset = 0f;
-        }
-
         for (int i = 0; i <= numDashes * 2 - 1; i += 2) {
             dashes[curDash].positions[0] = dashStartPos + dashDirection * dashLength * i;
             dashes[curDash].positions[1] = dashStartPos + dashDirection * dashLength * (i + 1);
@@ -144,6 +140,16 @@ public class TelePortParabola : MonoBehaviour {
             dashes[curDash].gameObject.GetComponent<LineRenderer>().startColor = arcColor;
             dashes[curDash].gameObject.GetComponent<LineRenderer>().endColor = arcColor;
             curDash += 1;
+        }
+        if (Physics.Raycast(dashStartPos, wand.transform.forward, out hit, teleDistance)) {
+            arcColor = Color.green;
+            animationOffset += Time.deltaTime * 4 * dashLength;
+            if (animationOffset > 2 * dashLength) { animationOffset = 0f; }
+            return hit;
+        }
+        else {
+            arcColor = Color.red;
+            animationOffset = 0f;
         }
         return new RaycastHit();
     }

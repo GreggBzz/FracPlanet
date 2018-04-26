@@ -7,7 +7,8 @@ public class Grass {
     private int[] triangles = new int[18];
 
     // Make one bunch of billboard grass, three planes, offset by 60 degrees. 
-    public void Generate(float scaler = .5F, float width = .8F, float height = 1.0F, float variety = 3F) {
+    public void Generate(float scaler = .5F, float width = .8F, float height = 1.0F, int type = 0) {
+        int numTextures = GrassManager.grassTextures;
 
         float scale = UnityEngine.Random.Range(scaler - (scaler / 3), scaler + (scaler / 3));
         float angle;
@@ -32,11 +33,16 @@ public class Grass {
         triangles[15] = 6; triangles[16] = 9; triangles[17] = 2;
 
 
-        // texture and scale.
-        uv[0] = uv[1] = uv[5] = new Vector2(0F, 0F);
-        uv[6] = uv[10] = uv[11] = new Vector2(0F, 1F);
-        uv[2] = uv[4] = uv[3] = new Vector2(1F, 0F);
-        uv[9] = uv[7] = uv[8] = new Vector2(1F, 1F);
+        // texture and scale, we use a texture strip to enhance batching.
+        float xSegment = 1.0F / (float)numTextures;
+        float xMin = type * xSegment;
+        float xMax = (type + 1) * xSegment; 
+
+
+        uv[0] = uv[1] = uv[5] = new Vector2(xMin, 0F);
+        uv[6] = uv[10] = uv[11] = new Vector2(xMin, 1F);
+        uv[2] = uv[4] = uv[3] = new Vector2(xMax, 0F);
+        uv[9] = uv[7] = uv[8] = new Vector2(xMax, 1F);
 
         for (int i = 0; i <= 11; i++) {
             vertices[i] *= scale;

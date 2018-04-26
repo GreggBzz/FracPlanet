@@ -40,6 +40,7 @@ public class WandController : SteamVR_TrackedController {
                 aScene.AddPlanetOutline();
                 break;
             case "Delete":
+                aScene.Teleport(true);
                 aScene.DestroyPlanets();
                 aScene.DestroyPlanetOutline();
                 radialMenu.whatIsSelected = "";
@@ -58,9 +59,9 @@ public class WandController : SteamVR_TrackedController {
                 }
                 break;
         }
-        // draw/update the pointer line?
+        // Update the pointer line and draw an arc if we're on a planet.
         if (teleportArc.lineEnabled) {
-            teleportArc.UpdateTeleportLine();
+            teleportArc.UpdateTeleportLine((aScene.onWhichPlanet.Contains("Planet")));
         }
 
         // draw/update the planets?
