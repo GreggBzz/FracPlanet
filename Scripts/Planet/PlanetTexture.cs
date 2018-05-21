@@ -2,8 +2,12 @@
 using System;
 
 public class PlanetTexture : MonoBehaviour {
-    // texture manager class. Methods to texture terrain, ocean, atmosphere.
-    // for understanding this, start with the Texture() Method.
+    // Texture manager class, methods to texture terrain, ocean, atmosphere.
+    // Assigns a tileable u,v corrdinate to each vertex. 
+    // Finds the neighbors of each vert, and building from mostly hexagonal
+    // primatives, we ensure that verts and their neighbors are assigned
+    // some corner of a texture, and that none of the neighboring  
+    // verts have the same corner assigned. Start with the Texture() Method.
 
     private struct adjacent {
         public int vert;
@@ -12,8 +16,7 @@ public class PlanetTexture : MonoBehaviour {
 
     private adjacent[,] adjacents;
     private Vector2[] uv;
-    public float maxElev = 0F;
-    public float minElev = 650000;
+    private PlanetSplatMap splatMap;
 
     private bool[] checkAdjacents(int vert) {
         // checks neighboring verts, returns an array of booleans to let us know which are nearby.
@@ -131,6 +134,7 @@ public class PlanetTexture : MonoBehaviour {
             uv[i].x = -10F;
             uv[i].y = -10F;
         }
+
         findAdjacents(triangles, vertCount);
 
         int doneVerts = 0;
@@ -157,46 +161,22 @@ public class PlanetTexture : MonoBehaviour {
             vertList = updateVertList(vertCount, tmpVertList);
             vi = 0;
         } while (doneVerts <= vertCount - 1);
+
+        // clean up and return
+        tmpVertList = null; vertList = null; adjacents = null;
         return uv;
     }
     
-    public Vector2[] AssignSplatElev(int vertCount, Vector3[] vertices, bool part = false, float curMinElev = 0, float curMaxElev = 0) {
-        // for use in the terrain shader, we'll return each vert's uv4 as either as a point along an 
-        // RGB fade on the y axis or a point along an RGB fade on the X axis. 
-        // In the shader we can then fade up to 6 textures. 
-        Vector2[] uv4 = new Vector2[vertCount];
-        float[] vertLength = new float[vertCount];
-        // if we're doing a partial LOD terrain mesh, use the min and max elevation from 
-        // the already created large mesh, so the terrain is textured right.
-        if (part == false) {
-            for (int i = 0; i <= vertices.Length - 1; i++) {
-                vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
-                    (vertices[i].y * vertices[i].y) +
-                    (vertices[i].z * vertices[i].z));
-                if (vertLength[i] <= minElev) { minElev = vertLength[i]; }
-                if (vertLength[i] >= maxElev) { maxElev = vertLength[i]; }
-            }
-        }
-        else {
-            for (int i = 0; i <= vertices.Length - 1; i++) {
-                vertLength[i] = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
-                    (vertices[i].y * vertices[i].y) +
-                    (vertices[i].z * vertices[i].z));
-            }
-            minElev = curMinElev; maxElev = curMaxElev;
-        }
-        for (int i = 0; i <= vertCount - 1; i++) {
-            float normalizedElev = (vertLength[i] - minElev) / (maxElev - minElev);
-            uv4[i].y = normalizedElev;
-            if (normalizedElev > .65F) {
-                uv4[i].x = 1F;
-            }
-            else {
-                uv4[i].x = 0F;
-            }
-        }
-        return uv4;
-    }  
+    public Vector2[] AssignSplatElev(Vector3[] vertices, Vector3[] normals = null) {
+        if (splatMap == null) { splatMap = gameObject.AddComponent<PlanetSplatMap>(); }
+        return splatMap.assignSplatMap(vertices, normals);
+    }
+
+    public Vector2[] GetSplatSpecials() {
+        // return uv3 from the splatMap class, which is used in the shader
+        // to determine terrain type.
+        return splatMap.GetUV3();
+    }
 
     private int[] updateVertList(int vertCount, int[] oldVertList) {
         // Assign all verts that were adjacent to each vert in the old vertlist (and previously untextured).

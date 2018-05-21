@@ -87,6 +87,7 @@ public class PlanetGeometry : MonoBehaviour {
         if ((fullSetup) && curPlanetLayer == "terrain") {
             detailMaker = gameObject.AddComponent<PlanetGeometryDetail>();
             detailMaker.Initialize(triangles, vertices, vertCount, radius, curPlanetSeed);
+            vertices = detailMaker.GetVerts();
         }
     }
 
@@ -215,12 +216,13 @@ public class PlanetGeometry : MonoBehaviour {
         if (!aFullSetup) {
             rnd = new System.Random(vertSeed[vertSeedCount]);
             vertSeedCount += 1;
+            displaceMag *= 1.02F;
         }
         if (rnd.NextDouble() < .5F) {
-            return p1 * (float)((displaceMag * roughness * .9) * rnd.NextDouble() + 1.0F);
+            return p1 * (float)((displaceMag * roughness * .9F) * rnd.NextDouble() + 1.0F);
         }
         else {
-            return p1 * (1.0F - (float)((displaceMag * roughness * .9) * rnd.NextDouble()));
+            return p1 * (1.0F - (float)((displaceMag * roughness * .9F) * rnd.NextDouble()));
         }
     }
 

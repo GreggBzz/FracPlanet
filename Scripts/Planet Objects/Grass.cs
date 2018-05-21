@@ -12,14 +12,15 @@ public class Grass {
 
         float scale = UnityEngine.Random.Range(scaler - (scaler / 3), scaler + (scaler / 3));
         float angle;
-        // 6 x 2 points around the circle, one high, one low.
+        // 6 x 2 points around the circle, one high, one low, offset by a random angle;
+        float angleOffset = UnityEngine.Random.Range(0f, (float)(2 * Math.PI));
         for (int i = 0; i <= 5; i++) {
-            angle = 60 * i * Mathf.Deg2Rad;
+            angle = (60 * i * Mathf.Deg2Rad) - angleOffset;
             vertices[i].z = vertices[11 - i].z = (float)(Math.Sin(angle)) * width;
             vertices[i].x = vertices[11 - i].x = (float)(Math.Cos(angle)) * width;
             vertices[i].y = 0; vertices[11 - i].y = height;
-            // set normals to "mostly" up, but add a little wiggle for variety.
-            normals[i] = normals[11 - i] = new Vector3(UnityEngine.Random.Range(0F, .2F), 1.0F, UnityEngine.Random.Range(0F, .2F));
+            // set normals to up for better lighting.
+            normals[i] = normals[11 - i] = Vector3.up;
         }
 
         // assemble the triangles along each plane. Culling is off in the shader so we don't 

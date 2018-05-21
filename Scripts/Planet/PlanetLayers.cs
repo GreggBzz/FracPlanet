@@ -57,10 +57,11 @@ public class PlanetLayers : MonoBehaviour {
                 break;
             case "terrain":
                 mesh.uv = textureManager.Texture(meshGeometry.GetVertIndex(), meshGeometry.GetVerts(), meshGeometry.GetTriangles());
-                mesh.uv4 = textureManager.AssignSplatElev(meshGeometry.GetVertIndex(), meshGeometry.GetVerts());
                 mesh.triangles = meshGeometry.GetTriangles();
                 planetCollider.sharedMesh = mesh;
                 recalc();
+                mesh.uv4 = textureManager.AssignSplatElev(meshGeometry.GetVerts(), mesh.normals);
+                mesh.uv3 = textureManager.GetSplatSpecials();
                 break;
             default:
                 break;
@@ -75,7 +76,12 @@ public class PlanetLayers : MonoBehaviour {
     }
 
     public float GetMaxElevation() {
-        return textureManager.maxElev;
+        if (gameObject.GetComponent<PlanetGeometryDetail>() != null) {
+            return gameObject.GetComponent<PlanetGeometryDetail>().maxHeight;
+        }
+        else {
+            return 1250F;
+        }      
     }
 
     void Update() {

@@ -83,15 +83,20 @@ public class DrawScene : MonoBehaviour {
 
         int layerMask = LayerMask.GetMask("Default", "Rocks"); // hit only rocks and terrain.
 
-        if (GameObject.Find("aPlanetTopTerrain")) {
-            GameObject.Find("aPlanetTopTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
-            GameObject.Find("aPlanetTopTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
+        if (GameObject.Find("aPlanetTopTerrainCollide")) {
+            GameObject.Find("aPlanetTopTerrainCollide").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
+            GameObject.Find("aPlanetTopTerrainCollide").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
             // drop the player from the center top onto the terrain, to ensure we're always above and the planet transform
             // and rotation's happen below us.
             Vector3 dropPoint = new Vector3(0, 30000, 3500);
             if (Physics.Raycast(dropPoint, Vector3.down, out hit2, 30000, layerMask)) {
                 wand.transform.parent.position = hit2.point;
             }
+            planetManager.placePlanetObjects();
+        }
+        if (GameObject.Find("aPlanetBottomTerrain")) {
+            GameObject.Find("aPlanetBottomTerrain").transform.rotation = GameObject.Find("aPlanet").transform.rotation;
+            GameObject.Find("aPlanetBottomTerrain").transform.localRotation = GameObject.Find("aPlanet").transform.localRotation;
         }
         rotationMatched = true;
     }
@@ -140,9 +145,12 @@ public class DrawScene : MonoBehaviour {
                 }
             }
             if (GameObject.Find("aPlanet") != null) {
+                GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = true;
                 if (GameObject.Find("aPlanet").GetComponent<GrassManager>() != null) {
                     GameObject.Find("aPlanet").GetComponent<GrassManager>().DisableGrass();
-                    //GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = true;
+                }
+                if (GameObject.Find("aPlanet").GetComponent<RocksManager>() != null) {
+                    GameObject.Find("aPlanet").GetComponent<RocksManager>().DisableRocks();
                 }
             }
             onWhichPlanet = "";
@@ -172,11 +180,10 @@ public class DrawScene : MonoBehaviour {
             }
             // see MatchTerrainRotation() to see the player position transform, after the terrain has rotated.
             // we drop the player with that. It's called once a frame.
+            // tesselate the near terrain.
             planetManager.ManageTerrain(true);
             if (GameObject.Find("aPlanet")) {
-                // tuck the less detailed mesh under the player a bit.
-                GameObject.Find("aPlanet").transform.position = new Vector3(0F, 748.5F, 3500F);
-                //GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = false;
+                GameObject.Find("aPlanet").GetComponent<MeshRenderer>().enabled = false;
             }
         }
         else {
@@ -258,7 +265,7 @@ public class DrawScene : MonoBehaviour {
                 if (seedQueueIndex > seedQueue.Length - 1) { seedQueueIndex = 0; }
                 planetSeed = seedQueue[seedQueueIndex];
                 rnd = new System.Random(planetSeed);
-                planetManager.planetDiameter = rnd.Next(500, 5000);
+                planetManager.planetDiameter = rnd.Next(1500, 3000);
                 wand.radialMenu.whatIsSelected = "";
                 break;
             case "Previous":
@@ -266,7 +273,7 @@ public class DrawScene : MonoBehaviour {
                 if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length - 1; }
                 planetSeed = seedQueue[seedQueueIndex];
                 rnd = new System.Random(planetSeed);
-                planetManager.planetDiameter = rnd.Next(500, 5000);
+                planetManager.planetDiameter = rnd.Next(1500, 3000);
                 wand.radialMenu.whatIsSelected = "";
                 break;
             default:

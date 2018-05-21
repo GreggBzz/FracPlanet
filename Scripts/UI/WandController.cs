@@ -102,7 +102,6 @@ public class WandController : SteamVR_TrackedController {
                 break;
             case "Planet":
                 aScene.AddPlanet();
-                //System.GC.Collect();
                 aScene.DestroyPlanetOutline();
                 radialMenu.Cycle("Destroy Menu");
                 break;

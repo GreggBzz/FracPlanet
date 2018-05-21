@@ -12,13 +12,13 @@ public class GrassManager : MonoBehaviour {
     
     // for ~100FPS on a 1060, shoot for < 3500 grass in the FOV using 10 materials (texture * variety).
     // because of dynamic batching, performance roughly scales with (grassMaterials * grassCount).
-    public const float drawDistance = 70;
+    public const float drawDistance = 125;
     private const float animateDistance = 8;
     private int wholePlanetVertCount;
     public const int grassTextures = 8; // unique textures, we'll use a texture atlas with n grasses in a strip.
     private const int grassColorVariety = 7; // unique color varieties.
     private const int grassMaxCount = 40000; // total grass gameobjects, displayed or not.
-    private const float grassScatterArea = 20F;
+    private const float grassScatterArea = 10F;
     private const int grassClusterSize = 400;
 
 
@@ -29,6 +29,7 @@ public class GrassManager : MonoBehaviour {
     private Material[] grassMaterial = new Material[grassColorVariety];
     private Material[] staticGrassMaterial = new Material[grassColorVariety];
     private Vector2[] grassElevations;
+    private Vector2[] grassSlopes;
     private float planetRadius;
     private float planetMaxElevation;
     private float planetMinElevation;
@@ -63,9 +64,10 @@ public class GrassManager : MonoBehaviour {
         allTheGrass = new GameObject("allTheGrass");
         // parameters to help with grass placement.
         grassElevations = GameObject.Find("aPlanet").GetComponent<MeshFilter>().mesh.uv4;
+        grassSlopes = GameObject.Find("aPlanet").GetComponent<MeshFilter>().mesh.uv3;
         planetRadius = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().diameter / 2F;
-        planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().maxElev;
-        planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().minElev;
+        planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().maxHeight;
+        planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().minHeight;
         curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
     }
 
@@ -93,6 +95,7 @@ public class GrassManager : MonoBehaviour {
         float waterLine = (planetRadius - planetMinElevation) / (planetMaxElevation - planetMinElevation);
         // cycle around the entire planets parent verts and place grass based on elevation and waterline.
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
+            if (grassSlopes[i].x > 0F) { continue; } // skip sloped terrain.
             if (grassElevations[i].y <= waterLine - .015F) {
                 // underwater, no grass here. 
                 continue;
@@ -126,7 +129,7 @@ public class GrassManager : MonoBehaviour {
     }
 
     private void MakeGrassCluster(int i) {
-        // create a grass cluster at the vert index, i.
+        // create a grass cluster at the terrain vert index, i.
         grassCluster[i].offset = new Vector2[grassClusterSize];
         float scatterX = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
         float scatterZ = UnityEngine.Random.Range(grassScatterArea / 3, grassScatterArea);
@@ -164,7 +167,7 @@ public class GrassManager : MonoBehaviour {
         aGrass[textureIndex, countIndex].AddComponent<MeshFilter>();
         aGrass[textureIndex, countIndex].AddComponent<MeshRenderer>();
         aGrass[textureIndex, countIndex].GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        aGrass[textureIndex, countIndex].GetComponent<Renderer>().receiveShadows = false;
+        aGrass[textureIndex, countIndex].GetComponent<Renderer>().receiveShadows = true;
         aGrass[textureIndex, countIndex].GetComponent<MeshFilter>().mesh.vertices = grassMesh[textureIndex, countIndex].GetVerts();
         aGrass[textureIndex, countIndex].GetComponent<MeshFilter>().mesh.triangles = grassMesh[textureIndex, countIndex].GetTris();
         aGrass[textureIndex, countIndex].GetComponent<MeshFilter>().mesh.uv = grassMesh[textureIndex, countIndex].GetUv();

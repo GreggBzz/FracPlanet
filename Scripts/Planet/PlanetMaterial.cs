@@ -4,8 +4,27 @@ using UnityEngine;
 // procedually modify the shader properties to give each planet a uniqe look.
 public class PlanetMaterial : MonoBehaviour {
     private int seed;
+    public const int terrainTextureCount = 6;
+    private const int terrainTextureFolders = 4;
+    private int[] whichTextureFolder;
     private System.Random rnd;
     private string txrPostFix = "";
+
+    public void SetTextureFolders() {
+        if (GameObject.Find("Controller (right)") != null) {
+            seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
+        }
+        else {
+            seed = 100;
+        }
+        rnd = new System.Random(seed);
+        whichTextureFolder = new int[terrainTextureCount];
+        for (int i = 0; i <= terrainTextureCount - 1; i++) {
+            whichTextureFolder[i] = rnd.Next(1, terrainTextureFolders + 1);
+        } 
+        
+    }
+
 
     public Material AssignMaterial(string layer, string curPlanetType = "", bool reassign = false) {
         if (GameObject.Find("Controller (right)") != null) {
@@ -140,17 +159,17 @@ public class PlanetMaterial : MonoBehaviour {
 
         if (layer == "terrain") {
             Texture controlTexture = Resources.Load("PlanetTextures/SplatElevation") as Texture;
-            Texture[] terrainTextures = new Texture[6];
-            Texture[] terrainNormals = new Texture[6];
+            Texture[] terrainTextures = new Texture[terrainTextureCount];
+            Texture[] terrainNormals = new Texture[terrainTextureCount];
             Material planetSurfaceMaterial = new Material(Shader.Find("Custom/Splatmap"));
             planetSurfaceMaterial.SetColor("_Color", TerrainColor(curPlanetType));
             planetSurfaceMaterial.SetTexture("_Control", controlTexture);
             planetSurfaceMaterial.SetFloat("_Smoothness", TerrainShininess(curPlanetType));
             planetSurfaceMaterial.SetColor("_Specular", TerrainColor(curPlanetType, true));
-            for (int i = 0; i <= terrainTextures.Length - 1; i++) {
+            for (int i = 0; i <= terrainTextureCount - 1; i++) {
                 txrPostFix = curPlanetType + (i + 1);
-                terrainNormals[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/nm" + txrPostFix) as Texture;
-                terrainTextures[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/txr" + txrPostFix) as Texture;
+                terrainNormals[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/1/nm" + txrPostFix) as Texture;
+                terrainTextures[i] = Resources.Load("PlanetTextures/" + curPlanetType + "/" + whichTextureFolder[i] + "/txr" + txrPostFix) as Texture;
                 planetSurfaceMaterial.SetTexture("_Texture" + (i + 1), terrainTextures[i]);
                 planetSurfaceMaterial.SetTexture("_Normal" + (i + 1), terrainNormals[i]);
                 planetSurfaceMaterial.SetTextureScale("_Texture" + (i + 1), TerrainTiling(curPlanetType, reassign));

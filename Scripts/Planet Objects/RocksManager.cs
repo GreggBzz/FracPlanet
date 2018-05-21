@@ -12,7 +12,7 @@ public class RocksManager : MonoBehaviour {
 
     // for ~100FPS on a 1060, shoot for < 3500 rocks in the FOV using 10 materials (texture * varietyF).
     // because of dynamic batching, performance roughly scales with (rocksMaterials * rocksCount).
-    public const float drawDistance = 90;
+    public const float drawDistance = 125;
     private int wholePlanetVertCount;
     private const int rocksTextures = 8; // unique textures;
     private const int rocksTextureVariety = 3; // unique texture + displacement varieties of rock;
@@ -61,12 +61,12 @@ public class RocksManager : MonoBehaviour {
         // parameters to help with rocks placement.
         rocksElevations = GameObject.Find("aPlanet").GetComponent<MeshFilter>().mesh.uv4;
         planetRadius = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().diameter / 2F;
-        planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().maxElev;
-        planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetTexture>().minElev;
+        planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().maxHeight;
+        planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().minHeight;
         curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
     }
 
-    public void AddRocks() {
+    public void AddRocks(string curPlanetType = "Terra", float curDiameter = 2500) {
         if (rocksMade) { return; }
         // make the mother of all rocks as our starting primative.
         GameObject mamaRock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -127,7 +127,7 @@ public class RocksManager : MonoBehaviour {
 
 
     // on first teleport, position the rocks around the entire planet.
-    public void PositionRocks() {
+    public void PositionRocks(string curPlanetType = "Terra", float curDiameter = 2500) {
         if (globalrocksLocations) { return; }
         float waterLine = (planetRadius - planetMinElevation) / (planetMaxElevation - planetMinElevation);
         // cycle around the entire planets parent verts and place rocks based on elevation and waterline.
