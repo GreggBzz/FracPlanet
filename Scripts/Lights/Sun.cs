@@ -4,14 +4,19 @@ using UnityEngine;
 
 public class Sun : MonoBehaviour {
     private Light sun;
- 	// Use this for initialization
+    public float distance = 1.0F;
+    private float twilight = 500F;
+    private float sundown = 0F;
 	void Start () {
         sun = gameObject.GetComponent<Light>();
     }
     // Update is called once per frame
     void Update () {
-        transform.RotateAround(new Vector3(0F, 750F, 3500F), Vector3.right, 2.5F * Time.deltaTime);
+        transform.RotateAround(new Vector3(0F, 750F, 3500F), Vector3.right, (1.8F / distance) * Time.deltaTime);
         transform.LookAt(new Vector3(0F, 750F, 3500F));
+        distance = (transform.position.y - twilight) / (twilight - sundown);
+        if (distance < .20F) { distance = .20F; }
+        if (distance > 1F) { distance = 1F; }
 	}
     public void Disable() {
         // disable and reset the position.
@@ -20,7 +25,7 @@ public class Sun : MonoBehaviour {
         enabled = false;
     }
     public void Enable(float diameter = 5000F) {
-        sun.intensity = 1F;
+        sun.intensity = 1.4F;
         transform.position = new Vector3(0F, (750F + diameter / 1.75F), 3500F);
         enabled = true;
     }

@@ -42,6 +42,7 @@ public class PlanetManager : MonoBehaviour {
     // planet objects
     private GrassManager grassManager;
     private RocksManager rocksManager;
+    private FogManager fogManager;
 
     private System.Random rnd; // chance for current planet atmosphere, clouds?
 
@@ -90,8 +91,10 @@ public class PlanetManager : MonoBehaviour {
         if (partialTerrainTop != null) {
             Destroy(partialTerrainTop); partialTerrainTop = null;
         }
+        if (fogManager != null) {
+            fogManager.DisableFog();
+        }
         planetSound.DisableSounds();
-
     }
 
     public void PausePlanet(string planetName) {
@@ -192,6 +195,8 @@ public class PlanetManager : MonoBehaviour {
         grassManager = GameObject.Find("aPlanet").AddComponent<GrassManager>();
         // we'll need rocks for later
         rocksManager = GameObject.Find("aPlanet").AddComponent<RocksManager>();
+        // fog for most planets.
+        fogManager = GameObject.Find("aPlanet").AddComponent<FogManager>();
     }
 
     private void AddOcean(float dist, float planetScale) {
@@ -228,7 +233,7 @@ public class PlanetManager : MonoBehaviour {
         int vertCount = partialOceanGenerator.GetVertCount();
         Vector3[] verts = partialOceanTop.GetComponent<MeshFilter>().mesh.vertices;
         int[] tris = partialOceanTop.GetComponent<MeshFilter>().mesh.triangles;
-        partialOceanTop.GetComponent<MeshFilter>().mesh.uv = textureManager.Texture(vertCount, verts, tris);
+        partialOceanTop.GetComponent<MeshFilter>().mesh.uv = textureManager.Texture(vertCount, verts, tris, true);
         Destroy(ocean); oceanMesh = null;
     }
 
@@ -277,7 +282,7 @@ public class PlanetManager : MonoBehaviour {
         partialTerrainBottom.GetComponent<MeshFilter>().mesh.uv3 = partialTerrainGenerator.GetFarUv3();
         partialTerrainBottom.GetComponent<MeshFilter>().mesh.uv4 = partialTerrainGenerator.GetFarUv4();
         // tuck the bottom part a down smidge to reduce noticable mesh seams.
-        partialTerrainBottom.transform.position = terrain.transform.position - new Vector3(0F, 0.20F, 0F);
+        partialTerrainBottom.transform.position = terrain.transform.position - new Vector3(0F, 0.35F, 0F);
         // set the bottom mesh texture tiling = 3 * the detail mesh tiling so it blends.
         for (int i = 0; i <= 6 - 1; i++) {
             partialTerrainBottom.GetComponent<Renderer>().material.SetTextureScale("_Texture" + (i + 1), 
@@ -290,6 +295,7 @@ public class PlanetManager : MonoBehaviour {
     public void placePlanetObjects() {
         rocksManager.PlaceAndEnableRocks();
         grassManager.PlaceAndEnableGrass();
+        fogManager.PlaceAndEnableFog();
     }
 
     private void AddAtmosphere(float dist) {
@@ -346,7 +352,11 @@ public class PlanetManager : MonoBehaviour {
             // chance for atmosphere and clouds.
             if (curPlanetType.Contains("Icy")) {
                 hasOcean = (rnd.NextDouble() < .7F);
-                hasAtmosphere = (rnd.NextDouble() < .7F);
+                if (hasOcean) {
+                    hasAtmosphere = true;
+                } else {
+                    hasAtmosphere = (rnd.NextDouble() < .7F);
+                }
                 if (hasAtmosphere) { hasClouds = (rnd.NextDouble() < .7F); }
             }
             // no chace for atmosphere and clouds, no ocean.

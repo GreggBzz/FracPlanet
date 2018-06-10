@@ -16,6 +16,7 @@ SubShader {
 CGPROGRAM
 #pragma target 5.0
 #pragma surface surf Lambert alphatest:_Cutoff vertex:vert addshadow
+#pragma multi_compile_instancing
  
 sampler2D _MainTex;
 sampler2D _Illum;

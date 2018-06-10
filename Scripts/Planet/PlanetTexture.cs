@@ -112,10 +112,35 @@ public class PlanetTexture : MonoBehaviour {
         return new Vector2(.5F, .5F);
     }
 
-    public Vector2[] Texture(int vertCount, Vector3[] vertices, int[] triangles) {
+    public Vector2[] Texture(int vertCount, Vector3[] vertices, int[] triangles, bool partialOcean = false) {
         // texture method is inside out. Finds all adjacenies, starting at the center of a hexagon. Work outward in layers.
         // Avoids assigning adjacnet verts to the same UV corrdinates for a seemless texture.
         // valid vert UV corrdinates are (0,0) , (0,1) , (1,0) and (1,1).
+
+        if (partialOcean) {
+            uv = new Vector2[vertCount];
+            float maxX = -9000;
+            float minX = 9000;
+            float maxZ = -9000;
+            float minZ = 9000;
+            for (int i = 0; i <= vertCount - 1; i++) {
+                if (vertices[i].x < minX) { minX = vertices[i].x; }
+                if (vertices[i].x > maxX) { maxX = vertices[i].x; }
+                if (vertices[i].z < minZ) { minZ = vertices[i].z; }
+                if (vertices[i].z > maxZ) { maxZ = vertices[i].z; }
+            }
+            float xSize = Math.Abs(minX) + maxX;
+            float zSize = Math.Abs(minZ) + maxZ;
+            //Debug.Log("minX: " + minX);
+            //Debug.Log("maxX: " + maxX);
+            //Debug.Log("minZ: " + minZ);
+            //Debug.Log("maxZ: " + maxZ);
+            //Debug.Log("vertCount: " + vertCount);
+            for (int i = 0; i <= vertCount - 1; i++) {
+                uv[i] = new Vector2((vertices[i].x + Math.Abs(minX)) / xSize, (vertices[i].z + Math.Abs(minZ)) / zSize);
+            }
+            return uv;
+        }
 
         System.Random rnd; int seed;
         if (GameObject.Find("Controller (right)") != null) {

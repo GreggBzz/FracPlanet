@@ -17,8 +17,7 @@ public class RocksManager : MonoBehaviour {
     private const int rocksTextures = 8; // unique textures;
     private const int rocksTextureVariety = 3; // unique texture + displacement varieties of rock;
     private const int rocksMaxCount = 5000; // total rocks gameobjects, displayed or not.
-    private const float rocksScatterArea = 30F;
-    private const int rocksClusterSize = 15;
+    private float rocksScatterArea;
 
     private GameObject allTheRocks;
     private Rocks[,] rocksMesh = new Rocks[rocksTextures, (rocksMaxCount / rocksTextures)];
@@ -29,12 +28,13 @@ public class RocksManager : MonoBehaviour {
     private float planetRadius;
     private float planetMaxElevation;
     private float planetMinElevation;
-    private bool globalrocksLocations = false;
+    private bool globalRocksLocations = false;
 
-    private string curPlanetType = "";
+    private string planetType = "";
 
     // a cluster of rocks to place. 
     public struct RocksCluster {
+        public int count;
         public Vector2 centerLocation;
         public Vector2[] offset;
         public int type;
@@ -42,7 +42,6 @@ public class RocksManager : MonoBehaviour {
         public bool display;
     }
     public RocksCluster[] rocksCluster;
-
 
     void Awake() {
         if (GameObject.Find("Controller (right)") != null) {
@@ -63,10 +62,10 @@ public class RocksManager : MonoBehaviour {
         planetRadius = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().diameter / 2F;
         planetMaxElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().maxHeight;
         planetMinElevation = GameObject.Find("aPlanet").GetComponent<PlanetGeometryDetail>().minHeight;
-        curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
+        planetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
     }
 
-    public void AddRocks(string curPlanetType = "Terra", float curDiameter = 2500) {
+    public void AddRocks() { // Create the rock gameobjects.
         if (rocksMade) { return; }
         // make the mother of all rocks as our starting primative.
         GameObject mamaRock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -83,18 +82,9 @@ public class RocksManager : MonoBehaviour {
         // make the rocks meshes and gameobjects.
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
-                
                 rocksMesh[i, i2] = new Rocks();
-                // first half of rock types are are smooth(er), assuming close to hydrosphere.
-                if (i <= (rocksTextures / 2)) {
-                    rocksMesh[i, i2].Generate(mamaRock.GetComponent<MeshFilter>().mesh.vertices, mamaRock.GetComponent<MeshFilter>().mesh.triangles,
-                                          mamaRock.GetComponent<MeshFilter>().mesh.uv, dupeVerts, 1.03F, .25F);
-                } else {
-                // second half of rock types are jaggy and bigger.
-                    rocksMesh[i, i2].Generate(mamaRock.GetComponent<MeshFilter>().mesh.vertices, mamaRock.GetComponent<MeshFilter>().mesh.triangles,
-                                          mamaRock.GetComponent<MeshFilter>().mesh.uv, dupeVerts, 1.35F, .6F);
-                }
-
+                rocksMesh[i, i2].Generate(mamaRock.GetComponent<MeshFilter>().mesh.vertices, mamaRock.GetComponent<MeshFilter>().mesh.triangles,
+                                          mamaRock.GetComponent<MeshFilter>().mesh.uv, dupeVerts, i + 1);
                 MakeaRock(i, i2);
             }
         }
@@ -125,10 +115,9 @@ public class RocksManager : MonoBehaviour {
         return dupeVerts;
     }
 
-
     // on first teleport, position the rocks around the entire planet.
     public void PositionRocks(string curPlanetType = "Terra", float curDiameter = 2500) {
-        if (globalrocksLocations) { return; }
+        if (globalRocksLocations) { return; }
         float waterLine = (planetRadius - planetMinElevation) / (planetMaxElevation - planetMinElevation);
         // cycle around the entire planets parent verts and place rocks based on elevation and waterline.
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
@@ -140,35 +129,51 @@ public class RocksManager : MonoBehaviour {
                 // big chance of rocks.
                 if (UnityEngine.Random.Range(0F, 1F) >= .14F) {
                     rocksCluster[i].haveRocks = true;
-                    rocksCluster[i].type = UnityEngine.Random.Range(1, 4);
+                    // smooth and rough gravel.
+                    rocksCluster[i].type = UnityEngine.Random.Range(5, 9);
                 }
             }
             else if ((rocksElevations[i].y > waterLine + .08F) && (rocksElevations[i].y <= waterLine + .35F)) {
                 // sorta chance of rocks.
                 if (UnityEngine.Random.Range(0F, 1F) >= .6F) {
                     rocksCluster[i].haveRocks = true;
-                    rocksCluster[i].type = UnityEngine.Random.Range(3, 9);
+                    // medium spiky, flat rocks, large gravel.
+                    rocksCluster[i].type = UnityEngine.Random.Range(3, 6);
                 }
             }
             else {
                 // good chance for rocks, last 2 types.
                 if (UnityEngine.Random.Range(0F, 1F) >= .8F) {
                     rocksCluster[i].haveRocks = true;
-                    rocksCluster[i].type = UnityEngine.Random.Range(3, 9);
+                    // boulders.
+                    rocksCluster[i].type = UnityEngine.Random.Range(1, 3);
                 }
             }
             if (rocksCluster[i].haveRocks) {
                 MakeRocksCluster(i);
             }
         }
-        globalrocksLocations = true;
+        globalRocksLocations = true;
     }
 
     private void MakeRocksCluster(int i) {
-        rocksCluster[i].offset = new Vector2[rocksClusterSize];
+        if ((rocksCluster[i].type == 1) || (rocksCluster[i].type == 2)) { // boulders
+            rocksCluster[i].count = 8;
+            rocksScatterArea = 15;
+        } else if ((rocksCluster[i].type == 3) || (rocksCluster[i].type == 4)) { // large rocks
+            rocksCluster[i].count = 15;
+            rocksScatterArea = 10;
+        } else if ((rocksCluster[i].type == 5) || (rocksCluster[i].type == 6)) { // large gravel
+            rocksCluster[i].count = 50;
+            rocksScatterArea = 10;
+        } else if ((rocksCluster[i].type == 7) || (rocksCluster[i].type == 8)) { // small gravel
+            rocksCluster[i].count = 50;
+            rocksScatterArea = 10;
+        }
+        rocksCluster[i].offset = new Vector2[rocksCluster[i].count];
         float scatterX = UnityEngine.Random.Range(rocksScatterArea / 3, rocksScatterArea);
         float scatterZ = UnityEngine.Random.Range(rocksScatterArea / 3, rocksScatterArea);
-        for (int i2 = 0; i2 <= rocksClusterSize - 1; i2++) {
+        for (int i2 = 0; i2 <= rocksCluster[i].count - 1; i2++) {
             float phi = UnityEngine.Random.Range(0F, 2 * (float)Math.PI);
             float rand = UnityEngine.Random.Range(0F, 1F);
             float xPos = (float)(Math.Sqrt(rand) * Math.Cos(phi));
@@ -180,8 +185,10 @@ public class RocksManager : MonoBehaviour {
     }
 
     private Material GetMaterial(int type) {
-        string rockTexturePath = "SurfaceObjects/Rocks/" + curPlanetType + "/" + curPlanetType.ToLower() + "Rocks" + type;
-        string rockNormalPath = "SurfaceObjects/Rocks/" + curPlanetType + "/nm" + curPlanetType + "Rocks" + type;
+        UnityEngine.Random.InitState(seed + type);
+        int rockTexture = UnityEngine.Random.Range(1, 5);
+        string rockTexturePath = "SurfaceObjects/Rocks/" + type + "/" + type + "_" + rockTexture;
+        string rockNormalPath = "SurfaceObjects/Rocks/" + type + "/n" + type + "_" + rockTexture;
         Texture rocksTexture = Resources.Load(rockTexturePath) as Texture;
         Texture rocksNormal = Resources.Load(rockNormalPath) as Texture;
         Material arockMaterial = new Material(Shader.Find("Custom/SimpleRockBump"));
@@ -191,6 +198,7 @@ public class RocksManager : MonoBehaviour {
         arockMaterial.SetTextureScale("_MainTex", new Vector2(5F, 5F));
         arockMaterial.SetTextureScale("_BumpMap", new Vector2(5F, 5F));
         arockMaterial.renderQueue = 1000;
+        arockMaterial.enableInstancing = true;
         return arockMaterial;
     }
 
@@ -248,6 +256,14 @@ public class RocksManager : MonoBehaviour {
         // hack to deal with a race condition where the mesh collider isn't calculated before raycast rocks placement.
         if (rocksPlacedDelay < 2 ) { rocksPlacedDelay += 1; return; }
 
+        Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
+        int layerMask = LayerMask.GetMask("Default"); // only hit the terrain.
+        RaycastHit hit;
+        Vector2 offset;
+        Vector3 dropPoint;
+        float dropHeight = (planetRadius * 1.1F) + 750f;
+        float dropDistance = (planetRadius * 1.5F) + 750f;
+
         for (int i = 0; i <= rocksTextures - 1; i++) {
             for (int i2 = 0; i2 <= (rocksMaxCount / rocksTextures) - 1; i2++) {
                 aRock[i, i2].GetComponent<Renderer>().enabled = false;
@@ -255,30 +271,25 @@ public class RocksManager : MonoBehaviour {
             displayedrocksCount[i] = 0;
         }
 
-        Vector3 cameraPos = GameObject.Find("[CameraRig]").transform.position;
-        RaycastHit hit;
-
-        int layerMask = LayerMask.GetMask("Default"); // only hit the terrain.
-        
         for (int i = 0; i <= wholePlanetVertCount - 1; i++) {
             if (!rocksCluster[i].display) { continue; }
             UnityEngine.Random.InitState(i);
             int curType = rocksCluster[i].type - 1;
 
-            for (int i2 = 0; i2 <= rocksClusterSize - 1; i2++) {
+            for (int i2 = 0; i2 <= rocksCluster[i].count - 1; i2++) {
                 if (displayedrocksCount[curType] >= (int)(rocksMaxCount / rocksTextures)) {
                     break;
                 }
 
                 int rockToDrop = UnityEngine.Random.Range(0, (int)(rocksMaxCount / rocksTextures));
                 
-                Vector2 offset = new Vector2(rocksCluster[i].offset[i2].x, rocksCluster[i].offset[i2].y);
-                Vector3 dropPoint = new Vector3(rocksCluster[i].centerLocation.x + offset.x, 25000, rocksCluster[i].centerLocation.y + offset.y);
+                offset = new Vector2(rocksCluster[i].offset[i2].x, rocksCluster[i].offset[i2].y);
+                dropPoint = new Vector3(rocksCluster[i].centerLocation.x + offset.x, dropHeight, rocksCluster[i].centerLocation.y + offset.y);
 
-                if (Physics.Raycast(dropPoint, Vector3.down, out hit, 30000, layerMask)) {
+                if (Physics.Raycast(dropPoint, Vector3.down, out hit, dropDistance, layerMask)) {
                     aRock[curType, rockToDrop].transform.position = hit.point;
                     aRock[curType, rockToDrop].GetComponent<Renderer>().enabled = true;
-                    aRock[curType, rockToDrop].GetComponent<Renderer>().material = rocksMaterial[curType, Math.Abs((int)offset.x) % rocksTextureVariety];
+                    aRock[curType, rockToDrop].GetComponent<Renderer>().sharedMaterial = rocksMaterial[curType, Math.Abs((int)offset.x) % rocksTextureVariety];
                     displayedrocksCount[curType] += 1;
                 }
             }

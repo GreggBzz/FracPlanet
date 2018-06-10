@@ -2,13 +2,12 @@
 using UnityEngine;
 
 public class PlanetGeometryDetail : MonoBehaviour {
-
+    private string planetType;
     // vert adjacentcies, used when making rivers.
     private struct adjacent {
         public int vert;
         public short count;
     }
-
     private adjacent[,] adjacents;
     private Vector3[] newVertices;
     private int[] newTriangles;
@@ -16,39 +15,62 @@ public class PlanetGeometryDetail : MonoBehaviour {
     private bool[] mountainVerts;
     private bool[] plainVerts;
 
-    private System.Random rnd;
+    private int[] mountainCounts;
+    private int[] riverCounts;
+    private int[] plainCounts;
 
+    private System.Random rnd;
     public float maxHeight;
     public float minHeight;
     public float averageHeight;
     public float waterLine;
-
     // Use this for initialization
     void Start() {
 
     }
     
     public void Initialize(int[] triangles, Vector3[] vertices, int vertCount, float radius, int seed) {
+        mountainCounts = new int[2]; plainCounts = new int[2]; riverCounts = new int[2];
+        planetType = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType;
         rnd = new System.Random(seed);
         adjacents = new adjacent[vertCount, 6];
         FindAdjacents(triangles, vertCount);
         newVertices = vertices;
         waterLine = radius;
         ResetHeights();
+
+        if (planetType == "TerraPlanet") {
+            mountainCounts[0] = 50; mountainCounts[1] = 70;
+            plainCounts[0] = 50; plainCounts[1] = 70;
+            riverCounts[0] = 30; riverCounts[1] = 50;
+        } else if (planetType == "IcyPlanet") {
+            mountainCounts[0] = 50; mountainCounts[1] = 70;
+            plainCounts[0] = 50; plainCounts[1] = 70;
+            riverCounts[0] = 30; riverCounts[1] = 50;
+        } else if (planetType == "MoltenPlanet") {
+            mountainCounts[0] = 50; mountainCounts[1] = 70;
+            plainCounts[0] = 50; plainCounts[1] = 70;
+            riverCounts[0] = 30; riverCounts[1] = 50;
+        } else {
+            mountainCounts[0] = 50; mountainCounts[1] = 100;
+            plainCounts[0] = 50; plainCounts[1] = 100;
+            riverCounts[0] = 0; riverCounts[1] = 2;
+        }
+        
         // Mountains
-        int numMountains = rnd.Next(20, 50);
+        int numMountains = rnd.Next(mountainCounts[0], mountainCounts[1]);
         mountainVerts = new bool[newVertices.Length];
         for (int i = 0; i <= numMountains; i++) {
             MakeMountain();
         }
         // Plains
-        int numPlains = rnd.Next(20, 70);
+        int numPlains = rnd.Next(plainCounts[0], plainCounts[1]);
         plainVerts = new bool[newVertices.Length];
         for (int i = 0; i <= numPlains; i++) {
             MakePlain();
         }
         // Rivers
-        int numRivers = rnd.Next(20, 70);
+        int numRivers = rnd.Next(riverCounts[0], riverCounts[1]);
         riverVerts = new bool[newVertices.Length];
         for (int i = 0; i <= numRivers; i++) {
             MakeRiver();

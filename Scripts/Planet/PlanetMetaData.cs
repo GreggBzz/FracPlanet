@@ -128,8 +128,8 @@ public class PlanetMetaData : MonoBehaviour {
         rnd = new System.Random(seed);
         if ((partialData) && unknowns[2]) { return "Unknown\n"; }
         linebreak = ",\n                       ";
-        string[] elements = { "Mercury", "Hydrocarbons", "Zinc", "Aluminum", "Antimony",
-                                 "Chromium", "Cobalt", "Complex Carbon", "Copper",
+        string[] elements = { "Mercury", "Pyroxenite", "Zinc", "Aluminum", "Antimony",
+                                 "Chromium", "Cobalt", "Feldspar", "Copper",
                                  "Gold", "Lead", "Iron", "Magnesium",
                                  "Molybdenum", "Nickel", "Platinum",
                                  "Plutonium", "Promethium", "Silicates", "Silver",

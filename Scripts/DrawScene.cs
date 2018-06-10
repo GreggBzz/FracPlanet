@@ -14,7 +14,7 @@ public class DrawScene : MonoBehaviour {
     private ScreenFader screenFade;
     private DrawScene aScene;
     private SkyBoxManager skybox;
-    //private CameraEffects cameraEffect;
+    private CameraEffects cameraEffect;
     private float timer = 0;
     private float timerMax = 0;
     // planet related stuff.
@@ -41,7 +41,7 @@ public class DrawScene : MonoBehaviour {
         }
         scanBox = gameObject.AddComponent<ScanBox>();
         skybox = gameObject.AddComponent<SkyBoxManager>();
-        //cameraEffect = gameObject.AddComponent<CameraEffects>();
+        cameraEffect = gameObject.AddComponent<CameraEffects>();
         screenFade.fadeTime = .1F;
         screenFade.enabled = true;
         rnd = new System.Random(42); // what's the meaning of life, eh?
@@ -78,7 +78,7 @@ public class DrawScene : MonoBehaviour {
         teleportArc.teleDistance = 4500F;
     }
 
-    public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match.
+    public void MatchTerrainRotation() { // force the rotation of the planet detail terrain to match, drop planet objects (once per teleport).
         if (rotationMatched) { return; }
 
         int layerMask = LayerMask.GetMask("Default", "Rocks"); // hit only rocks and terrain.
@@ -105,6 +105,7 @@ public class DrawScene : MonoBehaviour {
         // update all the planet objects. 
         GameObject.Find("aPlanet").GetComponent<RocksManager>().PlaceAndEnableRocks();
         GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+        GameObject.Find("aPlanet").GetComponent<FogManager>().PlaceAndEnableFog();
     }
 
 
@@ -152,11 +153,15 @@ public class DrawScene : MonoBehaviour {
                 if (GameObject.Find("aPlanet").GetComponent<RocksManager>() != null) {
                     GameObject.Find("aPlanet").GetComponent<RocksManager>().DisableRocks();
                 }
+                if (GameObject.Find("aPlanet").GetComponent<FogManager>() != null) {
+                    GameObject.Find("aPlanet").GetComponent<FogManager>().DisableFog();
+                }
             }
             onWhichPlanet = "";
             return;
         }
         hit = teleportArc.UpdateTeleportLine(drawArc);
+        //GameObject.Find("TerraPlanetFog1").GetComponent<Renderer>().enabled = false;
         if (hit.point == new Vector3()) { return; }
         if (hit.transform.gameObject.name.Contains("Planet")) {
             // create seperate high detail top ocean and low detail bottom ocean (once).

@@ -6,6 +6,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
     // planet objects
     private GrassManager grassManager;
     private RocksManager rocksManager;
+    private FogManager fogManager;
     private string curPlanetType = "";
 
     // keep track of how many verts we've added to each section.    
@@ -48,6 +49,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
             // reset it's position before we tuck it under the player a tad.
             grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
             rocksManager = GameObject.Find("aPlanet").GetComponent<RocksManager>();
+            fogManager = GameObject.Find("aPlanet").GetComponent<FogManager>();
             toTop = GameObject.Find("aPlanet").transform;
             curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
         }
@@ -61,6 +63,12 @@ public class PlanetTerrainDetail : MonoBehaviour {
             grassManager.PositionGrass();
             grassManager.DisableGrass();
         }
+
+        if (curPlanetType != "Rocky") {
+            fogManager.PositionFog();
+            fogManager.DisableFog();
+        }
+
         rocksManager.AddRocks();
         rocksManager.PositionRocks();
         rocksManager.DisableRocks();
@@ -106,6 +114,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                 }
                 if (closeVertsRef[curTriangles[i + 1]] == 0) {
                     closeVertsRef[curTriangles[i + 1]] = closeVertCount;
@@ -114,6 +123,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
                 if (closeVertsRef[curTriangles[i + 2]] == 0) {
                     closeVertsRef[curTriangles[i + 2]] = closeVertCount;
@@ -122,6 +132,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
                 closeTmpTris[closeTriCount] = closeVertsRef[curTriangles[i]];
                 closeTmpTris[closeTriCount + 1] = closeVertsRef[curTriangles[i + 1]];
@@ -136,6 +147,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     farTmpUv[farVertCount] = curUv[curTriangles[i]];
                     farTmpUv3[farVertCount] = curUv3[curTriangles[i]];
                     farTmpUv4[farVertCount] = curUv4[curTriangles[i]];
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     farVertCount += 1;
                 }
                 if (farVertsRef[curTriangles[i + 1]] == 0) {
@@ -144,6 +156,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     farTmpUv[farVertCount] = curUv[curTriangles[i + 1]];
                     farTmpUv3[farVertCount] = curUv3[curTriangles[i + 1]];
                     farTmpUv4[farVertCount] = curUv4[curTriangles[i + 1]];
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                     farVertCount += 1;
                 }
                 if (farVertsRef[curTriangles[i + 2]] == 0) {
@@ -152,6 +165,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     farTmpUv[farVertCount] = curUv[curTriangles[i + 2]];
                     farTmpUv3[farVertCount] = curUv3[curTriangles[i + 2]];
                     farTmpUv4[farVertCount] = curUv4[curTriangles[i + 2]];
+                    CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
                     farVertCount += 1;
                 }
                 farTmpTris[farTriCount] = farVertsRef[curTriangles[i]];
@@ -223,6 +237,16 @@ public class PlanetTerrainDetail : MonoBehaviour {
             rocksManager.rocksCluster[curVertIndex].centerLocation.x = curVertPos.x;
             rocksManager.rocksCluster[curVertIndex].centerLocation.y = curVertPos.z;
             rocksManager.rocksCluster[curVertIndex].display = true;
+        }
+    }
+
+    private void CheckForFog(int curVertIndex, Vector3 curVertPos, float curDiameter) {
+        if (fogManager.fogAtVert[curVertIndex].haveFog) {
+            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= FogManager.drawDistance) { return; }
+            fogManager.fogAtVert[curVertIndex].centerLocation.x = curVertPos.x;
+            fogManager.fogAtVert[curVertIndex].centerLocation.y = curVertPos.y;
+            fogManager.fogAtVert[curVertIndex].centerLocation.z = curVertPos.z;
+            fogManager.fogAtVert[curVertIndex].display = true;
         }
     }
 

@@ -56,6 +56,12 @@ public class PlanetSplatMap : MonoBehaviour {
         float vertHeight = 0f;
         float angle = 0f;
 
+        float roughness = 0f;
+        float slopeAngle = 20f;
+        roughness = GameObject.Find("aPlanet").GetComponent<PlanetGeometry>().roughness;
+
+        if (roughness >= .000040F) { slopeAngle = 35; }
+
         for (int i = 0; i <= vertices.Length - 1; i++) {
             angle = Vector3.Angle(normals[i], vertices[i].normalized);
             vertHeight = (float)Math.Sqrt((vertices[i].x * vertices[i].x) +
@@ -67,7 +73,7 @@ public class PlanetSplatMap : MonoBehaviour {
             if (vertHeight < waterLine) {
                 normalizedHeight = (vertHeight - minHeight) / (waterLine - minHeight);
                 uv4[i].y = normalizedHeight * txr2to3; uv4[i].x = 0;
-                if (angle > 20) { // clifs get higher texture.
+                if (angle > slopeAngle) { // clifs get higher texture.
                     uv3[i].x = 1f;
                 }
                 continue;
@@ -77,7 +83,7 @@ public class PlanetSplatMap : MonoBehaviour {
             if (vertHeight < lowerPlains) {
                 normalizedHeight = (vertHeight - waterLine) / (lowerPlains - waterLine);
                 uv4[i].y = normalizedHeight * (txr4 - txr2to3) + txr2to3; uv4[i].x = 0f;
-                if (angle > 20) {
+                if (angle > slopeAngle) {
                     uv3[i].x = 1f;
                 }
                 continue;
@@ -86,7 +92,7 @@ public class PlanetSplatMap : MonoBehaviour {
             if (vertHeight < maxHeight) {
                 normalizedHeight = (vertHeight - lowerPlains) / (maxHeight - lowerPlains);
                 uv4[i].y = normalizedHeight * (1.0f - txr4) + txr4; uv4[i].x = 0f;
-                if (angle > 20) {
+                if (angle > slopeAngle) {
                     uv3[i].x = 1f;
                 }
                 if (uv4[i].y > .65f) { uv4[i].x = 1f; }

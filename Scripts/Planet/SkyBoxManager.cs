@@ -7,20 +7,24 @@ public class SkyBoxManager : MonoBehaviour {
     private System.Random rnd;
     private int seed;
     private PlanetLayers atmosphereMesh;
+
     private GameObject starField;
     private GameObject theSun;
+    private GameObject theClouds;
+    private GameObject theAtmosphere;
+    private GameObject eyeCamera;
+    private bool objectsSet;
+
     private Material atmosphereMaterial;
     private bool planetSideSky;
     private PlanetMaterial materialManager;
-    private float starsCutoff = 0F;
-    private Color32 cloudCutOff = new Color32(0, 0, 0, 0);
+    private Color32 cloudColor = new Color32(0, 0, 0, 0);
     private bool cloudsFetched = false;
 
     // Use this for initialization
-    void Start () {
+    void Start() {
         planetSideSky = false;
         materialManager = gameObject.AddComponent<PlanetMaterial>();
-        //starField = new GameObject("Star Field");
         starField = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         starField.name = "Star Field";
         Material starFieldMaterial = materialManager.AssignMaterial("starfield");
@@ -32,10 +36,6 @@ public class SkyBoxManager : MonoBehaviour {
         starField.GetComponent<Collider>().enabled = false;
         Destroy(starField.GetComponent<Collider>());
         starField.GetComponent<Renderer>().enabled = false;
-        starsCutoff = starFieldMaterial.GetFloat("_Cutoff");
-        if (GameObject.Find("Sun") != null) {
-            theSun = GameObject.Find("Sun");
-        }
         if (GameObject.Find("Controller (right)") != null) {
             seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
         }
@@ -45,68 +45,61 @@ public class SkyBoxManager : MonoBehaviour {
         rnd = new System.Random(seed);
     }
 
-    public void setSkyOnPlanet (string planetType, int planetSeed, float planetDiameter = 2500F) {
-        // Fetch the cloud's color (once), so we can transition the alpha later.
-        if (GameObject.Find("aPlanetCloud") != null && !cloudsFetched) {
-            cloudCutOff = GameObject.Find("aPlanetCloud").GetComponent<Renderer>().material.GetColor("_TintColor");
+    public void setObjects() {
+        if (GameObject.Find("Sun") != null) {
+            theSun = GameObject.Find("Sun");
+        }
+        if (GameObject.Find("aPlanetCloud") != null) {
+            theClouds = GameObject.Find("aPlanetCloud");
+        }
+        if (GameObject.Find("aPlanetAtmosphere") != null) {
+            theAtmosphere = GameObject.Find("aPlanetAtmosphere");
+        }
+        if (GameObject.Find("Camera (eye)") != null) {
+            eyeCamera = GameObject.Find("Camera (eye)");
+        }
+        objectsSet = true;
+    }
+
+    public void setSkyOnPlanet(string planetType, int planetSeed, float planetDiameter = 2500F) {
+        if (!objectsSet) { setObjects(); }
+        
+        // Fetch the cloud's color (once), so we can transition it to darker.
+        float multiplier = GameObject.Find("Sun").GetComponent<Sun>().distance;
+        if (theClouds != null && !cloudsFetched) {
+            cloudColor = theClouds.GetComponent<Renderer>().material.GetColor("_TintColor");
             cloudsFetched = true;
         }
-        // if we're already planetside, adjust the stars clouds on/off and fadeing during sunset/sunrise.
-        if (GameObject.Find("Sun") != null) {
-            float sunPos = GameObject.Find("Sun").transform.eulerAngles.x;
-            float curStarsCutoff = starsCutoff;
-            int curCloudCutoff = cloudCutOff.a;
+        // if theres a sun, based on it's distance multipler: 
+        // dim the sun a bit, cutoff the stars more sharply, 
+        // darken the clouds, adjust the global fog cutoff.
+        if (theSun != null) {
+            float globalFogDistance = 9900;
 
-            float globalFogDistance = 9910;
-            // if it's nighttime, nix the global fog and don't cutoff the stars.
-            if (sunPos > 270 && sunPos <= 330) {
-                curStarsCutoff = starsCutoff;
-                globalFogDistance = 10000;
-                curCloudCutoff = 2;
-            }
-            // if it's "daytime" alpha cutoff the stars, enable global fog at the far reaches..
-            if (sunPos < 200) {
-                curStarsCutoff = 1F;
-                globalFogDistance = 9910;
-                curCloudCutoff = cloudCutOff.a;
-            }
-            // if it's "sunrise" or "sunset" fade the alpha cutoff for the starfield.
-            if (sunPos > 330 && sunPos < 360) {
-                // fade the stars out or in.
-                float fadei = (1F - starsCutoff) / 30;
-                float fadem = fadei * (sunPos - 330);
-                curStarsCutoff = starsCutoff + fadem;
-                // fade the clouds out or in.
-                float cFadei = (cloudCutOff.a - 2) / 30;
-                float cFadem = cFadei * (sunPos - 330);
-                curCloudCutoff = 2 + (int)(cFadem);
-                // fade the fog off for night, on for day.
-                globalFogDistance = 10000 - ((sunPos - 330) * 3);
-            }
-            starField.GetComponent<Renderer>().material.SetFloat("_Cutoff", curStarsCutoff);
+            theSun.GetComponent<Light>().intensity = multiplier;
+            starField.GetComponent<Renderer>().material.SetFloat("_Cutoff", multiplier);
 
-            // dim the sun a bit, or not at all if it's daytime and we cutting off the stars.           
-            theSun.GetComponent<Light>().intensity = curStarsCutoff;
-            //    theSun.GetComponent<Light>().intensity = curStarsCutoff * .75F;
-            
-
-            // You'll need to set the standard asset global fog to a public class to access it. 
-            // no fog if there's no atmosphere.
-            if (GameObject.Find("aPlanetAtmosphere") == null) {
+            if (theClouds != null) {
+                Color32 curColor = new Color32((byte)(cloudColor.r * multiplier),
+                                               (byte)(cloudColor.g * multiplier),
+                                               (byte)(cloudColor.b * multiplier),
+                                               cloudColor.a);
+                theClouds.GetComponent<Renderer>().material.SetColor("_TintColor", curColor);
+            }
+            if (theAtmosphere == null) {
                 globalFogDistance = 10000;
             }
-            GameObject.Find("Camera (eye)").GetComponent<GlobalFog>().startDistance = globalFogDistance;
-            // Adjust the cloud alpha cutoff.
-            Color32 newCloudCutoff = new Color32(cloudCutOff.r, cloudCutOff.g, cloudCutOff.b, (byte)curCloudCutoff);
-            if (GameObject.Find("aPlanetCloud")) {
-                GameObject.Find("aPlanetCloud").GetComponent<Renderer>().material.SetColor("_TintColor", newCloudCutoff);
+            else {
+                globalFogDistance = 10000 - (100 * multiplier);
             }
+
+            eyeCamera.GetComponent<GlobalFog>().startDistance = globalFogDistance;
             // Move the starbox so that it always looks right.
-            float playerHeight = GameObject.Find("Camera (eye)").transform.position.y;
+            float playerHeight = eyeCamera.transform.position.y;
             starField.transform.position = new Vector3(0, playerHeight - 1350, 3500);
         }
         if (planetSideSky) return;
-        if (GameObject.Find("aPlanetAtmosphere") != null) {
+        if (theAtmosphere != null) {
             Material planetSkyBox = new Material(Shader.Find("Skybox/Procedural"));
             planetSkyBox.SetColor("_SkyTint", AtmosphereColor(planetType));
             planetSkyBox.SetColor("_GroundColor", AtmosphereColor(planetType));
@@ -114,34 +107,36 @@ public class SkyBoxManager : MonoBehaviour {
             if (GameObject.Find("Camera (eye)") != null) {
                 GameObject.Find("Camera (eye)").GetComponent<Skybox>().material = planetSkyBox;
             }
-            RenderSettings.sun = GameObject.Find("Sun").GetComponent<Light>();
+            RenderSettings.sun = theSun.GetComponent<Light>();
         }
         // disable the Atmosphere mesh renderer
-        if (GameObject.Find("aPlanetAtmosphere") != null) {
-            GameObject.Find("aPlanetAtmosphere").GetComponent<MeshRenderer>().enabled = false;
+        if (theAtmosphere != null) {
+            theAtmosphere.GetComponent<MeshRenderer>().enabled = false;
         }
         // Enable and transform the starbox.
         starField.transform.localScale = new Vector3(2790, 2790, 2790);
         // rotate the starfield a bit to give it a "random" look.
-        starField.transform.localEulerAngles = 
+        starField.transform.localEulerAngles =
             new Vector3(starFieldRotation(), starFieldRotation(), starFieldRotation());
         starField.GetComponent<Renderer>().enabled = true;
         planetSideSky = true;
     }
 
-    public void setSkyOffPlanet () {
+    public void setSkyOffPlanet() {
         if (!planetSideSky) return;
-        if (GameObject.Find("aPlanetAtmosphere") != null) {
+        if (theAtmosphere != null) {
             Material starSkyBox = Resources.Load("Materials/Skybox/starSkyBox01", typeof(Material)) as Material;
-            if (GameObject.Find("Camera (eye)") != null) {
-                GameObject.Find("Camera (eye)").GetComponent<Skybox>().material = starSkyBox;
+            if (eyeCamera != null) {
+                eyeCamera.GetComponent<Skybox>().material = starSkyBox;
             }
             RenderSettings.sun = null;
         }
         starField.GetComponent<Renderer>().enabled = false;
-        GameObject.Find("Camera (eye)").GetComponent<GlobalFog>().startDistance = 20000;
+        eyeCamera.GetComponent<GlobalFog>().startDistance = 20000;
         planetSideSky = false;
         cloudsFetched = false;
+        objectsSet = false;
+        theAtmosphere = null; theSun = null; theClouds = null; eyeCamera = null;
     }
 
     private Color32 AtmosphereColor(string curPlanetType) {
@@ -168,7 +163,7 @@ public class SkyBoxManager : MonoBehaviour {
     private float SunSize(string curPlanetType) {
         if (curPlanetType.Contains("Terra")) {
             // a relativly close sun.
-            return (float)(rnd.NextDouble() * (0.15 - 0.04) + 0.04) ;
+            return (float)(rnd.NextDouble() * (0.15 - 0.04) + 0.04);
         }
         if (curPlanetType.Contains("Icy")) {
             // a distant sun.

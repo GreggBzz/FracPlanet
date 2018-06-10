@@ -19,9 +19,9 @@ public class PlanetGeometry : MonoBehaviour {
     public int tessRounds = 5;
 
     // how bumpy is our planet?
-    private const float maxRoughness = .000025F;
-    private const float minRoughness = .000015F;
-    private float roughness;
+    private float maxRoughness = .000025F;
+    private float minRoughness = .000015F;
+    public float roughness;
 
     private int[] triangles;
     private int[] tempTriangles;
@@ -57,6 +57,17 @@ public class PlanetGeometry : MonoBehaviour {
         }
 
         rnd = new System.Random(seed);
+        float roughnessScale = (float)rnd.NextDouble();
+        // setup a roughness scale.
+        if (roughnessScale <= .75F) {
+            maxRoughness = .000025F; minRoughness = .000015F;
+        }
+        if (roughnessScale <= .40F) {
+            maxRoughness = .000050F; minRoughness = .000030F;
+        }
+        if (roughnessScale <= .10F) {
+            maxRoughness = .000015F; minRoughness = .000010F;
+        }
 
         planetLayer = curPlanetLayer;
         aFullSetup = fullSetup;

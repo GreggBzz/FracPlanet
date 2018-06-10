@@ -11,6 +11,8 @@ SubShader {
 
 CGPROGRAM
 #pragma surface surf Lambert
+#pragma multi_compile_instancing
+
 struct Input {
 	float2 uv_MainTex;
 	float2 uv_BumpMap;

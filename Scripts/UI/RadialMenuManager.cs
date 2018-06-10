@@ -105,6 +105,7 @@ public class RadialMenuManager : MonoBehaviour {
     }
 
     public void SelectItem(bool clicked) {
+        if (hoverItem >= menuTitle.Length) { return; }
         // if the pad is clicked, drop the item like a toggle.
         if (clicked) whatIsPushed = menuTitle[hoverItem];
         // if the pad is unclicked, raise the pushed item indicating it's selected.

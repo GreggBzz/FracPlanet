@@ -8,12 +8,12 @@ public class Grass {
 
     // Make one bunch of billboard grass, three planes, offset by 60 degrees. 
     public void Generate(float scaler = .5F, float width = .8F, float height = 1.0F, int type = 0) {
-        int numTextures = GrassManager.grassTextures;
+        //int numTextures = GrassManager.grassTextures;
 
         float scale = UnityEngine.Random.Range(scaler - (scaler / 3), scaler + (scaler / 3));
         float angle;
         // 6 x 2 points around the circle, one high, one low, offset by a random angle;
-        float angleOffset = UnityEngine.Random.Range(0f, (float)(2 * Math.PI));
+        float angleOffset = (float)Math.PI; // UnityEngine.Random.Range(0f, (float)(2 * Math.PI));
         for (int i = 0; i <= 5; i++) {
             angle = (60 * i * Mathf.Deg2Rad) - angleOffset;
             vertices[i].z = vertices[11 - i].z = (float)(Math.Sin(angle)) * width;
@@ -34,16 +34,15 @@ public class Grass {
         triangles[15] = 6; triangles[16] = 9; triangles[17] = 2;
 
 
-        // texture and scale, we use a texture strip to enhance batching.
-        float xSegment = 1.0F / (float)numTextures;
-        float xMin = type * xSegment;
-        float xMax = (type + 1) * xSegment; 
+        // texture and scale.
+        float xMin = 0;
+        float xMax = 1;
 
 
         uv[0] = uv[1] = uv[5] = new Vector2(xMin, 0F);
-        uv[6] = uv[10] = uv[11] = new Vector2(xMin, 1F);
+        uv[6] = uv[10] = uv[11] = new Vector2(xMin, .99F);
         uv[2] = uv[4] = uv[3] = new Vector2(xMax, 0F);
-        uv[9] = uv[7] = uv[8] = new Vector2(xMax, 1F);
+        uv[9] = uv[7] = uv[8] = new Vector2(xMax, .99F);
 
         for (int i = 0; i <= 11; i++) {
             vertices[i] *= scale;
