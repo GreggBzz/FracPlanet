@@ -11,11 +11,19 @@ public class CameraEffects : MonoBehaviour {
     private Shader blurFastShader;
     private DrawScene aScene;
 
-    private float foggieness;
+    private byte inkyNess; // to fade to black.
+    private float foggieness; // to make things foggier.
     private Material fogSphereMaterial;
     private Texture fogSphereTexture;
     private Color32 fogSphereColor;
     private Color32 oceanColor = new Color32();
+
+    private Vector3 eyePos;
+    private Vector3 eyeForward;
+    private RaycastHit hit;
+
+    private int layerMaskWater;
+    private int layerMaskObjects;
 
     private int debugcount = 0;
     private bool oceanColorSet = false;
@@ -36,11 +44,14 @@ public class CameraEffects : MonoBehaviour {
         fogSphere.gameObject.name = "CameraFogSphere";
         fogSphereTexture = Resources.Load("PlanetTextures/fogSphere") as Texture;
         fogSphereMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
+        fogSphereMaterial.renderQueue = 4000;
         fogSphereMaterial.SetTexture("_MainTex", fogSphereTexture);
         fogSphere.GetComponent<Renderer>().material = fogSphereMaterial;
         fogSphere.transform.localScale = new Vector3(.25f, .25f, .25f);
         fogSphere.GetComponent<Renderer>().enabled = false;
         foggieness = 0.0F;
+        layerMaskWater = LayerMask.GetMask("Water");
+        layerMaskObjects = LayerMask.GetMask("Rocks", "Trees", "Default");
     }
 
     // Update is called once per frame
@@ -60,12 +71,27 @@ public class CameraEffects : MonoBehaviour {
     }
 
     private void RenderEffects() {
-        int layerMask = LayerMask.GetMask("Water");
-        // do something to the camera.
+        // do something to the camera when underwater, or inside of an object.
+        eyeForward = cameraEye.transform.forward;
         if (aScene.onWhichPlanet != "") {
-             // tweak the eye position in world space because our water collider is .35F lower than the shader makes the waves.
-            Vector3 eyePos = cameraRig.transform.position + cameraEye.transform.localPosition - new Vector3(0F, .4F, 0F);
-            if (Physics.Raycast(eyePos + Vector3.up * 300F, Vector3.down, 300F, layerMask)) {
+            //adjust eye position to test for a rock/tree collision.
+            eyePos = cameraRig.transform.position + cameraEye.transform.localPosition;
+            if (Physics.Raycast(eyePos + (eyeForward * -.4f), eyeForward, out hit, .55f, layerMaskObjects)) {
+                if (inkyNess >= 240) {
+                    inkyNess = 255;
+                } else {
+                    inkyNess += 5;
+                }
+                fogSphere.GetComponent<Renderer>().enabled = true;
+                fogSphereMaterial.SetColor("_TintColor", new Color32(0, 0, 0, inkyNess));
+                return;
+            }
+            else {
+                inkyNess = 0;
+            }
+            // tweak the eye position in world space because our water collider is .35F lower than the shader makes the waves.
+            eyePos = cameraRig.transform.position + cameraEye.transform.localPosition - new Vector3(0F, .4F, 0F);
+            if (Physics.Raycast(eyePos + Vector3.up * 300F, Vector3.down, 300F, layerMaskWater)) {
                 fogSphere.GetComponent<Renderer>().enabled = true;
                 foggieness += .01F;
                 if (foggieness >= .99F) {
@@ -74,6 +100,7 @@ public class CameraEffects : MonoBehaviour {
                     fogSphereColor = new Color32((byte)(R * foggieness), (byte)(G * foggieness),
                         (byte)(B * foggieness), (byte)(A * foggieness * .6));
                     fogSphereMaterial.SetColor("_TintColor", fogSphereColor);
+                    return;
                 }
             }
             else {
@@ -87,6 +114,9 @@ public class CameraEffects : MonoBehaviour {
                     fogSphereMaterial.SetColor("_TintColor", fogSphereColor);
                 }
             }
-         }
+        }
+        else {
+            fogSphere.GetComponent<Renderer>().enabled = false;
+        }
     }
 }

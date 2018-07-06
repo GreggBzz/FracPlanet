@@ -7,6 +7,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
     private GrassManager grassManager;
     private RocksManager rocksManager;
     private FogManager fogManager;
+    private TreeManager treeManager;
     private string curPlanetType = "";
 
     // keep track of how many verts we've added to each section.    
@@ -39,7 +40,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
 
     // LOD cutoffs
     public float minDistance = 0F;
-    public float maxDistance = 95F;
+    public float maxDistance = 150;
 
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter, Vector2[] curUv, Vector2[] curUv3, Vector2[] curUv4) {
 
@@ -48,20 +49,28 @@ public class PlanetTerrainDetail : MonoBehaviour {
             GameObject.Find("aPlanet").GetComponent<MeshCollider>().enabled = false;
             // reset it's position before we tuck it under the player a tad.
             grassManager = GameObject.Find("aPlanet").GetComponent<GrassManager>();
+            treeManager = GameObject.Find("aPlanet").GetComponent<TreeManager>();
             rocksManager = GameObject.Find("aPlanet").GetComponent<RocksManager>();
             fogManager = GameObject.Find("aPlanet").GetComponent<FogManager>();
             toTop = GameObject.Find("aPlanet").transform;
             curPlanetType = (GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetType).Replace("Planet", "");
         }
-  
+
         // setup the tesselate script for later.
-        meshGeometry = gameObject.AddComponent<PlanetGeometry>();
+        if (meshGeometry == null) {
+            meshGeometry = gameObject.AddComponent<PlanetGeometry>();
+        }
 
         // setup planet objects
         if (curPlanetType == "Terra" || curPlanetType == "Icy") {
+            // grass
             grassManager.AddGrass();
             grassManager.PositionGrass();
             grassManager.DisableGrass();
+            // trees
+            treeManager.AddTrees();
+            treeManager.PositionTrees();
+            treeManager.DisableTrees();
         }
 
         if (curPlanetType != "Rocky") {
@@ -113,6 +122,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[closeVertCount] = curTriangles[i];
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
+                    CheckForTrees(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                 }
@@ -122,6 +132,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[closeVertCount] = curTriangles[i + 1];
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
+                    CheckForTrees(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                     CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
@@ -131,6 +142,7 @@ public class PlanetTerrainDetail : MonoBehaviour {
                     vertSeeds[closeVertCount] = curTriangles[i + 2];
                     closeVertCount += 1;
                     CheckForGrass(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
+                    CheckForTrees(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i]]), curDiameter);
                     CheckForRocks(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 2]]), curDiameter);
                     CheckForFog(curTriangles[i], toTop.TransformPoint(curVerts[curTriangles[i + 1]]), curDiameter);
                 }
@@ -228,6 +240,15 @@ public class PlanetTerrainDetail : MonoBehaviour {
             grassManager.grassCluster[curVertIndex].centerLocation.x = curVertPos.x;
             grassManager.grassCluster[curVertIndex].centerLocation.y = curVertPos.z;
             grassManager.grassCluster[curVertIndex].display = true;
+        }
+    }
+
+    private void CheckForTrees(int curVertIndex, Vector3 curVertPos, float curDiameter) {
+        if (treeManager.treeCluster[curVertIndex].haveTrees) {
+            if (Vector3.Distance(curVertPos, new Vector3(0, 750 + curDiameter / 2, 3500)) >= TreeManager.drawDistance) { return; }
+            treeManager.treeCluster[curVertIndex].centerLocation.x = curVertPos.x;
+            treeManager.treeCluster[curVertIndex].centerLocation.y = curVertPos.z;
+            treeManager.treeCluster[curVertIndex].display = true;
         }
     }
 

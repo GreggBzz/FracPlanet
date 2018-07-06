@@ -19,15 +19,18 @@ public class RadialMenuManager : MonoBehaviour {
     private int totalTypes;
     // publish what the user has selected.
     public string whatIsSelected = "";
+    // publish what was selected, say you want to toggle a dialog off without leaving teleport.
+    public string whatWasSelected = "";
     // keep track of what the user has pressed down on.
     private string whatIsPushed = "";
 
     void Start() {
         // Configure your menutypes here, with " - Child" menus last. Define items in defineTypes().
-        menuTypes[0] = "Planet Menu";
-        menuTypes[1] = "Destroy Menu";
-        menuTypes[2] = "Planet Menu - Child";
-        totalTypes = 3;
+        menuTypes[0] = "Destroy Menu";
+        menuTypes[1] = "Planet Menu";
+        menuTypes[2] = "Teleport Menu";
+        menuTypes[3] = "Planet Menu - Child";
+        totalTypes = 4;
         curMenuType = "";
     }
 
@@ -105,6 +108,7 @@ public class RadialMenuManager : MonoBehaviour {
     }
 
     public void SelectItem(bool clicked) {
+        whatWasSelected = whatIsSelected;
         if (hoverItem >= menuTitle.Length) { return; }
         // if the pad is clicked, drop the item like a toggle.
         if (clicked) whatIsPushed = menuTitle[hoverItem];
@@ -156,10 +160,10 @@ public class RadialMenuManager : MonoBehaviour {
         switch (menuType) {
             case "Planet Menu":
                 itemsCount = 4;
-                menuTexture[0] = Resources.Load<Texture>("MenuItems/MoltenPlanet");
-                menuTexture[1] = Resources.Load<Texture>("MenuItems/TerraPlanet");
-                menuTexture[2] = Resources.Load<Texture>("MenuItems/IcyPlanet");
-                menuTexture[3] = Resources.Load<Texture>("MenuItems/RockyPlanet");
+                menuTexture[0] = Resources.Load<Texture>("UI/Menuitems/MoltenPlanet");
+                menuTexture[1] = Resources.Load<Texture>("UI/Menuitems/TerraPlanet");
+                menuTexture[2] = Resources.Load<Texture>("UI/Menuitems/IcyPlanet");
+                menuTexture[3] = Resources.Load<Texture>("UI/Menuitems/RockyPlanet");
                 menuTitle[0] = "MoltenPlanet";
                 menuTitle[1] = "TerraPlanet";
                 menuTitle[2] = "IcyPlanet";
@@ -167,17 +171,26 @@ public class RadialMenuManager : MonoBehaviour {
                 break;
             case "Destroy Menu":
                 itemsCount = 3;
-                menuTexture[0] = Resources.Load<Texture>("MenuItems/Delete");
-                menuTexture[1] = Resources.Load<Texture>("MenuItems/Home");
-                menuTexture[2] = Resources.Load<Texture>("MenuItems/Teleport");
+                menuTexture[0] = Resources.Load<Texture>("UI/Menuitems/Delete");
+                menuTexture[1] = Resources.Load<Texture>("UI/Menuitems/Exit");
+                menuTexture[2] = Resources.Load<Texture>("UI/Menuitems/Help");
                 menuTitle[0] = "Delete";
-                menuTitle[1] = "Home";
+                menuTitle[1] = "Exit";
+                menuTitle[2] = "Help";
+                break;
+            case "Teleport Menu":
+                itemsCount = 3;
+                menuTexture[0] = Resources.Load<Texture>("UI/Menuitems/Home");
+                menuTexture[1] = Resources.Load<Texture>("UI/Menuitems/Info");
+                menuTexture[2] = Resources.Load<Texture>("UI/Menuitems/Teleport");
+                menuTitle[0] = "Home";
+                menuTitle[1] = "Info";
                 menuTitle[2] = "Teleport";
                 break;
             case "Planet Menu - Child":
                 itemsCount = 2;
-                menuTexture[0] = Resources.Load<Texture>("MenuItems/Previous");
-                menuTexture[1] = Resources.Load<Texture>("MenuItems/Next");
+                menuTexture[0] = Resources.Load<Texture>("UI/Menuitems/Previous");
+                menuTexture[1] = Resources.Load<Texture>("UI/Menuitems/Next");
                 menuTitle[0] = "Previous";
                 menuTitle[1] = "Next";
                 break;

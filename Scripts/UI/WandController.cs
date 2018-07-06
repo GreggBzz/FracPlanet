@@ -26,7 +26,6 @@ public class WandController : SteamVR_TrackedController {
         base.Update();
         // high level, we're either teleporting, making a planet or nothing.
         // if we're rendering a planet, limit the user options.
-
         string switch_string = radialMenu.whatIsSelected;
         if (radialMenu.whatIsSelected.Contains("Planet")) switch_string = "Planet";
         switch (switch_string)
@@ -38,12 +37,6 @@ public class WandController : SteamVR_TrackedController {
                 aScene.SetPlanetType(radialMenu.whatIsSelected);
                 radialMenu.SwitchToChild();
                 aScene.AddPlanetOutline();
-                break;
-            case "Delete":
-                aScene.Teleport(true);
-                aScene.DestroyPlanets();
-                aScene.DestroyPlanetOutline();
-                radialMenu.whatIsSelected = "";
                 break;
             case "Home":
                 aScene.Teleport(true);
@@ -89,6 +82,21 @@ public class WandController : SteamVR_TrackedController {
     }
     public override void OnTriggerUnclicked(ClickedEventArgs e) {
         base.OnTriggerUnclicked(e);
+        
+        // check if we're confirming a planet delete.
+        if (GameObject.Find("DeleteBox") != null) {
+            if (GameObject.Find("DeleteBox").GetComponent<DeleteBox>().deleteDisplayed) {
+                GameObject.Find("DeleteBox").GetComponent<DeleteBox>().DeleteConfirm();
+                return;
+            }
+        }
+        // check if we're confirming a system exit.
+        if (GameObject.Find("ExitBox") != null) {
+            if (GameObject.Find("ExitBox").GetComponent<ExitBox>().exitDisplayed) {
+                GameObject.Find("ExitBox").GetComponent<ExitBox>().ExitConfirm();
+            }
+        }
+
         string switch_string = radialMenu.whatIsSelected;
         if (radialMenu.curMenuType.Contains("Planet Menu - Child")) switch_string = "Planet";
         switch (switch_string) {
@@ -103,7 +111,8 @@ public class WandController : SteamVR_TrackedController {
             case "Planet":
                 aScene.AddPlanet();
                 aScene.DestroyPlanetOutline();
-                radialMenu.Cycle("Destroy Menu");
+                radialMenu.Cycle("Teleport Menu");
+                radialMenu.whatIsSelected = "Teleport";
                 break;
             default:
                 teleportArc.DisableTeleportLine();
@@ -119,7 +128,11 @@ public class WandController : SteamVR_TrackedController {
         teleportArc.DisableTeleportLine();
         // if we're rendering a planet, don't let the user do anything besides destroy/teleport.
         if (aScene.havePlanet) {
-            radialMenu.Cycle("Destroy Menu");
+            if (radialMenu.curMenuType == "Teleport Menu") {
+                radialMenu.Cycle("Destroy Menu");
+                return;
+            }
+            radialMenu.Cycle("Teleport Menu");
         }
         else {
             radialMenu.Cycle();
@@ -142,7 +155,7 @@ public class WandController : SteamVR_TrackedController {
         base.OnPadUnclicked(e);
         if (radialMenu.curMenuType != "") {
             radialMenu.SelectItem(false);
-        }  
+        }
     }
     public override void OnPadTouched(ClickedEventArgs e) {
         base.OnPadTouched(e);

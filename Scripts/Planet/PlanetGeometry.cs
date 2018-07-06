@@ -56,6 +56,7 @@ public class PlanetGeometry : MonoBehaviour {
             seed = 100;
         }
 
+        vertSeedCount = 0;
         rnd = new System.Random(seed);
         float roughnessScale = (float)rnd.NextDouble();
         // setup a roughness scale.
@@ -63,7 +64,7 @@ public class PlanetGeometry : MonoBehaviour {
             maxRoughness = .000025F; minRoughness = .000015F;
         }
         if (roughnessScale <= .40F) {
-            maxRoughness = .000050F; minRoughness = .000030F;
+            maxRoughness = .000040F; minRoughness = .000030F;
         }
         if (roughnessScale <= .10F) {
             maxRoughness = .000015F; minRoughness = .000010F;

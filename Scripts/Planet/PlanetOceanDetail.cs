@@ -22,10 +22,9 @@ public class PlanetOceanDetail : MonoBehaviour {
     private Vector3[] tmpVerticies;
 
     public void Generate(int[] curTriangles, Vector3[] curVerts, float curDiameter, bool bottom = false) {
-
-        meshGeometry = gameObject.AddComponent<PlanetGeometry>();
-
-
+        if (meshGeometry == null) {
+            meshGeometry = gameObject.AddComponent<PlanetGeometry>();
+        }
         int triCount = 0;
         int[] vertexRef = new int[40962];
         Vector3[] tmpVerts = new Vector3[40962];

@@ -18,7 +18,6 @@ public class PlanetManager : MonoBehaviour {
     // "while planetside" gameobjects and meshes.
     private PlanetOceanDetail partialOceanGenerator;
     private PlanetTerrainDetail partialTerrainGenerator;
-   // private PlanetTerrainDetail partialTerrainBottomMesh;
     private GameObject partialOceanTop;
     private GameObject partialTerrainTop;
     private GameObject partialTerrainBottom;
@@ -28,6 +27,8 @@ public class PlanetManager : MonoBehaviour {
     private PlanetSounds planetSound;
     // dimensions, seed, type.
     private const float distFromCenter = 3500F;
+    public const int maxDiameter = 3000;
+    public const int minDiameter = 1500;
     public float planetDiameter = 2500F;
     public string curPlanetType = "";
     public int curPlanetSeed = 100;
@@ -41,6 +42,7 @@ public class PlanetManager : MonoBehaviour {
 
     // planet objects
     private GrassManager grassManager;
+    private TreeManager treeManager;
     private RocksManager rocksManager;
     private FogManager fogManager;
 
@@ -69,6 +71,9 @@ public class PlanetManager : MonoBehaviour {
         }
         if (GameObject.Find("allTheRocks") != null) {
             terrain.GetComponent<RocksManager>().DestroyRocks();
+        }
+        if (GameObject.Find("allTheTrees") != null) {
+            terrain.GetComponent<TreeManager>().DestroyTrees();
         }
         if (terrainMesh != null) {
             Destroy(terrain); terrainMesh = null;
@@ -191,12 +196,14 @@ public class PlanetManager : MonoBehaviour {
         terrainMesh.GenerateFull("terrain", planetDiameter, curPlanetSeed);
         terrainMesh.transform.position = centerPos + Vector3.forward * dist;
         terrainMesh.center = terrainMesh.transform.position;
-        // we'll need biomes for later
+        // we'll need grass for later
         grassManager = GameObject.Find("aPlanet").AddComponent<GrassManager>();
         // we'll need rocks for later
         rocksManager = GameObject.Find("aPlanet").AddComponent<RocksManager>();
         // fog for most planets.
         fogManager = GameObject.Find("aPlanet").AddComponent<FogManager>();
+        // trees for most planets.
+        treeManager = GameObject.Find("aPlanet").AddComponent<TreeManager>();
     }
 
     private void AddOcean(float dist, float planetScale) {
@@ -296,6 +303,7 @@ public class PlanetManager : MonoBehaviour {
         rocksManager.PlaceAndEnableRocks();
         grassManager.PlaceAndEnableGrass();
         fogManager.PlaceAndEnableFog();
+        treeManager.PlaceAndEnableTrees();
     }
 
     private void AddAtmosphere(float dist) {
@@ -320,7 +328,7 @@ public class PlanetManager : MonoBehaviour {
         cloud.AddComponent<PlanetLayers>();
         // scale the clouds to just around the highest mountain.
         float cloudScale = terrainMesh.GetMaxElevation() * 2 / planetDiameter;
-        cloudScale -= .01F;
+        cloudScale -= .005F;
         cloud.GetComponent<Renderer>().material = cloudMaterial;
         cloudMesh = cloud.GetComponent<PlanetLayers>();
         cloudMesh.GenerateFull("cloud", planetDiameter * cloudScale, curPlanetSeed);

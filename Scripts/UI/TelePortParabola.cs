@@ -17,6 +17,8 @@ public class TelePortParabola : MonoBehaviour {
     private const float v0 = 25.0f;
 
     public bool lineEnabled = false;
+    public string whatIsHit = "";
+
     private const int numDashes = 50;
     //private float dashLength = .03f;
     private Color arcColor = Color.red;
@@ -109,10 +111,12 @@ public class TelePortParabola : MonoBehaviour {
                 dashes[i / 2].gameObject.GetComponent<LineRenderer>().endColor = arcColor;
                 dashes[i / 2].gameObject.GetComponent<LineRenderer>().enabled = true;
                 if (Physics.Raycast(arcPoints[p0], arcPoints[p1] - arcPoints[p0], out hit, dashLength * 5f, layerMask)) {
+                    whatIsHit = hit.transform.gameObject.name;
+
                     for (int i2 = i / 2; i2 <= numDashes - 1; i2++) {
                         dashes[i2].gameObject.GetComponent<LineRenderer>().enabled = false;
-                    }
-                    if (hit.transform.gameObject.name.Contains("Rock")) {
+                    } // for trees or rocks, turn red.
+                    if ((hit.transform.gameObject.layer == 8) || (hit.transform.gameObject.layer == 9)) {
                         arcColor = Color.red;
                         return new RaycastHit();
                     }

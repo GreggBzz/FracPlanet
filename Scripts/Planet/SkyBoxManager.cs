@@ -125,7 +125,8 @@ public class SkyBoxManager : MonoBehaviour {
     public void setSkyOffPlanet() {
         if (!planetSideSky) return;
         if (theAtmosphere != null) {
-            Material starSkyBox = Resources.Load("Materials/Skybox/starSkyBox01", typeof(Material)) as Material;
+            theAtmosphere.GetComponent<MeshRenderer>().enabled = true;
+            Material starSkyBox = Resources.Load("Materials/Skybox/HighQuality", typeof(Material)) as Material;
             if (eyeCamera != null) {
                 eyeCamera.GetComponent<Skybox>().material = starSkyBox;
             }

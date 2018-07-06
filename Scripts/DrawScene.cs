@@ -70,7 +70,15 @@ public class DrawScene : MonoBehaviour {
             aMainLight.Enable();
         }
         if ((!havePlanet) && (wand.radialMenu.curMenuType == ("Planet Menu - Child"))) {
-            planetManager.UpdatePotentialPlanet(seedQueue[seedQueueIndex]);
+
+            int seedModifier = 0;
+            string type = planetManager.curPlanetType.Replace("Planet", "");
+
+            if (type == "Terra") { seedModifier = 100; }
+            if (type == "Icy") { seedModifier = 200; }
+            if (type == "Molten") { seedModifier = 300; }
+
+            planetManager.UpdatePotentialPlanet(seedQueue[seedQueueIndex] + seedModifier);
             UpdateScanBox(true);
             aMainLight.Enable();
         }
@@ -105,6 +113,7 @@ public class DrawScene : MonoBehaviour {
         // update all the planet objects. 
         GameObject.Find("aPlanet").GetComponent<RocksManager>().PlaceAndEnableRocks();
         GameObject.Find("aPlanet").GetComponent<GrassManager>().PlaceAndEnableGrass();
+        GameObject.Find("aPlanet").GetComponent<TreeManager>().PlaceAndEnableTrees();
         GameObject.Find("aPlanet").GetComponent<FogManager>().PlaceAndEnableFog();
     }
 
@@ -156,12 +165,14 @@ public class DrawScene : MonoBehaviour {
                 if (GameObject.Find("aPlanet").GetComponent<FogManager>() != null) {
                     GameObject.Find("aPlanet").GetComponent<FogManager>().DisableFog();
                 }
+                if (GameObject.Find("aPlanet").GetComponent<TreeManager>() != null) {
+                    GameObject.Find("aPlanet").GetComponent<TreeManager>().DisableTrees();
+                }
             }
             onWhichPlanet = "";
             return;
         }
         hit = teleportArc.UpdateTeleportLine(drawArc);
-        //GameObject.Find("TerraPlanetFog1").GetComponent<Renderer>().enabled = false;
         if (hit.point == new Vector3()) { return; }
         if (hit.transform.gameObject.name.Contains("Planet")) {
             // create seperate high detail top ocean and low detail bottom ocean (once).
@@ -247,13 +258,14 @@ public class DrawScene : MonoBehaviour {
 
     public void UpdateScanBox(bool unknowns = false) {
         string scanBoxText;
+        string type = planetManager.curPlanetType.Replace("Planet", "");
         if (unknowns) {
-            scanBoxText = planetManager.planetMetaData.getData(true);
+            scanBoxText = planetManager.planetMetaData.getData(type, seedQueueIndex, true);
         }
         else {
-            scanBoxText = planetManager.planetMetaData.getData();
+            scanBoxText = planetManager.planetMetaData.getData(type, seedQueueIndex);
         }
-        scanBox.DisplayScanBox(scanBoxText + " Planet Seed: " + seedQueueIndex);
+        scanBox.DisplayScanBox(scanBoxText);
     }
 
     public void HideScanBox() {
@@ -264,13 +276,14 @@ public class DrawScene : MonoBehaviour {
         if (wand == null) { return; }
         if (havePlanet) { return; }
         string switch_string = wand.radialMenu.whatIsSelected;
+
         switch (switch_string) {
             case "Next":
                 seedQueueIndex += 1;
                 if (seedQueueIndex > seedQueue.Length - 1) { seedQueueIndex = 0; }
                 planetSeed = seedQueue[seedQueueIndex];
                 rnd = new System.Random(planetSeed);
-                planetManager.planetDiameter = rnd.Next(1500, 3000);
+                planetManager.planetDiameter = rnd.Next(PlanetManager.minDiameter, PlanetManager.maxDiameter);
                 wand.radialMenu.whatIsSelected = "";
                 break;
             case "Previous":
@@ -278,7 +291,7 @@ public class DrawScene : MonoBehaviour {
                 if (seedQueueIndex < 0) { seedQueueIndex = seedQueue.Length - 1; }
                 planetSeed = seedQueue[seedQueueIndex];
                 rnd = new System.Random(planetSeed);
-                planetManager.planetDiameter = rnd.Next(1500, 3000);
+                planetManager.planetDiameter = rnd.Next(PlanetManager.minDiameter, PlanetManager.maxDiameter);
                 wand.radialMenu.whatIsSelected = "";
                 break;
             default:

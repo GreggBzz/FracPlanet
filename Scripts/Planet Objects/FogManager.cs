@@ -11,6 +11,8 @@ public class FogManager : MonoBehaviour {
     private int R = 0, G = 0, B = 0, A = 0;
     private Color32 baseColor;
     private Material fogMaterial;
+    private GameObject SunMultiplier;
+    private float multiplier;
 
     private int wholePlanetVertCount;
     private float planetRadius;
@@ -45,6 +47,7 @@ public class FogManager : MonoBehaviour {
         R = rnd.Next(70, 150); B = rnd.Next(70, 150);
         G = rnd.Next(70, 150); A = 6;
         baseColor = new Color32((byte)R, (byte)G, (byte)B, (byte)A);
+        SunMultiplier = GameObject.Find("Sun");
 
         fogMaterial = Resources.Load("PlanetTextures/TerraPlanet/Fog/TerraPlanetFog1", typeof(Material)) as Material;
         fogMaterial.SetColor("_TintColor", baseColor);
@@ -58,6 +61,7 @@ public class FogManager : MonoBehaviour {
         for (int i = 0; i <= fogCount - 1; i++) {
             planetFogs = GameObject.Find("FogEffects");
             fog[i] = planetFogs.transform.GetChild(i).gameObject;
+            fog[i].layer = 2; // ignore raycast.
         }
         DisableFog();
 	}
@@ -111,7 +115,7 @@ public class FogManager : MonoBehaviour {
 
     void Update () {
         // darken the fog and make it less transparent at night.
-        float multiplier = GameObject.Find("Sun").GetComponent<Sun>().distance;
+        multiplier = SunMultiplier.GetComponent<Sun>().distance;
         baseColor = new Color32((byte)(R * multiplier), (byte)(G * multiplier) , 
                                 (byte)(B * multiplier), (byte)(A + ((1 - multiplier) * 70)));
         fogMaterial.SetColor("_TintColor", baseColor);

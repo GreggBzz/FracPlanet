@@ -26,7 +26,6 @@ public class PlanetMaterial : MonoBehaviour {
         
     }
 
-
     public Material AssignMaterial(string layer, string curPlanetType = "", bool reassign = false) {
         if (GameObject.Find("Controller (right)") != null) {
             seed = GameObject.Find("Controller (right)").GetComponent<PlanetManager>().curPlanetSeed;
@@ -60,13 +59,13 @@ public class PlanetMaterial : MonoBehaviour {
         }
 
         if (layer == "cloud") {
-            int cloudTxrN = rnd.Next(1, 4);
+            int cloudTxrN = rnd.Next(1, 7);
             Texture curTypeTexture = Resources.Load("PlanetTextures/txrCloud" + cloudTxrN) as Texture;
             Material cloudMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
             cloudMaterial.SetTexture("_MainTex", curTypeTexture);
             cloudMaterial.SetColor("_TintColor", CloudColor(curPlanetType));
             cloudMaterial.mainTextureScale = CloudTiling(curPlanetType);
-            cloudMaterial.renderQueue = 3000;
+            cloudMaterial.renderQueue = 3500;
             // Adjust the render queue if we're on the surface so it looks right.
             if (reassign) {
                 cloudMaterial.renderQueue = 2900;
@@ -77,18 +76,38 @@ public class PlanetMaterial : MonoBehaviour {
         if (layer == "ocean") {
             rnd = new System.Random(seed);
             Texture oceanTexture = Resources.Load("PlanetTextures/" + curPlanetType + "/Hydro/" + "colorHydro" + curPlanetType + rnd.Next(1, hydroTextureCount + 1)) as Texture;
-            Material oceanMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
-            oceanMaterial.SetColor("_TintColor", OceanColor(curPlanetType, true));
+            Material oceanMaterial = new Material(Shader.Find("Standard"));
             oceanMaterial.SetTexture("_MainTex", oceanTexture);
-            oceanMaterial.SetFloat("_InvFade", 2.0F);
-            oceanMaterial.mainTextureScale = OceanTiling(reassign);
+            oceanMaterial.SetFloat("_Mode", 2);
+            oceanMaterial.SetFloat("_Glossiness", 0.5F);
+            oceanMaterial.SetFloat("_Metallic", 0.5F);
+            oceanMaterial.mainTextureScale = new Vector2(1F, 1F);
+            oceanMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            oceanMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            oceanMaterial.SetInt("_ZWrite", 0);
+            oceanMaterial.DisableKeyword("_ALPHATEST_ON");
+            oceanMaterial.EnableKeyword("_ALPHABLEND_ON");
+            oceanMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            oceanMaterial.SetColor("_Color", OceanColor(curPlanetType, true));
             return oceanMaterial;
         }
 
         if (layer == "outline") {
-            Texture planetOutlineTexture = Resources.Load("PlanetTextures/txrPlanetOutline") as Texture;
-            Material planetOutlineMaterial = new Material(Shader.Find("Particles/Alpha Blended"));
+            Texture planetOutlineTexture = Resources.Load("PlanetTextures/fogSphere") as Texture;
+            Material planetOutlineMaterial = new Material(Shader.Find("Standard"));
             planetOutlineMaterial.SetTexture("_MainTex", planetOutlineTexture);
+            planetOutlineMaterial.SetFloat("_Mode", 2);
+            planetOutlineMaterial.SetFloat("_Glossiness", 0.5F);
+            planetOutlineMaterial.SetFloat("_Metallic", 0.5F);
+            planetOutlineMaterial.mainTextureScale = new Vector2(1F, 1F);
+            planetOutlineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            planetOutlineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            planetOutlineMaterial.SetInt("_ZWrite", 0);
+            planetOutlineMaterial.DisableKeyword("_ALPHATEST_ON");
+            planetOutlineMaterial.EnableKeyword("_ALPHABLEND_ON");
+            planetOutlineMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            planetOutlineMaterial.renderQueue = 3000;
+            planetOutlineMaterial.SetColor("_Color", new Color32((byte)30, (byte)30, (byte)30, (byte)200));
             return planetOutlineMaterial;
         }
 
@@ -161,7 +180,7 @@ public class PlanetMaterial : MonoBehaviour {
             starFieldMaterial.EnableKeyword("_ALPHATEST_ON");
             starFieldMaterial.DisableKeyword("_ALPHABLEND_ON");
             starFieldMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            starFieldMaterial.renderQueue = 2900;
+            starFieldMaterial.renderQueue = 3900; // render last.
             starFieldMaterial.SetColor("_SpecColor", Color.white);
             starFieldMaterial.SetColor("_Color", Color.white);
             return starFieldMaterial;

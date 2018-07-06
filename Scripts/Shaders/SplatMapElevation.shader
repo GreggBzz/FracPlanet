@@ -28,7 +28,7 @@
 	LOD 300
 
 		CGPROGRAM
-        #pragma surface surf StandardSpecular addshadow finalcolor:setColor
+        #pragma surface surf StandardSpecular finalcolor:setColor
         #pragma target 5.0
 
 		struct Input {

@@ -20,6 +20,11 @@ public class PlanetMetaData : MonoBehaviour {
     public string mass = "Unknown";
     public string density = "Unknown";
     public string type = "Unknown";
+
+    // what temperature, types of rocks for planetside metadata.
+    public int[] temp = new int[2];
+    public string[] rocks = new string[6];
+
     public string corrdinates = "Unknown"; // really, the random seed.
     private bool partialData = false;
     private bool[] unknowns = new bool[7];
@@ -49,6 +54,9 @@ public class PlanetMetaData : MonoBehaviour {
         rnd = new System.Random(seed);
         if ((partialData) && unknowns[0]) { return "Unknown\n"; }
         linebreak = ",\n                       ";
+
+
+
         string[] elements = { "Carbon Dioxide", "Liquid Nitrogen",
                                  "Liquid Oxygen", "Liquid Hydrogen",
                                  "Liquid Helium", "Liquid Argon", "Methane",
@@ -59,13 +67,12 @@ public class PlanetMetaData : MonoBehaviour {
                                  "Mercury", "Sulfuric Acid", "Hydrochloric Acid" };
 
         if (!hasOcean) { return "None";  }
+
         if ((planetType).Contains("Icy")) {
             hydrosphere = (elements[rnd.Next(0, 9)] + linebreak +
                            elements[rnd.Next(0, 9)] + linebreak +
                            elements[rnd.Next(0, 9)]);
         }
-
-       // Complex Amnonia Compounds - Hydrochloric Acid
         if ((planetType).Contains("Molten")) {
             hydrosphere = (elements[rnd.Next(11, 21)] + linebreak +
                            elements[rnd.Next(11, 21)] + linebreak +
@@ -75,11 +82,6 @@ public class PlanetMetaData : MonoBehaviour {
             hydrosphere = (elements[rnd.Next(11, 17)] + linebreak +
                            elements[rnd.Next(11, 17)] + linebreak +
                            elements[rnd.Next(11, 17)]);
-        }
-        if ((planetType).Contains("Gas")) {
-            hydrosphere = (elements[rnd.Next(0, 21)] + linebreak +
-                           elements[rnd.Next(0, 21)] + linebreak +
-                           elements[rnd.Next(0, 21)]);
         }
         return hydrosphere;
     }
@@ -116,10 +118,8 @@ public class PlanetMetaData : MonoBehaviour {
                           elements[rnd.Next(0, 14)] + linebreak +
                           elements[rnd.Next(0, 14)]);
         }
-        if ((planetType).Contains("Gas")) {
-            atmosphere = (elements[rnd.Next(0, 21)] + linebreak +
-                          elements[rnd.Next(0, 21)] + linebreak +
-                          elements[rnd.Next(0, 21)]);
+        if ((planetType).Contains("Rocky")) {
+            atmosphere = "None";
         }
         return atmosphere;
     }
@@ -136,22 +136,36 @@ public class PlanetMetaData : MonoBehaviour {
                                  "Tin", "Titanium", "Tungsten"};
 
         if ((planetType).Contains("Icy")) {
-            lithosphere = (elements[rnd.Next(0, 23)] + linebreak +
-                           elements[rnd.Next(0, 23)] + linebreak +
-                           elements[rnd.Next(0, 23)]);
+            for (int i = 0; i <= rocks.Length - 1; i++) {
+                rocks[i] = elements[rnd.Next(0, 23)];
+            }
+            lithosphere = (rocks[0] + linebreak +
+                           rocks[1] + linebreak +
+                           rocks[2]);
         }
         if ((planetType).Contains("Molten")) {
-            lithosphere = (elements[rnd.Next(5, 23)] + linebreak +
-                           elements[rnd.Next(5, 23)] + linebreak +
-                           elements[rnd.Next(5, 23)]);
+            for (int i = 0; i <= rocks.Length - 1; i++) {
+                rocks[i] = elements[rnd.Next(5, 23)];
+            }
+            lithosphere = (rocks[0] + linebreak +
+                           rocks[1] + linebreak +
+                           rocks[2]);
         }
         if ((planetType).Contains("Terra")) {
-            lithosphere = (elements[rnd.Next(2, 23)] + linebreak +
-                           elements[rnd.Next(2, 23)] + linebreak +
-                           elements[rnd.Next(2, 23)]);
+            for (int i = 0; i <= rocks.Length - 1; i++) {
+                rocks[i] = elements[rnd.Next(2, 23)];
+            }
+            lithosphere = (rocks[0] + linebreak +
+                           rocks[1] + linebreak +
+                           rocks[2]);
         }
-        if ((planetType).Contains("Gas")) {
-            lithosphere = "None";
+        if ((planetType).Contains("Rocky")) {
+            for (int i = 0; i <= rocks.Length - 1; i++) {
+                rocks[i] = elements[rnd.Next(0, 23)];
+            }
+            lithosphere = (rocks[0] + linebreak +
+                           rocks[1] + linebreak +
+                           rocks[2]);
         }
         return lithosphere;
     }
@@ -164,11 +178,6 @@ public class PlanetMetaData : MonoBehaviour {
         int highK = 0; int lowK = 0; int lowI = 0; int highI = 0;
         if ((planetType).Contains("Icy")) {
             lowK = rnd.Next(50, 118); highK = rnd.Next(118, 191);
-            lowI = 0; highI = 1;
-            if (lowK > 100) { lowI = 1; }
-        }
-        else if ((planetType).Contains("Gas")) {
-            lowK = rnd.Next(70, 118); highK = rnd.Next(118, 166);
             lowI = 0; highI = 1;
             if (lowK > 100) { lowI = 1; }
         }
@@ -186,6 +195,7 @@ public class PlanetMetaData : MonoBehaviour {
             if (lowK > 400) { lowI = 5; }
         }
         climate = (lowK + "K" + " to " + highK + "K" + " (" + climates[lowI] + " to " + climates[highI] + ")");
+        temp[0] = lowK; temp[1] = highK;
         return climate;
     }
 
@@ -196,11 +206,6 @@ public class PlanetMetaData : MonoBehaviour {
                              "Very-Violent" };
         if (!hasAtmosphere) {
             weather = "None";
-        }
-        if ((planetType).Contains("Gas")) {
-            int lowW = rnd.Next(3, 5);
-            int highW = rnd.Next(4, 6);
-            weather = (weathers[lowW] + " to " + weathers[highW]);
         }
         else {
             int lowW = rnd.Next(1, 4);
@@ -237,16 +242,18 @@ public class PlanetMetaData : MonoBehaviour {
         }
     }
 
-    public string getData(bool partial = false) {
+    public string getData(string planetType, int planetSeed, bool partial = false) {
         partialData = partial;
         string allText = "";
-        allText += ("<color=orange>Mass:</color> " + setMass() + "\n");
-        allText += ("<color=orange>Gravity:</color> " + setGravity() + "\n");
-        allText += ("<color=orange>Climate:</color> " + setClimate() + "\n");
-        allText += ("<color=orange>Weather:</color> " + setWeather() + "\n");
-        allText += ("<color=orange>Atmosphere:</color> " + setAtmosphere() + "\n");
-        allText += ("<color=orange>Hydrosphere:</color> " + setHydrosphere() + "\n");
-        allText += ("<color=orange>Lithosphere:</color> " + setLithosphere() + "\n");
+        allText += ("<color=orange>Type:</color> " + planetType + "\n");
+        allText += ("<color=orange>Index:</color> " + planetSeed + "\n\n");
+        allText += ("<color=grey>Mass:</color> " + setMass() + "\n");
+        allText += ("<color=grey>Gravity:</color> " + setGravity() + "\n");
+        allText += ("<color=grey>Climate:</color> " + setClimate() + "\n");
+        allText += ("<color=grey>Weather:</color> " + setWeather() + "\n");
+        allText += ("<color=grey>Atmosphere:</color> " + setAtmosphere() + "\n");
+        allText += ("<color=grey>Hydrosphere:</color> " + setHydrosphere() + "\n");
+        allText += ("<color=grey>Lithosphere:</color> " + setLithosphere() + "\n");
         return allText;
     }
 }
