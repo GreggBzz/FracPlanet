@@ -1,7 +1,7 @@
 ## Vive Planet ##
 This is the legacy procedural planet generation and UI code that lead to the creation of the project called Exoplanet: https://store.steampowered.com/app/894380/Exoplanet/
 
-Once Exoplanet's final act and scene are polished and tested in the comming month (Unbelievably, I'm *almost done!!*) I'll refresh this code.
+Once Exoplanet's final act and scene are polished and tested in the comming month of June 2023 (Unbelievably, I'm *almost done!!*) I'll refresh this code.
 
 Much of it is similar, but I want to offer the more robust, Unity 2021 LTS compatible and feature rich planet generator as seen in Exoplanet as open source.
 
