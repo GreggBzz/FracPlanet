@@ -1,7 +1,11 @@
-# Vive Planet
-Work in progress procedual planet generator / explorer for Unity5 and the HTC Vive.
+## Vive Planet ##
+This is the legacy procedural planet generation and UI code that lead to the creation of the project called Exoplanet: https://store.steampowered.com/app/894380/Exoplanet/
 
-This is a development build! Things will _probabbly_ work...
+Once Exoplanet's final act and scene are polished and tested in the comming month (Unbelievably, I'm *almost done!!*) I'll refresh this code.
+
+Much of it is similar, but I want to offer the more robust, Unity 2021 LTS compatible and feature rich planet generator as seen in Exoplanet as open source.
+
+That said, if you want to play around with this version, here's a few notes. Things will _probably_ work...
 
 ## Controls ##
 * You only need one controller.
