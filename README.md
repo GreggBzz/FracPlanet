@@ -1,13 +1,14 @@
 ## Vive Planet ##
-This is the legacy procedural planet generation and UI code that lead to the creation of:
-Exoplanet: https://store.steampowered.com/app/894380/Exoplanet/
-.. and it's completed version with a dozen hours of quests, rebraned as:
-Project Coreward: https://store.steampowered.com/app/2657840/
+This is the legacy procedural planet generation and UI code that lead to the creation of Exoplanet
+and later, Project Coreward. 
+
+* Exoplanet: https://store.steampowered.com/app/894380/Exoplanet/
+* Project Coreward: https://store.steampowered.com/app/2657840/
 
 The core here is similar in theory and implementation to what's used in the above games, but I want to offer the more robust, Unity 2021 LTS compatible and feature rich planet generator as seen in Project Coreward as open source,
-in some time.
+eventually. 
 
-That said, if you want to play around with this version, here's a few notes. Things will _probably_ work...
+For now, if you want to play around with this version, here's a few notes. Things will _probably_ work...
 
 ## Controls ##
 * You only need one controller.
